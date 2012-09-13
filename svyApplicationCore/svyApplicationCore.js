@@ -18,7 +18,7 @@ function initModules(startupArguments) {
 	//TODO: implement something is that is needed
 	
 	//Init modules
-	var mods = scopes.svyUtils.getJSFormInstances(solutionModel.getForm('AbstractModuleDef'))
+	var mods = scopes.svyUtils.getJSFormInstances(solutionModel.getForm('AbstractModuleDef')) 
 
 	for (var i = 0; i < mods.length; i++) {
 		/** @type {RuntimeForm<AbstractModuleDef>}*/
