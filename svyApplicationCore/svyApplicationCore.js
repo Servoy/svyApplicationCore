@@ -24,7 +24,7 @@ function initModules(startupArguments) {
 		/** @type {RuntimeForm<AbstractModuleDef>}*/
 		var form = forms[mods[i].name]
 		form.moduleInit.call(null, startupArguments)
-		application.output('Initializing module ' + '' + ', version ' + form.getVersion())
+		application.output('Initializing module ' + form.getId() + ', version ' + form.getVersion())
 		history.removeForm(mods[i].name)
 	}
 }
