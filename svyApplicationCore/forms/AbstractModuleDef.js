@@ -35,7 +35,9 @@ var id
  * @final
  * @properties={typeid:24,uuid:"47D17F1A-7591-435A-9952-E0366D65F206"}
  */
-function getId() {}
+function getId() {
+	return id
+}
 
 /**
  * Abstract method, to override on instances 
