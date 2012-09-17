@@ -1,7 +1,7 @@
 /*
  * Core Application logic.
  * Provides:
- * - Module initialization with dependancies
+ * - Module initialization with dependencies
  */
 
 /**
