@@ -8,15 +8,16 @@
  */
 
 /**
- * @type {Number}
+ * @type {String}
  * @protected
- * @properties={typeid:35,uuid:"EEACC49F-D09D-488E-B428-00641387B37E",variableType:4}
+ * @properties={typeid:35,uuid:"EEACC49F-D09D-488E-B428-00641387B37E"}
  */
-var version = -1
+var version;
 
 /**
  * Returns the module version. Is final, DO NOT OVERRIDE
  * @final
+ * @return {String} version
  * @properties={typeid:24,uuid:"88C8B51B-1405-4ED0-A0A0-389230BF5663"}
  */
 function getVersion() {
@@ -29,10 +30,12 @@ function getVersion() {
  * 
  * @properties={typeid:35,uuid:"B0F7941E-23FE-4D1F-9E26-696D15EFC95D"}
  */
-var id
+var id;
 
 /**
+ * Returns the module name/id
  * @final
+ * @return {String} id
  * @properties={typeid:24,uuid:"47D17F1A-7591-435A-9952-E0366D65F206"}
  */
 function getId() {
