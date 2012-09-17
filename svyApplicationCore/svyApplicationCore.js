@@ -24,7 +24,8 @@ function initModules(startupArguments) {
 		/** @type {RuntimeForm<AbstractModuleDef>}*/
 		var form = forms[mods[i].name]
 		form.moduleInit.call(null, startupArguments)
-		application.output('Initializing module ' + form.getId() + ', version ' + form.getVersion())
+		// FIXME: remove associative reference on form if https://support.servoy.com/browse/SVY-3075 is fixed
+		application.output('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided from moduleInit on form \"" + form["controller"].getName() + "\"]") + ' version ' + form.getVersion());
 		history.removeForm(mods[i].name)
 	}
 }
