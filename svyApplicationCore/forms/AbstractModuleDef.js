@@ -10,6 +10,7 @@
 /**
  * @type {String}
  * @protected
+ * 
  * @properties={typeid:35,uuid:"EEACC49F-D09D-488E-B428-00641387B37E"}
  */
 var version;
@@ -41,6 +42,14 @@ var id;
 function getId() {
 	return id
 }
+
+/**
+ * @type {Array<{name: String, value: Object}>}
+ * @protected 
+ * 
+ * @properties={typeid:35,uuid:"EC33E751-DA28-429B-AFFF-E7E25C64812C",variableType:-4}
+ */
+var defaultProperties;
 
 /**
  * Abstract method, to override on instances 
