@@ -106,6 +106,30 @@ function PASSWORD_RULE_VIOLATION(record, message, i18nKey, i18nArguments) {
 }
 
 /**
+ * The user is not part of the organization with the given ID
+ * 
+ * @param {JSRecord<db:/svy_framework/sec_user>} record
+ * @param {UUID|String} organizationId
+ *
+ * @properties={typeid:24,uuid:"2CA76922-50A3-405E-AAD1-A430C3DA4479"}
+ */
+function USER_NOT_MEMBER_OF_ORGANIZATION(record, organizationId) {
+	
+	/**
+	 * The record where the problem occured
+	 * @type {JSRecord<db:/svy_framework/sec_user>}
+	 */
+	this.record = record;
+	
+	/**
+	 * The ID of the organization the user does not belong to
+	 */
+	this.organizationId = organizationId;
+	
+	USER_NOT_MEMBER_OF_ORGANIZATION.prototype = new SvyException("User not part of organization");
+}
+
+/**
  * The given file could not be found
  * 
  * @param {plugins.file.JSFile} file
