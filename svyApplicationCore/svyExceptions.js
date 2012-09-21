@@ -36,6 +36,8 @@ function SvyException(errorMessage, i18nKey, i18nArguments) {
 	});	
 }
 
+
+
 /**
  * No record present
  * 
@@ -145,4 +147,54 @@ function FILE_NOT_FOUND(file) {
 	this.file = file;
 	
 	FILE_NOT_FOUND.prototype = new SvyException("File not found");
+}
+
+/**
+ * Raised when an argument is not legal
+ * 
+ * @param {String} errorMessage
+ * @param {String} [i18nKey]
+ * @param {Array} [i18nArguments]
+ * @author Sean
+ * @properties={typeid:24,uuid:"CA8E2117-F6BF-45EB-8A87-4F48ABA1C4EA"}
+ */
+function IllegalArgumentException(errorMessage, i18nKey, i18nArguments){
+	IllegalArgumentException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
+}
+
+/**
+ * Raised when JSFoundSet.newRecord() failed
+ * 
+ * @param {String} errorMessage
+ * @param {String} [i18nKey]
+ * @param {Array} [i18nArguments]
+ * @param {JSFoundSet} [foundset]
+ * @author Sean
+ * @properties={typeid:24,uuid:"A119ED1E-0AFB-4797-AD92-A54A3CC14EC5"}
+ */
+function NewRecordFailedException(errorMessage, i18nKey, i18nArguments, foundset){
+	/**
+	 *  The Foundset that was used to attempt record creation
+	 *   @type {JSFoundSet} 
+	 */
+	this.foundset = foundset;
+	
+	NewRecordFailedException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
+}
+/**
+ * @param {String} errorMessage
+ * @param {String} [i18nKey]
+ * @param {Array} [i18nArguments]
+ * @param {JSFoundSet} [foundset]
+ * @author Sean
+ * @properties={typeid:24,uuid:"64C7062A-FFB8-4933-8556-4D035387F003"}
+ */
+function FindModeFailedException(errorMessage, i18nKey, i18nArguments, foundset){
+	/**
+	 *  The Foundset that was used to attempt record creation
+	 *   @type {JSFoundSet} 
+	 */
+	this.foundset = foundset;
+	
+	FindModeFailedException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
 }
