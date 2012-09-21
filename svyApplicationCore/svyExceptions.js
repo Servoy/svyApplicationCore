@@ -191,10 +191,29 @@ function NewRecordFailedException(errorMessage, i18nKey, i18nArguments, foundset
  */
 function FindModeFailedException(errorMessage, i18nKey, i18nArguments, foundset){
 	/**
-	 *  The Foundset that was used to attempt record creation
+	 *  The Foundset that was used to attempt to enter find mode
 	 *   @type {JSFoundSet} 
 	 */
 	this.foundset = foundset;
 	
 	FindModeFailedException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
+}
+
+/**
+ * @param {String} errorMessage
+ * @param {String} [i18nKey]
+ * @param {Array} [i18nArguments]
+ * @param {JSFoundSet|JSRecord} [foundsetOrRecord] saves can be on anything (null),foundset, or record
+ * @author Sean
+ *
+ * @properties={typeid:24,uuid:"561FDA43-B94A-4133-98B6-D98B50ACD0C9"}
+ */
+function SaveDataFailedException(errorMessage, i18nKey, i18nArguments, foundsetOrRecord){
+	/**
+	 *  The Foundset that was used to attempt record creation
+	 *   @type {JSFoundSet} 
+	 */
+	this.foundsetOrRecord = foundsetOrRecord;
+	
+	SaveDataFailedException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
 }
