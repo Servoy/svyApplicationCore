@@ -68,25 +68,6 @@ function NO_OWNER(record) {
 }
 
 /**
- * The password has to contain letters and numbers
- * 
- * @param {JSRecord<db:/svy_framework/sec_user>} record
- *
- * @properties={typeid:24,uuid:"6513677B-3EA8-4BF5-80DA-E0EE4C6BEC6F"}
- */
-function PASSWORD_MUST_CONTAIN_LETTERS_AND_NUMBERS(record) {
-	
-	/**
-	 * The record where the problem occured
-	 * @type {JSRecord<db:/svy_framework/sec_user>}
-	 */
-	this.record = record;
-	
-	PASSWORD_MUST_CONTAIN_LETTERS_AND_NUMBERS.prototype = new SvyException("The password must contain letters and numbers.", "svy.fr.dlg.password_contain_letters_numbers");
-
-}
-
-/**
  * Thrown when a password does not comply to the rules set for the owner
  * 
  * @param {JSRecord<db:/svy_framework/sec_user>} record
