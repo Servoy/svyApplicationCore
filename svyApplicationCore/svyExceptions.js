@@ -19,6 +19,10 @@ function SvyException(errorMessage, i18nKey, i18nArguments) {
 		return localeMessage;
 	}
 	
+	this.toString = function(){
+		return localeMessage;
+	}
+	
 	Object.defineProperty(this, "message", {
 		get: function() {
 			return message;
