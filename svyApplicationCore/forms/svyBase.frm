@@ -1,0 +1,8 @@
+name:"svyBase",
+navigatorID:"-1",
+onRecordEditStopMethodID:"43B70EDD-007F-4975-B338-E02AAF9F4453",
+onRecordSelectionMethodID:"A0CA6456-5EF1-4EE9-B245-95BE346E3FC8",
+onShowMethodID:"C16ADCD3-8E46-4E96-9572-D474FB904C1F",
+showInMenu:true,
+typeid:3,
+uuid:"924ACF24-CB15-484F-954C-EEB5B90D1F2A"
