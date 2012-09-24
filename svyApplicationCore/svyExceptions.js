@@ -198,3 +198,22 @@ function SaveDataFailedException(errorMessage, i18nKey, i18nArguments, foundsetO
 	
 	SaveDataFailedException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
 }
+
+/**
+ * @param {String} errorMessage
+ * @param {String} [i18nKey]
+ * @param {Array} [i18nArguments]
+ * @param {JSFoundSet|JSRecord} [foundsetOrRecord] saves can be on anything (null),foundset, or record
+ * @author Sean
+ *
+ * @properties={typeid:24,uuid:"BD31A2D1-C1FD-41C0-98F7-76F36BC8ED57"}
+ */
+function DeleteRecordFailedException(errorMessage, i18nKey, i18nArguments, foundsetOrRecord){
+	/**
+	 *  The Foundset that was used to attempt record creation
+	 *   @type {JSFoundSet} 
+	 */
+	this.foundsetOrRecord = foundsetOrRecord;
+	
+	DeleteRecordFailedException.prototype = new SvyException(errorMessage,i18nKey,i18nArguments);
+}
