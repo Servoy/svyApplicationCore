@@ -8,12 +8,24 @@
 var runtimeProperties = loadRuntimeProperties();
 
 /**
+ * Security levels for properties
+ * 
  * @properties={typeid:35,uuid:"90B235D5-64C8-485C-B482-DCD4BFD9042E",variableType:-4}
  */
 var SECURITY_LEVEL = { NOT_EDITABLE: 0, EDITABLE_BY_OWNER: 1, EDITABLE_BY_ORGANIZATION: 2, EDITABLE_BY_USER: 4 };
 
 /**
+ * Entity types for properties
+ * 
+ * @properties={typeid:35,uuid:"B281409E-C917-4F3C-9F9D-EDB2567EBFAE",variableType:-4}
+ */
+var PROPERTY_ENTITY_TYPE = { MODULE: 1 };
+
+/**
  * @private 
+ * 
+ * @return {Array<Property>}
+ * 
  * @properties={typeid:24,uuid:"5F654912-306D-4609-81E5-D2230818627C"}
  */
 function getLoadedProperties() {
@@ -106,6 +118,26 @@ function getPropertyValues(propertyName) {
 }
 
 /**
+ * Returns all entities for which there were properties found
+ * 
+ * @return {Array<String>}
+ * 
+ * @properties={typeid:24,uuid:"B162B256-9C66-4C12-B331-EF1258A70BFF"}
+ */
+function getEntities() {
+	var props = getLoadedProperties();
+	/** @type {Array<String>} */
+	var entites = new Array();
+	for (var i = 0; i < props.length; i++) {
+		var prop = props[i];
+		if (entites.indexOf(prop.entityId) == -1) {
+			entites.push(prop.entityId);
+		}
+	}
+	return entites;
+}
+
+/**
  * Sets the values of the given property (optionally for the given userId)<br>
  * 
  * <b>Important:</b> All existing property values are removed!
@@ -121,7 +153,7 @@ function getPropertyValues(propertyName) {
  */
 function setPropertyValues(propertyName, propertyValues, userId) {
 	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
-	var query = databaseManager.createSelect("db:/" + globals["nav_db_framework"] + "/nav_properties");
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
 	query.result.addPk();
 	query.where.add(query.columns.property_name.eq(propertyName));
 	if (userId) {
@@ -248,11 +280,16 @@ function Property(propertyRecord) {
 	this.isOwnerProperty = propertyRecord.owner_id ? true : false;	
 	
 	/**
-	 * The id of the module to which this property belongs
+	 * The id of the entity to which this property belongs
 	 * 
 	 * @type {String}
 	 */
-	this.moduleId = propertyRecord.module_id ? propertyRecord.module_id : null;
+	this.entityId = propertyRecord.module_id ? propertyRecord.module_id : null;
+	
+	/**
+	 * TODO: implement sort
+	 */
+	this.sortOrder = 0;
 	
 	/**
 	 * Returns the user of this property as a scopes.svySecurityManager.User object
@@ -371,6 +408,20 @@ function PropertyDescription() {
 	var securityLevel = 0;
 	
 	/**
+	 * The type of entity to which this property belongs
+	 * 
+	 * @type {Number}
+	 */
+	this.entityType = 0;
+	
+	/**
+	 * The entity to which this property belongs
+	 * 
+	 * @type {String}
+	 */
+	this.entity = null;
+	
+	/**
 	 * Adds a value description to this PropertyDescription
 	 * 
 	 * @param {Number} sortOrder
@@ -417,7 +468,6 @@ function PropertyDescription() {
  * Description of a single property value
  * 
  * @constructor 
- * @private 
  * 
  * @param {Number} sortOrder
  * @param {String} name
@@ -460,21 +510,23 @@ function PropertyValueDescription(sortOrder, name, dataType) {
 	 * 
 	 * @type {Object}
 	 */
-	this.defaultValue = null;
+	this.defaultValue = "";
 	
 	/**
 	 * The name of the value list to be used
 	 * 
 	 * @type {String}
 	 */
-	this.valueListName = null;
+	this.valueListName = "";
 	
 	/**
 	 * Fixed values for the value list
 	 * 
 	 * @type {Array}
 	 */
-	this.valueListValues = null;
+	this.valueListValues = new Array();
+	
+	Object.seal(this);	
 }
 
 /**
@@ -514,9 +566,9 @@ function getValueArray(_values) {
 }
 
 /**
- * Returns all properties of the given module
+ * Returns all properties of the given entity
  * 
- * @param {String} moduleId
+ * @param {String} entityId
  * 
  * @return {Array<Property>} moduleProperties
  * 
@@ -525,10 +577,14 @@ function getValueArray(_values) {
  *
  * @properties={typeid:24,uuid:"DADA9046-8E92-403A-815A-48E7D2CE60F3"}
  */
-function getModuleProperties(moduleId) {
+function getEntityProperties(entityId) {
 	var props = getLoadedProperties();
+	/**
+	 * @param {Property} property
+	 * @return {Boolean}
+	 */
 	function propFilter(property) {
-		return (property.moduleId == moduleId);
+		return (property.entityId == entityId);
 	}
 	return props.filter(propFilter);
 }
@@ -557,7 +613,7 @@ function setDefaultProperties(defaultProperties, moduleId) {
 	}
 	
 	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
-	var query = databaseManager.createSelect("db:/" + globals["nav_db_framework"] + "/nav_properties");
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
 	query.result.addPk();
 	query.where.add(query.columns.property_name.isin(propertyNames));
 	
@@ -609,16 +665,16 @@ function setDefaultProperties(defaultProperties, moduleId) {
  * @properties={typeid:24,uuid:"45FFC645-B941-42E6-A2A1-63AA5F16D0B8"}
  */
 function loadRuntimeProperties() {
-	var userId = scopes.svySecurityManager.getUser().userId;
-	var orgId = scopes.svySecurityManager.getOrganization().orgId;
-	var ownerId = scopes.svySecurityManager.getOwner().ownerId;
+	var userId = globals.svy_sec_lgn_user_id;
+	var orgId = globals.svy_sec_lgn_organization_id;
+	var ownerId = globals.svy_sec_lgn_owner_id;
 	
 	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
-	var query = databaseManager.createSelect("db:/" + globals["nav_db_framework"] + "/nav_properties");
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
 	query.result.addPk();
-	query.where.add(query.columns.owner_id.isin([null, ownerId.toString(), "00000000-0000-0000-0000-000000000000"]));
-	query.where.add(query.columns.organization_id.isin([null, orgId.toString(), "00000000-0000-0000-0000-000000000000"]));	
-	query.where.add(query.columns.user_id.isin([null, userId.toString(), "00000000-0000-0000-0000-000000000000"]));
+	query.where.add(query.columns.owner_id.isin([null, ownerId.toString(), globals.zero_uuid.toString()]));
+	query.where.add(query.columns.organization_id.isin([null, orgId.toString(), globals.zero_uuid.toString()]));	
+	query.where.add(query.columns.user_id.isin([null, userId.toString(), globals.zero_uuid.toString()]));
 	
 	/** @type {JSFoundSet<db:/svy_framework/nav_properties>} */
 	var fs = databaseManager.getFoundSet(query);
@@ -654,6 +710,20 @@ function loadRuntimeProperties() {
 		}
 	}
 	runtimeProperties = result;
-	application.output("Properties filled");
 	return result;
+}
+
+/**
+ * @param {scopes.svyProperties.PropertyDescription} propertyDescription
+ *
+ * @properties={typeid:24,uuid:"09B91526-05CA-46EA-909E-1CEBD6A204FC"}
+ */
+function addProperty(propertyDescription) {
+	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property");
+	var record = fs.getRecord(fs.newRecord());
+	record.property_name = propertyDescription.name;
+	record.value_description = propertyDescription.valueDescriptions;
+	databaseManager.saveData(record);
+	return record;
 }
