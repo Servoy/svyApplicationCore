@@ -672,8 +672,8 @@ function loadRuntimeProperties() {
 	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
 	query.result.addPk();
-	query.where.add(query.columns.owner_id.isin([null, ownerId.toString(), globals.zero_uuid.toString()]));
-	query.where.add(query.columns.organization_id.isin([null, orgId.toString(), globals.zero_uuid.toString()]));	
+//	query.where.add(query.columns.owner_id.isin([null, ownerId.toString(), globals.zero_uuid.toString()]));
+//	query.where.add(query.columns.organization_id.isin([null, orgId.toString(), globals.zero_uuid.toString()]));	
 	query.where.add(query.columns.user_id.isin([null, userId.toString(), globals.zero_uuid.toString()]));
 	
 	/** @type {JSFoundSet<db:/svy_framework/nav_properties>} */
@@ -687,13 +687,13 @@ function loadRuntimeProperties() {
 		for (var i = 1; i <= fs.getSize(); i++) {
 			var record = fs.getRecord(i);
 			var propertyLevel = 0;
-			if (record.owner_id) {
-				propertyLevel = 1;
-			} else if (record.organization_id) {
-				propertyLevel = 2;
-			} else if (record.user_id) {
-				propertyLevel = 4;
-			}
+//			if (record.owner_id) {
+//				propertyLevel = 1;
+//			} else if (record.organization_id) {
+//				propertyLevel = 2;
+//			} else if (record.user_id) {
+//				propertyLevel = 4;
+//			}
 			if (record.property_name in relevantProperties) {
 				if (relevantProperties[record.property_name].level < propertyLevel) {
 					relevantProperties[record.property_name].level = propertyLevel;
