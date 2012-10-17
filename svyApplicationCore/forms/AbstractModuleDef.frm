@@ -1,4 +1,4 @@
-encapsulation:60,
+encapsulation:44,
 name:"AbstractModuleDef",
 navigatorID:"-1",
 showInMenu:true,
