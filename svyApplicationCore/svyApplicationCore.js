@@ -22,10 +22,9 @@ function initModules(startupArguments) {
 
 	for (var i = 0; i < mods.length; i++) {
 		/** @type {RuntimeForm<AbstractModuleDef>}*/
-		var form = forms[mods[i].name]
-		form.moduleInit.call(null, startupArguments)
-		// FIXME: remove associative reference on form if https://support.servoy.com/browse/SVY-3075 is fixed
-		application.output('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided from moduleInit on form \"" + form["controller"].getName() + "\"]") + ' version ' + form.getVersion());
+		var form = forms[mods[i].name];
+		form.moduleInit.call(null, startupArguments);
+		application.output('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided from moduleInit on form \"" + form.controller.getName() + "\"]") + ' version ' + form.getVersion());
 		history.removeForm(mods[i].name)
 	}
 }
