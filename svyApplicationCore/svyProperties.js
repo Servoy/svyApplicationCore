@@ -1,5 +1,5 @@
 /**
- * @type {Array<Property>}
+ * @type {Array<RuntimeProperty>}
  * 
  * @private 
  *
@@ -8,23 +8,18 @@
 var runtimeProperties = loadRuntimeProperties();
 
 /**
- * Security levels for properties
+ * @type {String}
  * 
- * @properties={typeid:35,uuid:"90B235D5-64C8-485C-B482-DCD4BFD9042E",variableType:-4}
+ * @private 
+ *
+ * @properties={typeid:35,uuid:"C16E9163-768A-41CD-900B-6B0ADCCF514F"}
  */
-var SECURITY_LEVEL = { NOT_EDITABLE: 0, EDITABLE_BY_OWNER: 1, EDITABLE_BY_ORGANIZATION: 2, EDITABLE_BY_USER: 4 };
-
-/**
- * Entity types for properties
- * 
- * @properties={typeid:35,uuid:"B281409E-C917-4F3C-9F9D-EDB2567EBFAE",variableType:-4}
- */
-var PROPERTY_ENTITY_TYPE = { MODULE: 1 };
+var PROPERTY_CHANGED_EVENT_ACTION = "propertyChanged";
 
 /**
  * @private 
  * 
- * @return {Array<Property>}
+ * @return {Array<RuntimeProperty>}
  * 
  * @properties={typeid:24,uuid:"5F654912-306D-4609-81E5-D2230818627C"}
  */
@@ -36,23 +31,243 @@ function getLoadedProperties() {
 }
 
 /**
+ * Creates a new Property
+ * 
+ * @param {String} name								- the name of this property
+ * @param {String|UUID|PropertySet} propertySet		- the propertySet given as name, ID or PropertySet object
+ * @param {Number} [sortOrder]						- the sortOrder of this property in the set
+ * @param {Number} [adminLevel]						- the minimum admin level required to edit this property
+ * @param {String} [header]							- the header text that is placed above the property values
+ * 
+ * @return {Property}
+ * 
+ * @throws {scopes.svyExceptions.ValueNotUniqueException} the name of the property has to be unique
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
+ *
+ * @properties={typeid:24,uuid:"ADD262C0-596E-4356-875E-6DE4303070D1"}
+ */
+function createProperty(name, propertySet, sortOrder, adminLevel, header) {
+	if (!name || !propertySet) {
+		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+	}
+	
+	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property");
+	
+	/** @type {PropertySet} */
+	var propertySetObject;
+	/** @type {String} */
+	var propertySetId;
+	
+	if (propertySet instanceof String) {
+		// the name of the property set
+		propertySetObject = getPropertySet(propertySet);
+		if (!propertySetObject) {
+			throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+		}
+		propertySetId = propertySetObject.propertySetId;
+	} else if (propertySet instanceof UUID) {
+		propertySetId = propertySet.toString();
+	} else if (propertySet instanceof PropertySet) {
+		/** @type {PropertySet} */
+		var tmpObject = propertySet;		
+		propertySetId = tmpObject.propertySetId;
+	} else {
+		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+	}
+	
+	if (!scopes.svyUtils.isValueUnique(fs, "property_name", name, ["nav_property_sets_id"], [propertySetId]))	{
+		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name");
+	}
+	var propertyRecord = fs.getRecord(fs.newRecord());
+	propertyRecord.property_name = name;
+	propertyRecord.nav_property_sets_id = propertySetId;
+	if (sortOrder) {
+		propertyRecord.sort_order = sortOrder;
+	}
+	if (adminLevel >= 0 && scopes.svyUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, adminLevel)) {
+		propertyRecord.admin_level = adminLevel;
+	}
+	if (header) {
+		propertyRecord.header_text = header;
+	}
+	databaseManager.saveData(propertyRecord);
+	return new Property(propertyRecord);
+}
+
+/**
+ * Creates a new PropertySet
+ * 
+ * @param {String} name						- the name of this property set
+ * @param {String} [displayName] 			- the name that is shown (usually i18n)
+ * @param {String} [description]			- the description of this property set (usually i18n)
+ * @param {String} [icon]					- the icon of this property set as a String URL or byte[]
+ * @param {RuntimeForm|String} [formName]	- the (name of the) form used to present this property set
+ * @param {Number} [sortOrder] 				- the index on which this set is shown in a property editor
+ * 
+ * @return {PropertySet}
+ * 
+ * @throws {scopes.svyExceptions.ValueNotUniqueException} the name of the property set has to be unique
+ * @throws {scopes.svyExceptions.IllegalArgumentException} 
+ *
+ * @properties={typeid:24,uuid:"DF2A8A29-EBBA-41C3-9652-2B2184F12421"}
+ */
+function createPropertySet(name, displayName, description, icon, formName, sortOrder) {
+	if (!name) {
+		throw scopes.svyExceptions.IllegalArgumentException("No name provided for createPropertySet");
+	}
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_sets");		
+	if (!scopes.svyUtils.isValueUnique(fs, "name", name))	{
+		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name");
+	}
+	var record = fs.getRecord(fs.newRecord());
+	record.name = name;
+	if (displayName) {
+		record.display_name = displayName;
+	}
+	if (description) {
+		record.description = description;
+	}
+	if (icon) {
+		record.icon = icon;
+	}
+	if (formName) {
+		if (formName instanceof RuntimeForm) {
+			/** @type {RuntimeForm} */
+			var runtimeForm = formName;
+			record.form_name = runtimeForm.controller.getName();
+		} else {
+			record.form_name = formName;
+		}
+	}
+	if (sortOrder) {
+		record.sort_order = sortOrder;
+	}
+	databaseManager.saveData(record);
+	return new PropertySet(record);
+}
+
+/**
+ * Returns the Property with the given name
+ * 
+ * @param {String} name
+ * 
+ * @return {Property} propertyDescription
+ *
+ * @properties={typeid:24,uuid:"006BEBB6-6D13-4DD9-AEDA-DA0A49FC7F64"}
+ */
+function getProperty(name) {
+	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	query.result.addPk();
+	query.where.add(query.columns.property_name.lower.eq(name.toLowerCase()));
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
+		return new Property(fs.getRecord(1));
+	} else {
+		return null;
+	}
+}
+
+/**
+ * Returns the PropertyDescription with the given ID
+ *  
+ * @param {String|UUID} id
+ * 
+ * @return {Property} propertyDescription
+ *
+ * @properties={typeid:24,uuid:"601AF58C-96B5-4A67-909B-72FA1B58AE53"}
+ */
+function getPropertyById(id) {
+	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	query.result.addPk();
+	query.where.add(query.columns.nav_property_id.eq(id.toString()));
+	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
+		return new Property(fs.getRecord(1));
+	} else {
+		return null;
+	}
+}
+
+/**
+ * Returns the PropertySet with the given name or null if not found
+ * 
+ * @param {String} name
+ * 
+ * @return {PropertySet}
+ *
+ * @properties={typeid:24,uuid:"8637E948-2FA9-4FBD-9E41-13B2C4B86311"}
+ */
+function getPropertySet(name) {
+	/** @type {QBSelect<db:/svy_framework/nav_property_sets>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_sets");
+	query.result.addPk();
+	query.where.add(query.columns.name.lower.eq(name.toLowerCase()));
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
+		return new PropertySet(fs.getRecord(1));
+	} else {
+		return null;
+	}
+}
+
+/**
+ * Returns the PropertySet with the given ID or null if not found
+ * 
+ * @param {String|UUID} propertySetId
+ * 
+ * @return {PropertySet}
+ *
+ * @properties={typeid:24,uuid:"E6C00C43-1861-454C-B7D5-5074E00DEC7C"}
+ */
+function getPropertySetById(propertySetId) {
+	/** @type {QBSelect<db:/svy_framework/nav_property_sets>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_sets");
+	query.result.addPk();
+	query.where.add(query.columns.nav_property_sets_id.eq(propertySetId.toString()));
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
+		return new PropertySet(fs.getRecord(1));
+	} else {
+		return null;
+	}
+}
+
+/**
  * @param {String} propertyName
  * 
- * @return {Property} property
+ * @return {RuntimeProperty} property
  * 
  * @author patrick
  * @since 11.09.2012
  *
  * @properties={typeid:24,uuid:"D40C8A42-7A29-41E6-A324-0FC99CBE5C0B"}
  */
-function getProperty(propertyName) {
+function getRuntimeProperty(propertyName) {
+	/** @type {Array<RuntimeProperty>} */
 	var props = getLoadedProperties();
 	
+	/**
+	 * @param {RuntimeProperty} x
+	 * @return {boolean} match
+	 */
 	function propFilter(x) {
-		return (x == propertyName);
+		if (x.propertyName == propertyName) {
+			return true;
+		} else if (x.propertyValueName == propertyName) {
+			return true;
+		}
+		return false;
 	}
 	
-	var mappedArray = props.map(propFilter);
+	var mappedArray = props.filter(propFilter);
 	if (mappedArray.length > 0) {
 		return mappedArray[0];
 	} else {
@@ -61,20 +276,42 @@ function getProperty(propertyName) {
 }
 
 /**
+ * Returns all runtime properties as an array<p>
  * 
- * @return {Array<Property>} properties
+ * If the adminLevel is provided, the values in the properties returned apply to the given level
+ * 
+ * @param {Number} [adminLevel]
+ * @param {Array<String>} [propertyNames]
+ * 
+ * @return {Array<RuntimeProperty>} properties
  * 
  * @author patrick
  * @since 11.09.2012
  *
  * @properties={typeid:24,uuid:"2DD6C79F-0E99-4F9B-A534-53EBECC5096E"}
  */
-function getProperties() {
-	return getLoadedProperties();
+function getRuntimeProperties(adminLevel, propertyNames) {
+	/** @type {Array<RuntimeProperty>} */
+	var result = loadRuntimeProperties(adminLevel);
+	if (!propertyNames) {
+		return result;
+	}
+	
+	function resultFilter(x) {
+		if (propertyNames.indexOf(x.propertyName) > -1) {
+			return true;
+		} else if (propertyNames.indexOf(x.propertyValueName) > -1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	return result.filter(resultFilter);
 }
 
 /**
- * Returns the value of the given property or null if not found<br><br>
+ * Returns the runtime value of the given property or null if not found<br><br>
  * 
  * This function should only be called if the property is known to have only one value; otherwise use scopes.svyProperties.getPropertyValues()
  * 
@@ -97,276 +334,222 @@ function getPropertyValue(propertyName) {
 }
 
 /**
- * Returns the values of the given property or null if not found
+ * Returns all runtime property values for the given property
  * 
- * @param {String} propertyName
+ * @param {String|Array<String>} propertyName
  * 
- * @return {Array} propertyValues
+ * @return {Array} values
  * 
- * @author patrick
- * @since 06.09.2012
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
  *
- * @properties={typeid:24,uuid:"88E60D1C-08FE-485D-8F25-F27441288531"}
+ * @properties={typeid:24,uuid:"7D050615-B328-4430-B63B-C610D09A91DB"}
  */
 function getPropertyValues(propertyName) {
-	var prop = getProperty(propertyName);
-	if (!prop) {
-		return null;
+	var givenPropertyNames;
+	if (propertyName instanceof String) {
+		givenPropertyNames = [propertyName];
+	} else if (propertyName instanceof Array) {
+		givenPropertyNames = propertyName;
 	} else {
-		return prop.values;
-	}
-}
-
-/**
- * Returns all entities for which there were properties found
- * 
- * @return {Array<String>}
- * 
- * @properties={typeid:24,uuid:"B162B256-9C66-4C12-B331-EF1258A70BFF"}
- */
-function getEntities() {
-	var props = getLoadedProperties();
-	/** @type {Array<String>} */
-	var entites = new Array();
-	for (var i = 0; i < props.length; i++) {
-		var prop = props[i];
-		if (entites.indexOf(prop.entityId) == -1) {
-			entites.push(prop.entityId);
-		}
-	}
-	return entites;
-}
-
-/**
- * Sets the values of the given property (optionally for the given userId)<br>
- * 
- * <b>Important:</b> All existing property values are removed!
- * 
- * @param {String} propertyName
- * @param {Array} propertyValues
- * @param {UUID|String} userId
- * 
- * @author patrick
- * @since 11.09.2012
- *
- * @properties={typeid:24,uuid:"1876BC12-2D20-48D5-8948-A99FB30DB805"}
- */
-function setPropertyValues(propertyName, propertyValues, userId) {
-	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
-	query.result.addPk();
-	query.where.add(query.columns.property_name.eq(propertyName));
-	if (userId) {
-		query.where.add(query.columns.user_id.eq(userId.toString()));
+		throw new scopes.svyExceptions.IllegalArgumentException("propertyName parameter has to be either String or String[]");
 	}
 	
-	// create String array
-	var values = new Array();
-	for (var i = 0; i < propertyValues.length; i++) {
-		var _propValue = propertyValues[i];
-		if (_propValue instanceof String) {
-			values.push(_propValue);
-		} else if (_propValue instanceof Boolean) {
-			values.push(_propValue ? "true" : "false");
+	/** @type {Array<RuntimeProperty>} */
+	var props = getLoadedProperties();	
+	
+	/**
+	 * @param {RuntimeProperty} x
+	 * @return {boolean} match
+	 */
+	function propFilter(x) {
+		if (givenPropertyNames.indexOf(x.propertyName) != -1) {
+			return true;
+		} else if (givenPropertyNames.indexOf(x.propertyValueName) != -1) {
+			return true;
+		}
+		return false;
+	}
+	
+	var mappedArray = props.filter(propFilter);
+	
+	/**
+	 * @param {RuntimeProperty} v1
+	 * @param {RuntimeProperty} v2
+	 * @return {Number}
+	 */
+	function sortProps(v1, v2) {
+		if (v1.sort > v2.sort) {
+			return 1;
+		} else if (v1.sort < v2.sort) {
+			return -1;
 		} else {
-			values.push(_propValue);
+			return 0;
 		}
 	}
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_properties>} */
-	var fs = databaseManager.getFoundSet(query);
-	if (fs && fs.getSize() == 1) {
-		var record = fs.getRecord(1);
-		record.property_value = values;
-		databaseManager.saveData(record);
+	mappedArray.sort(sortProps);
+	
+	if (mappedArray.length > 0) {
+		var result = new Array();
+		for (var i = 0; i < mappedArray.length; i++) {
+			result.push(mappedArray[i].value);
+		}
+		return result;
 	} else {
-		application.output("Requested property \"" + propertyName + "\" is missing in the properties", LOGGINGLEVEL.WARNING);
+		return null;
 	}
 }
 
 /**
- * Sets the value of the given property (optionally for the given userId)<br>
+ * A single runtime property
  * 
- * @param {String} propertyName
- * @param {Array} propertyValue
- * @param {UUID|String} userId
+ * @param {String} name						- the name of the property
+ * @param {Object} value					- the value
+ * @param {String|UUID} [propertyOwner]		- the ID of the owner of this property; if not given, the userId is used
+ * @param {String} [valueName]				- the name of the property value; if not given, the property name is used
+ * @param {Number} [securityLevel]			- the security level required to edit this property; if not given, scopes.svySecurityManager.ADMIN_LEVEL.NONE is used
+ * @param {Number} [sortOrder]				- the sort order for this value
+ * @param {UUID} [navPropertyId]			- the ID of the nav_property record; null for user properties
+ * @param {UUID} [navPropertyValueId]		- the ID of the nav_property_values record; null for user properties stored in the client.properties
+ * @param {Date} [modificationDate]			- the last modification date of this property value
+ * @param {Boolean} [isLoadedFromFile]		- if true, this property was loaded from file
+ * 
+ * @constructor 
  * 
  * @author patrick
- * @since 11.09.2012
+ * @since 2012-10-15
  *
- * @properties={typeid:24,uuid:"41C3838A-B8C1-4DB6-86D9-AEA1C38473AA"}
+ * @properties={typeid:24,uuid:"5F5AB7B6-17D1-47FB-A4F8-0161B6667EAA"}
  */
-function setPropertyValue(propertyName, propertyValue, userId) {
-	setPropertyValues(propertyName, [propertyValue], userId);
-}
-
-/**
- * @param {JSRecord<db:/svy_framework/nav_properties>} propertyRecord
- *
- * @properties={typeid:24,uuid:"10C602B8-B4BB-4ACB-97CE-D10E54714734"}
- */
-function Property(propertyRecord) {
-	
-	var record = propertyRecord;
+function RuntimeProperty(name, value, propertyOwner, valueName, securityLevel, sortOrder, navPropertyId, navPropertyValueId, modificationDate) {
 	
 	/**
 	 * The name of this property
 	 * 
+	 * @final
+	 * 
 	 * @type {String}
 	 */
-	this.name = propertyRecord.property_name;
+	this.propertyName = name;
+	
+	/**
+	 * The name of this property value
+	 * 
+	 * @final
+	 * 
+	 * @type {String}
+	 */
+	this.propertyValueName = valueName ? valueName : name;
 	
 	/**
 	 * The ID of this property
 	 * 
-	 * @type {UUID}
-	 */
-	this.propertyId = propertyRecord.nav_property_id;
-	
-	/**
-	 * The values of this property
-	 * 
-	 * @type {Array}
-	 */
-	this.values = getValueArray(propertyRecord.property_value);
-	
-	/**
-	 * The owner ID of this property
-	 *  
-	 * @type {UUID}
-	 */
-	this.ownerId = propertyRecord.owner_id ? propertyRecord.owner_id : null;	
-	
-	/**
-	 * The organization ID of this property
-	 *  
-	 * @type {UUID}
-	 */
-	this.orgId = propertyRecord.organization_id ? propertyRecord.organization_id : null;
-	
-	/**
-	 * The user ID of this property
+	 * @final
 	 * 
 	 * @type {UUID}
 	 */
-	this.userId = propertyRecord.user_id;
+	this.propertyId = navPropertyId;
+	
+	/**
+	 * The ID of the property value
+	 * 
+	 * @final
+	 * 
+	 * @type {UUID}
+	 */
+	this.propertyValueId = navPropertyValueId;
+	
+	/**
+	 * The value of this property
+	 * 
+	 * @type {Object}
+	 */
+	this.value = value;
+	
+	/**
+	 * Internal var holding the value
+	 */
+	var $value = value;
 	
 	/**
 	 * The modification date of this property
 	 * 
 	 * @type {Date}
 	 */
-	this.lastModified = propertyRecord.modification_date ? propertyRecord.modification_date : null;
+	this.lastModified = modificationDate;
 	
 	/**
-	 * If true, the property is a user property
+	 * The sort of this property
 	 * 
-	 * @type {Boolean}
-	 */
-	this.isUserProperty = propertyRecord.user_id ? true : false;
-	
-	/**
-	 * If true, the property is an organization property
+	 * @final
 	 * 
-	 * @type {Boolean}
+	 * @type {Number}
 	 */
-	this.isOrganizationProperty = propertyRecord.organization_id ? true : false;
+	this.sort = sortOrder ? sortOrder : 1;
 	
 	/**
-	 * If true, the property is an owner property
+	 * The admin level of this property setting<p>
 	 * 
-	 * @type {Boolean}
+	 * The admin level determines if this setting is a user's, organization's, owner's or global
+	 * 
+	 * @type {Number}
+	 * 
+	 * @final
+	 * 
+	 * @see scopes.svySecurityManager.ADMIN_LEVEL for possible levels
 	 */
-	this.isOwnerProperty = propertyRecord.owner_id ? true : false;	
+	this.adminLevel = securityLevel ? securityLevel : scopes.svySecurityManager.ADMIN_LEVEL.NONE;
 	
 	/**
-	 * The id of the entity to which this property belongs
+	 * The id of the owner, organization or user to which this property belongs
 	 * 
 	 * @type {String}
 	 */
-	this.entityId = propertyRecord.module_id ? propertyRecord.module_id : null;
+	this.propertyOwnerId = propertyOwner ? propertyOwner : globals.svy_sec_lgn_user_id;
 	
 	/**
-	 * TODO: implement sort
-	 */
-	this.sortOrder = 0;
-	
-	/**
-	 * Returns the user of this property as a scopes.svySecurityManager.User object
+	 * If true, this property was loaded from file
 	 * 
-	 * @type {Object}
+	 * @type {Boolean}
 	 */
-	this.getUser = function() {
-		if (!record.user_id) {
-			return null;
-		} else {
-			return scopes.svySecurityManager.getUserById(record.user_id);
-		}
-	}
+	this.loadedFromFile = navPropertyValueId ? false : true;
 	
-	/**
-	 * Returns the organization of this property as a scopes.svySecurityManager.Organization object
-	 * 
-	 * @type {Object}
-	 */
-	this.getOrganization = function() {
-		if (!record.organization_id) {
-			return null;
-		} else {
-			return scopes.svySecurityManager.getOrganizationById(record.organization_id);
-		}
-	}
-	
-	/**
-	 * Returns the owner of this property as a scopes.svySecurityManager.Owner object
-	 * 
-	 * @type {Object}
-	 */
-	this.getOwner = function() {
-		if (!record.owner_id) {
-			return null;
-		} else {
-			return scopes.svySecurityManager.getOwnerById(record.owner_id);
-		}
-	}	
-	
-	Object.defineProperty(this, "name", { 
+	Object.defineProperty(this, "value", {
 		get: function() {
-			return record.property_name;
+			if ($value === true) {
+				return 1;
+			} else if ($value === false) {
+				return 0;
+			} else {
+				return $value;
+			}
 		},
 		set: function(x) {
-			
-		}
-	});
-	
-	Object.defineProperty(this, "propertyId", { 
-		get: function() {
-			return record.nav_property_id;
-		},
-		set: function(x) {
-			
-		}
-	});
-	
-	Object.defineProperty(this, "values", { 
-		get: function() {
-			var _result = getValueArray(record.property_value);
-			return _result;
-		},
-		set: function(x) {
-			setPropertyValues(record.property_name, x, record.user_id);
-		}
-	});
-	
-	Object.defineProperties(this, {
-		"getUser": {
-			enumerable: false
-		},
-		"getOrganization": {
-			enumerable: false
-		},
-		"getOwner": {
-			enumerable: false
+			if (!this.propertyValueId && !getPropertyValue("save_user_properties_in_db")) {
+				$value = x;
+				application.setUserProperty(this.propertyName, x);
+			} else {
+				/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+				var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+				fs.loadRecords(this.propertyValueId);
+				var newValueArray = new Array();
+				if (utils.hasRecords(fs)) {
+					var record = fs.getRecord(1);
+					/** @type {Array<{name: String, value: Object}>} */
+					var values = record.property_value;
+					if (values && values.length > 0) {
+						for (var i = 0; i < values.length; i++) {
+							newValueArray[i] = values[i];						
+							if (values[i].name == this.propertyValueName) {
+								newValueArray[i].value = x;
+							}
+						}
+						record.property_value = newValueArray;
+						databaseManager.saveData(record);
+						$value = x;
+					}
+				}
+			}
 		}
 	});
 	
@@ -375,85 +558,241 @@ function Property(propertyRecord) {
 }
 
 /**
+ * Creates a RuntimeProperty from the given nav_property record and propertyValue
+ * 
+ * @param {JSRecord<db:/svy_framework/nav_property_values>} propertyValueRecord
+ * @param {{name: String, value: Object, sort: Number}} propertyValue
+ * 
+ * @return {RuntimeProperty}
+ * 
+ * @private 
+ *
+ * @properties={typeid:24,uuid:"F51CC4D5-D5F1-4397-A8FA-60CC1F814B4E"}
+ */
+function createRuntimeProperty(propertyValueRecord, propertyValue) {
+	var name = propertyValueRecord.property_name;
+	var value = propertyValue.value;
+	var propertyOwner = propertyValueRecord.owner_id;
+	var valueName = propertyValue.name;
+	var securityLevel = propertyValueRecord.security_level;
+	var sortOrder = propertyValue.sort;
+	var navPropertyId = propertyValueRecord.nav_property_id;
+	var navPropertyValueId = propertyValueRecord.nav_property_values_id;
+	var modificationDate = propertyValueRecord.modification_date;
+	return new RuntimeProperty(name, value, propertyOwner, valueName, securityLevel, sortOrder, navPropertyId, navPropertyValueId, modificationDate);
+}
+
+/**
+ * Description of a single property
+ * 
+ * @constructor 
+ * 
+ * @param {JSRecord<db:/svy_framework/nav_property>} propertyRecord
+ * 
+ * @author patrick
+ * 
+ * 
  * @properties={typeid:24,uuid:"0084C159-E8D0-4DA8-BEC1-48E70A8EDF6E"}
  */
-function PropertyDescription() {
+function Property(propertyRecord) {
+	
+	/**
+	 * @type {JSRecord<db:/svy_framework/nav_property>}
+	 */
+	var record = propertyRecord;
 	
 	/**
 	 * The name of this Property
 	 * 
 	 * @type {String}
+	 * 
+	 * @throws {scopes.svyExceptions.ValueNotUniqueException}
 	 */
-	this.name = "";
+	this.name = record.property_name;
 	
 	/**
-	 * Array with all PropertyValueDescription objects of this Property
-	 * 
-	 * @type {Array<PropertyValueDescription>}
-	 */
-	this.valueDescriptions = new Array();
-	
-	/**
-	 * The security level of this Property<br><br>
-	 * 
-	 * The following levels are supported:<br>
-	 * <ul>
-	 * <li>SECURITY_LEVEL.NOT_EDITABLE = not editable</li>
-	 * <li>SECURITY_LEVEL.EDITABLE_BY_OWNER = editable by tenant admin</li>
-	 * <li>SECURITY_LEVEL.EDITABLE_BY_ORGANIZATION = editable by organization admin</li>
-	 * <li>SECURITY_LEVEL.EDITABLE_BY_USER = editable by user</li>
-	 * </ul>
-	 * 
-	 */
-	var securityLevel = 0;
-	
-	/**
-	 * The type of entity to which this property belongs
-	 * 
-	 * @type {Number}
-	 */
-	this.entityType = 0;
-	
-	/**
-	 * The entity to which this property belongs
+	 * An optional header text that will be set above the values
 	 * 
 	 * @type {String}
 	 */
-	this.entity = null;
+	this.header = record.header_text;
 	
 	/**
-	 * Adds a value description to this PropertyDescription
+	 * Array with all PropertyValue objects of this Property
+	 * 
+	 * @type {Array<PropertyValue>}
+	 */
+	this.valueDescriptions = record.value_description ? record.value_description : new Array();
+	
+	/**
+	 * The required security level to be able to edit<br><br>
+	 * 
+	 * @see scopes.svySecurityManager.ADMIN_LEVEL for possible levels
+	 * 
+	 * @throws {scopes.svyExceptions.IllegalArgumentException}
+	 * 
+	 */
+	this.securityLevel = record.admin_level;
+	
+	/**
+	 * The ID of this property
+	 * 
+	 * @type {UUID}
+	 */
+	this.propertyId = record.nav_property_id;
+	
+	/**
+	 * The ID of the property set
+	 * 
+	 * @type {UUID}
+	 */
+	this.propertySetId = record.nav_property_sets_id;
+	
+	/**
+	 * The sort order for this property
+	 * 
+	 * @type {Number}
+	 */
+	this.sortOrder = record.sort_order;
+	
+	/**
+	 * Adds a value description to this Property
 	 * 
 	 * @param {Number} sortOrder
 	 * @param {String} name
 	 * @param {Number} dataType
+	 * @param {Number} [displayType]
+	 * @param {String} [label]
+	 * @param {String} [description]
+	 * @param {Object} [defaultValue]
+	 * @param {String} [valueListName]
+	 * @param {Array} [valueListValues]
 	 * 
-	 * @return {PropertyValueDescription}
+	 * @return {PropertyValue}
 	 */
-	this.addValueDescription = function(sortOrder, name, dataType) {
-		var propDescription = new PropertyValueDescription(sortOrder, name, dataType);
-		this.valueDescriptions.push(propDescription);
+	this.addValueDescription = function(sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues) {
+		/** @type {Property} */
+		var _this = this;
+		var propDescription = new PropertyValue(_this, sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues);
+		var values = new Array();
+		for (var i = 0; i < _this.valueDescriptions.length; i++) {
+			values.push(_this.valueDescriptions[i]);
+		}
+		values.push(propDescription);
+		record.value_description = values;
+		databaseManager.saveData(record);
+		_this.valueDescriptions = values;
 		return propDescription;
 	}
 	
-	Object.defineProperty(this, "securityLevel", {
+	/**
+	 * Returns the property value with the given name
+	 * 
+	 * @return {PropertyValue}
+	 */
+	this.getPropertyValue = function(propertyValueName) {
+		/** @type {Property} */
+		var _this = this;
+		/** @type {Array<PropertyValue>} */		
+		var values = _this.valueDescriptions;
+		for (var i = 0; i < values.length; i++) {
+			var value = values[i];
+			if (value.name == propertyValueName) {
+				return value;
+			}
+		}
+		return null;
+	}	
+	
+	/**
+	 * Returns the property set of this property
+	 * 
+	 * @return {PropertySet}
+	 */
+	this.getPropertySet = function() {
+		/** @type {UUID} */
+		var uuid = this.propertySetId;
+		return getPropertySetById(uuid);
+	}
+	
+	/**
+	 * Saves the value description
+	 */
+	this.saveValueDescription = function() {
+		/** @type {Property} */
+		var _this = this;
+		record.value_description = _this.valueDescriptions;
+		databaseManager.saveData(record);
+	}
+	
+	Object.defineProperty(this, "name", {
 		get: function() {
-			if (securityLevel == 4) {
-				return "EDITABLE_BY_USER";
-			} else if (securityLevel == 2) {
-				return "EDITABLE_BY_ORGANIZATION";
-			}  else if (securityLevel == 1) {
-				return "EDITABLE_BY_OWNER";
-			} else {
-				return "NOT_EDITABLE";
-			} 
+			return record.property_name;
 		},
 		set: function(x) {
-			if (x == SECURITY_LEVEL.EDITABLE_BY_ORGANIZATION || x == SECURITY_LEVEL.EDITABLE_BY_OWNER || x == SECURITY_LEVEL.EDITABLE_BY_USER || x == SECURITY_LEVEL.NOT_EDITABLE) {
-				securityLevel = x;
+			if (x) {
+				if (!scopes.svyUtils.isValueUnique(record, "property_name", x)) {
+					throw new scopes.svyExceptions.ValueNotUniqueException(record, "property_name");
+				}
+				record.property_name = x;
+				databaseManager.saveData(record);
 			}
 		}
 	})
+
+	Object.defineProperty(this, "header", {
+		get: function() {
+			return record.header_text;
+		},
+		set: function(x) {
+			if (x) {
+				record.header_text = x;
+				databaseManager.saveData(record);
+			}
+		}
+	})
+	
+	Object.defineProperty(this, "propertyId", {
+		get: function() {
+			return record.nav_property_id;
+		}
+	})	
+	
+	Object.defineProperty(this, "propertySetId", {
+		get: function() {
+			return record.nav_property_sets_id;
+		},
+		set: function(x) {
+			if (x) {
+				record.nav_property_sets_id = x;
+				databaseManager.saveData(record);
+			}
+		}
+	})	
+	
+	Object.defineProperty(this, "securityLevel", {
+		get: function() {
+			return record.admin_level;
+		},
+		set: function(x) {
+			if (scopes.svyUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, x)) {
+				record.admin_level = x;
+				databaseManager.saveData(record);
+			} else {
+				throw new scopes.svyExceptions.IllegalArgumentException("Property security level must be one of the constants defined in scopes.svySecurityManager.ADMIN_LEVEL");
+			}
+		}
+	})
+	
+	Object.defineProperty(this, "sortOrder", {
+		get: function() {
+			return record.sort_order;
+		},
+		set: function(x) {
+			record.sort_order = x;
+			databaseManager.saveData(record);
+		}
+	})	
 	
 	Object.defineProperties(this, {
 		"addValueDescription": {
@@ -465,59 +804,277 @@ function PropertyDescription() {
 }
 
 /**
- * Description of a single property value
+ * 
+ * Property set<br>
+ * holds name, description and icon for a set of properties
+ * 
+ * @param {JSRecord<db:/svy_framework/nav_property_sets>} propertySetRecord
  * 
  * @constructor 
- * 
+ *
+ * @properties={typeid:24,uuid:"99A097CF-1AE3-4412-B9C3-A7EB7EC9F88A"}
+ */
+function PropertySet(propertySetRecord) {
+	
+	/**
+	 * @type {JSRecord<db:/svy_framework/nav_property_sets>}
+	 */
+	var record = propertySetRecord;
+	
+	/**
+	 * The name of this property set
+	 * 
+	 * @type {String}
+	 */
+	this.name = record.name;
+	
+	/**
+	 * The display name of this set, usually an i18n key
+	 * 
+	 * @type {String}
+	 */
+	this.displayName = record.display_name;
+	
+	/**
+	 * The description of this property set
+	 * 
+	 * @type {String}
+	 */
+	this.description = record.description;
+	
+	/**
+	 * The ID of this property set
+	 * 
+	 * @type {UUID}
+	 */
+	this.propertySetId = record.nav_property_sets_id;
+	
+	/**
+	 * The icon of this property set<br>
+	 * The icon can be provided as either a String URL or a byte[] containing the media data
+	 * 
+	 * @type {byte[]}
+	 */
+	this.icon = record.icon;
+	
+	/**
+	 * The optional form name of the form used to display this set
+	 * 
+	 * @type {String}
+	 */
+	this.formName = record.form_name;
+	
+	/**
+	 * The sort order for this property set
+	 * 
+	 * @type {Number}
+	 */
+	this.sortOrder = record.sort_order;
+	
+	Object.defineProperty(this, "name", {
+		get: function() {
+			return record.name;
+		},
+		set: function(x) {
+			record.name = x;
+			databaseManager.saveData(record);
+		}
+	})
+	
+	Object.defineProperty(this, "displayName", {
+		get: function() {
+			return record.display_name;
+		},
+		set: function(x) {
+			record.display_name = x;
+			databaseManager.saveData(record);
+		}
+	})
+	
+	Object.defineProperty(this, "description", {
+		get: function() {
+			return record.description;
+		},
+		set: function(x) {
+			record.description = x;
+			databaseManager.saveData(record);
+		}
+	})
+	
+	Object.defineProperty(this, "propertySetId", {
+		get: function() {
+			return record.nav_property_sets_id;
+		},
+		set: function(x) {
+		}
+	})	
+	
+	Object.defineProperty(this, "icon", {
+		get: function() {
+			return record.icon;
+		},
+		set: function(x) {
+			record.icon = x;
+			databaseManager.saveData(record);
+		}
+	})	
+	
+	Object.defineProperty(this, "formName", {
+		get: function() {
+			return record.form_name;
+		},
+		set: function(x) {
+			record.form_name = x;
+			databaseManager.saveData(record);
+		}
+	})
+	
+	Object.defineProperty(this, "sortOrder", {
+		get: function() {
+			return record.sort_order;
+		},
+		set: function(x) {
+			record.sort_order = x;
+			databaseManager.saveData(record);
+		}
+	})	
+	
+	Object.seal(this);
+}
+
+/**
+ * @param {Property} propertyDescription
  * @param {Number} sortOrder
  * @param {String} name
  * @param {Number} dataType
+ * @param {Number} displayType
+ * @param {String} label
+ * @param {String} description
+ * @param {Object} value
+ * @param {String} [valueListName]
+ * @param {Array} [valueListValues]
  *
- * @properties={typeid:24,uuid:"7D1F559F-06AE-4A8D-8869-AB10AB834FC6"}
+ * @properties={typeid:24,uuid:"10C602B8-B4BB-4ACB-97CE-D10E54714734"}
  */
-function PropertyValueDescription(sortOrder, name, dataType) {
+function PropertyValue(propertyDescription, sortOrder, name, dataType, displayType, label, description, value, valueListName, valueListValues) {
+	
+	/**
+	 * The Property this value description belongs to
+	 * 
+	 * @type {Property}
+	 */
+	var propertyDescriptionObj = propertyDescription;
 	
 	/**
 	 * The sort order for this value
 	 * 
 	 * @type {Number}
 	 */
-	this.sortOrder = sortOrder;
+	this.sortOrder = -1;	
 	
 	/**
 	 * The name of this value
 	 * 
 	 * @type {String}
 	 */
-	this.name = name;
+	this.name = "";		
+	
+	/**
+	 * Internal var holding name
+	 * @type {String}
+	 */
+	var $name = name ? name : propertyDescriptionObj.name;		
+	
+	/**
+	 * The name of this value
+	 * 
+	 * @type {String}
+	 */
+	this.label = "";
+	
+	/**
+	 * Internal var holding label
+	 * @type {String}
+	 */
+	var $label = label;
+	
+	/**
+	 * The header label placed above the properties
+	 * 
+	 * @type {String}
+	 */
+	this.header = "";
+	
+	/**
+	 * Internal var holding header
+	 * @type {String}
+	 */
+	var $header = null;	
+	
+	/**
+	 * A description of the value
+	 * 
+	 * @type {String}
+	 */
+	this.description = "";
+	
+	/**
+	 * Internal var holding description
+	 * @type {String}
+	 */
+	var $description = description;
 	
 	/**
 	 * The data type given as a JSColumn constant
 	 * 
 	 * @type {Number}
 	 */
-	this.dataType = dataType;
+	this.dataType = -1;
+	
+	/**
+	 * Internal var holding dataType
+	 * @type {Number}
+	 */
+	var $dataType = dataType;
 	
 	/**
 	 * The display type given as a JSField constant
 	 * 
 	 * @type {Number}
 	 */
-	this.displayType = null;
+	this.displayType = -1;		
 	
 	/**
-	 * The default value of this property
+	 * Internal var holding displayType
+	 * @type {Number}
+	 */
+	var $displayType = displayType ? displayType : JSField.TEXT_FIELD;
+	
+	/**
+	 * The (default) value of this property
 	 * 
 	 * @type {Object}
 	 */
-	this.defaultValue = "";
+	this.value = {};
+	
+	/**
+	 * Internal var holding defaultValue
+	 * @type {Object}
+	 */
+	var $value = value;	
 	
 	/**
 	 * The name of the value list to be used
 	 * 
 	 * @type {String}
 	 */
-	this.valueListName = "";
+	this.valueListName = "";	
+	
+	/**
+	 * Internal var holding valueListName
+	 * @type {String}
+	 */
+	var $valueListName = valueListName;	
 	
 	/**
 	 * Fixed values for the value list
@@ -525,6 +1082,159 @@ function PropertyValueDescription(sortOrder, name, dataType) {
 	 * @type {Array}
 	 */
 	this.valueListValues = new Array();
+	
+	/**
+	 * Internal var holding valueListValues
+	 * @type {Array}
+	 */
+	var $valueListValues = valueListValues;	
+	
+	/**
+	 * Returns the security level of the property
+	 * 
+	 * @return {Number}
+	 */
+	this.securityLevel = propertyDescriptionObj.securityLevel;
+	
+	/**
+	 * Internal var sortOrder
+	 * @type {Number}
+	 */
+	var $sortOrder = sortOrder;		
+	
+	// Try to guess data type if not given
+	if (!$dataType && $value) {
+		if ($value instanceof Number) {
+			$dataType = JSVariable.NUMBER;
+		} else if ($value instanceof Date) {
+			$dataType = JSVariable.DATETIME;
+		} else if ($value instanceof Array) {
+			$dataType = JSVariable.MEDIA;
+		} else {
+			$dataType = JSVariable.TEXT;
+		}
+	}
+	
+	/**
+	 * Returns an object to be stored in nav_property
+	 * 
+	 * @return {{name: String, value: Object}}
+	 */
+	this.getValueObject = function() {
+		/** @type {PropertyValue} */
+		var _this = this;
+		var result = new Object();
+		result.name = _this.name;
+		result.value = _this.value;
+		result.sort = _this.sortOrder;
+		return result;
+	}
+	
+	Object.defineProperty(this, "description", {
+		get: function() {
+			return $description;
+		},
+		set: function(x) {
+			$description = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})
+	
+	Object.defineProperty(this, "name", {
+		get: function() {
+			return $name;
+		},
+		set: function(x) {
+			$name = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})
+	
+	Object.defineProperty(this, "label", {
+		get: function() {
+			return $label;
+		},
+		set: function(x) {
+			$label = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})	
+	
+	Object.defineProperty(this, "header", {
+		get: function() {
+			return $header;
+		},
+		set: function(x) {
+			$header = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})		
+	
+	Object.defineProperty(this, "sortOrder", {
+		get: function() {
+			return $sortOrder;
+		},
+		set: function(x) {
+			$sortOrder = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})	
+
+	Object.defineProperty(this, "displayType", {
+		get: function() {
+			return $displayType;
+		},
+		set: function(x) {
+			$displayType = x;	
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})
+	
+	Object.defineProperty(this, "value", {
+		get: function() {
+			if ($value === true) {
+				return 1;
+			} else if ($value === false) {
+				return 0;
+			} else {
+				return $value;
+			}
+		},
+		set: function(x) {
+			$value = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})	
+	
+	Object.defineProperty(this, "dataType", {
+		get: function() {
+			return $dataType;
+		},
+		set: function(x) {
+			$dataType = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})		
+	
+	Object.defineProperty(this, "valueListName", {
+		get: function() {
+			return $valueListName;
+		},
+		set: function(x) {
+			$valueListName = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})		
+	
+	Object.defineProperty(this, "valueListValues", {
+		get: function() {
+			return $valueListValues;
+		},
+		set: function(x) {
+			$valueListValues = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})
 	
 	Object.seal(this);	
 }
@@ -566,91 +1276,186 @@ function getValueArray(_values) {
 }
 
 /**
- * Returns all properties of the given entity
+ * Updates the given properties<p>
  * 
- * @param {String} entityId
+ * This is usually called when modules are intialized
  * 
- * @return {Array<Property>} moduleProperties
- * 
- * @author patrick
- * @since 18.09.2012
+ * @param {{propertySet: {name: String, displayName: String, description: String, icon: String, sort: Number, formName: String}, properties: Array<{name: String, value: Object, securityLevel: Number, sort: Number, dataType: Number, displayType: Number, label: String, header: String, description: String, valueListName: String, valueListValues: Array}>}} props
  *
- * @properties={typeid:24,uuid:"DADA9046-8E92-403A-815A-48E7D2CE60F3"}
+ * @properties={typeid:24,uuid:"CC1F58C5-B612-4476-B1F3-AF267DDAC38B"}
  */
-function getEntityProperties(entityId) {
-	var props = getLoadedProperties();
-	/**
-	 * @param {Property} property
-	 * @return {Boolean}
-	 */
-	function propFilter(property) {
-		return (property.entityId == entityId);
-	}
-	return props.filter(propFilter);
-}
-
-/**
- * Creates properties as given<br>
- * 
- * The method will only create the properties that do not already exist
- * 
- * @param {Array} defaultProperties as Array<{name: String, value: Object}>
- * @param {String} [moduleId] the ID of the module to which these properties belong
- *
- * @properties={typeid:24,uuid:"73A7F888-D54A-40FD-9968-740E24D6BFCC"}
- */
-function setDefaultProperties(defaultProperties, moduleId) {
-	if (!defaultProperties || defaultProperties.length == 0) {
-		return;
+function updateDefaultProperties(props) {
+	/** @type {{name: String, displayName: String, description: String, icon: String, sort: Number, formName: String}} */
+	var givenSet = props.propertySet;
+	// Get a property set
+	var propertySet = getPropertySet(givenSet.name);
+	if (!propertySet) {
+		propertySet = createPropertySet(
+			givenSet.name, 
+			givenSet.displayName, 
+			givenSet.description, 
+			givenSet.icon, 
+			givenSet.formName, 
+			givenSet.sort
+		);
+	} else {
+		if (propertySet.description != givenSet.description) {
+			propertySet.description = givenSet.description;
+		}
+		if (propertySet.displayName != givenSet.displayName) {
+			propertySet.displayName = givenSet.displayName;
+		}
+		if (propertySet.formName != givenSet.formName) {
+			propertySet.formName = givenSet.formName;
+		}		
+		if (propertySet.icon != givenSet.icon) {
+			propertySet.icon = givenSet.icon;
+		}		
+		if (propertySet.name != givenSet.displayName) {
+			propertySet.displayName = givenSet.displayName;
+		}		
+		if (propertySet.sortOrder != givenSet.sort) {
+			propertySet.sortOrder = givenSet.sort;
+		}		
 	}
 	
-	// Init
-	getLoadedProperties();
-	
-	var propertyNames = new Array();
-	for (var pp = 0; pp < defaultProperties.length; pp++) {
-		propertyNames.push(defaultProperties[pp].name);
+	// now see which properties already exist
+	/** @type {Array<{name: String, value: Object, securityLevel: Number, sort: Number, dataType: Number, displayType: Number, label: String, header: String, description: String, valueListName: String, valueListValues: Array}>} */
+	var givenProperties = props.properties;
+	var givenPropertyNames = new Array();
+	for (var i = 0; i < givenProperties.length; i++) {
+		givenPropertyNames.push(givenProperties[i].name);
 	}
 	
-	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
+	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
 	query.result.addPk();
-	query.where.add(query.columns.property_name.isin(propertyNames));
+	query.where.add(query.columns.nav_property_sets_id.eq(propertySet.propertySetId.toString()));
+	query.where.add(query.columns.property_name.isin(givenPropertyNames));
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_properties>} */
+	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
 	var fs = databaseManager.getFoundSet(query);
 	
+	function removeItem(name) {
+		for (var x = 0; x < givenProperties.length; x++) {
+			if (givenProperties[x].name == name) {
+				givenProperties.splice(x, 1);
+			}
+		}		
+	}
+	
+	function findValueItem(name) {
+		function filterForName(x) {
+			if (x.name == name) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+		var result = givenProperties.filter(filterForName);
+		if (result.length >= 0) {
+			return result[0];
+		} else {
+			return null;
+		}
+	}
+	
 	if (utils.hasRecords(fs)) {
-		for (var fsi = 1; fsi <= fs.getSize(); fsi++) {
-			var record = fs.getRecord(fsi);
-			var index = propertyNames.indexOf(record.property_name);
-			if (index > -1) {
-				propertyNames.splice(index,1);
-				defaultProperties.splice(index,1);
+		for (var j = 1; j <= fs.getSize(); j++) {
+			var record = fs.getRecord(j);
+			if (givenPropertyNames.indexOf(record.property_name) != -1) {
+				// found this property; adjust values if necessary
+				/** @type {Array<PropertyValue>} */
+				var propValues = new Array();
+				for ( var x = 0 ; x < record.value_description.length ; x ++ ) {
+					propValues[x] = record.value_description[x];
+				}
+				
+				var valueItem = findValueItem(record.property_name);
+				
+				// adjust booleans
+				if (valueItem.value === true) {
+					valueItem.value = 1;
+				} else if (valueItem.value === false) {
+					valueItem.value = 0;
+				}
+				
+				var itemFound = false;
+				var itemChanged = false;
+				for (var p = 0; p < propValues.length; p++) {
+					if (propValues[p].name == valueItem.name) {
+						// item found
+						itemFound = true;
+						if ("dataType" in valueItem && propValues[p].dataType !== valueItem.dataType) {
+							propValues[p].dataType = valueItem.dataType;
+							itemChanged = true;
+						}
+						if ("description" in valueItem && propValues[p].description !== valueItem.description) {
+							propValues[p].description = valueItem.description;
+							itemChanged = true;
+						}
+						if ("displayType" in valueItem && propValues[p].displayType !== valueItem.displayType) {
+							propValues[p].displayType = valueItem.displayType;
+							itemChanged = true;
+						}
+						if ("header" in valueItem && propValues[p].header !== valueItem.header) {
+							propValues[p].header = valueItem.header;
+							itemChanged = true;
+						}
+						if ("label" in valueItem && propValues[p].label !== valueItem.label) {
+							propValues[p].label = valueItem.label;
+							itemChanged = true;
+						}
+						if ("securityLevel" in valueItem && propValues[p].securityLevel !== valueItem.securityLevel) {
+							propValues[p].securityLevel = valueItem.securityLevel;
+							itemChanged = true;
+						}
+//						if ("sort" in valueItem && propValues[p].sortOrder !== valueItem.sort) {
+//							propValues[p].sortOrder = valueItem.sort;
+//							itemChanged = true;
+//						}
+						if ("value" in valueItem && propValues[p].value !== valueItem.value) {
+							propValues[p].value = valueItem.value;
+							itemChanged = true;
+						}
+						if ("valueListName" in valueItem && propValues[p].valueListName !== valueItem.valueListName) {
+							propValues[p].valueListName = valueItem.valueListName;
+							itemChanged = true;
+						}
+						if ("valueListValues" in valueItem && propValues[p].valueListValues !== valueItem.valueListValues) {
+							propValues[p].valueListValues = valueItem.valueListValues;
+							itemChanged = true;
+						}
+					}
+				}
+				
+				if (!itemFound) {
+					// TODO
+					propValues.push(new PropertyValue());
+				} else if (itemChanged) {
+					record.value_description = propValues;
+					databaseManager.saveData(record);
+				}
+				removeItem(record.property_name);
 			}
 		}
 	}
 	
-	for (var i = 0; i < defaultProperties.length; i++) {
-		/** @type {{name: String, value: Object}} */
-		var prop = defaultProperties[i];
-		record = fs.getRecord(fs.newRecord());
-		record.property_name = prop.name;
-		record.property_value = prop.value instanceof Array ? prop.value : [prop.value];
-		record.module_id = moduleId;
-		if (databaseManager.saveData(record)) {
-			runtimeProperties.push(new Property(record));
-			application.output("Created new property \"" + prop.name + "\" with value " + record.property_value, LOGGINGLEVEL.INFO);
-		} else {
-			application.output("Failed to create new property \"" + prop.name + "\"", LOGGINGLEVEL.WARNING);
+	if (givenProperties && givenProperties.length > 0) {
+		for (var rp = 0; rp < givenProperties.length; rp++) {
+			var givenProperty = givenProperties[rp];
+			var newProperty = createProperty(givenProperty.name, propertySet, givenProperty.sort, givenProperty.securityLevel);
+			newProperty.addValueDescription(1, givenProperty.name, givenProperty.dataType, givenProperty.displayType, givenProperty.label, givenProperty.description, givenProperty.value, givenProperty.valueListName, givenProperty.valueListValues);
 		}
 	}
 }
 
 /**
- * Loads all relevant properties for the logged in user<br>
+ * Loads all relevant properties for the logged in user<p>
  * 
- * properties are prioritized in this order:<br>
+ * If an adminLevel is given, runtime values for that admin level are returned<p>
+ * 
+ * Properties are prioritized in this order:<br>
  * 
  * <ul>
  * <li>user</li>
@@ -659,62 +1464,110 @@ function setDefaultProperties(defaultProperties, moduleId) {
  * <li>global</li>
  * </ul>
  * 
- * @return {Array<Property>}
+ * @param {Number} [adminLevel]
+ * 
+ * @return {Array<RuntimeProperty>} runtime properties for either the current user or the given admin level
  * 
  * @private 
  * @properties={typeid:24,uuid:"45FFC645-B941-42E6-A2A1-63AA5F16D0B8"}
  */
-function loadRuntimeProperties() {
-	var userId = globals.svy_sec_lgn_user_id;
-	var orgId = globals.svy_sec_lgn_organization_id;
+function loadRuntimeProperties(adminLevel) {
+	
+	var start = new Date();
+	
 	var ownerId = globals.svy_sec_lgn_owner_id;
+	if (ownerId) {
+		ownerId = ownerId.toString();
+	} else {
+		ownerId = null;
+	}
 	
-	/** @type {QBSelect<db:/svy_framework/nav_properties>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_properties");
-	query.result.addPk();
-//	query.where.add(query.columns.owner_id.isin([null, ownerId.toString(), globals.zero_uuid.toString()]));
-//	query.where.add(query.columns.organization_id.isin([null, orgId.toString(), globals.zero_uuid.toString()]));	
-	query.where.add(query.columns.user_id.isin([null, userId.toString(), globals.zero_uuid.toString()]));
+	/** @type {QBSelect<db:/svy_framework/nav_property_values>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_values");
+	query.result.addPk();	
+	query.where.add(query.columns.owner_id.isin([null, ownerId, globals.zero_uuid.toString()]));
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_properties>} */
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
 	
-	/** @type {Array<Property>} */
-	var result = new Array();	
+	/** @type {Array<RuntimeProperty>} */
+	var result = new Array();
+	var runtimeProp;
+	
+	var givenAdminLevel = -1;
+	if (!(adminLevel == undefined || adminLevel == null)) {
+		givenAdminLevel = adminLevel;
+	}
 	
 	if (fs && utils.hasRecords(fs)) {
 		var relevantProperties = new Object();
 		for (var i = 1; i <= fs.getSize(); i++) {
 			var record = fs.getRecord(i);
-			var propertyLevel = 0;
-//			if (record.owner_id) {
-//				propertyLevel = 1;
-//			} else if (record.organization_id) {
-//				propertyLevel = 2;
-//			} else if (record.user_id) {
-//				propertyLevel = 4;
-//			}
-			if (record.property_name in relevantProperties) {
-				if (relevantProperties[record.property_name].level < propertyLevel) {
-					relevantProperties[record.property_name].level = propertyLevel;
-					relevantProperties[record.property_name].record = record;
+			
+			var propertyLevel = record.admin_level;
+			/** @type {Array<{name: String, value, Object, sort: Number}>} */
+			var propertyValues = record.property_value;
+			for (var j = 0; j < propertyValues.length; j++) {
+				var propertyValue = propertyValues[j];
+				if (propertyValue.name in relevantProperties) {
+					if (givenAdminLevel > -1 && relevantProperties[propertyValue.name].level > givenAdminLevel && record.admin_level < relevantProperties[propertyValue.name].level && record.admin_level >= givenAdminLevel) {
+						// highest level wins
+						relevantProperties[propertyValue.name].value = propertyValue.value;
+						relevantProperties[propertyValue.name].record = record;
+						relevantProperties[propertyValue.name].level = record.admin_level;
+					} else if (givenAdminLevel == -1 && relevantProperties[propertyValue.name].level > propertyLevel) {
+						// smallest level wins
+						relevantProperties[propertyValue.name].value = propertyValue.value;
+						relevantProperties[propertyValue.name].record = record;
+						relevantProperties[propertyValue.name].level = record.admin_level;						
+					}
+				} else {
+					relevantProperties[propertyValue.name] = new Object();
+					relevantProperties[propertyValue.name].level = propertyLevel;
+					relevantProperties[propertyValue.name].value = propertyValue.value;
+					relevantProperties[propertyValue.name].name = propertyValue.name;
+					relevantProperties[propertyValue.name].sort = propertyValue.sort;
+					relevantProperties[propertyValue.name].record = record;
 				}
-			} else {
-				relevantProperties[record.property_name] = new Object();
-				relevantProperties[record.property_name].level = propertyLevel;
-				relevantProperties[record.property_name].record = record;
 			}
 		}
 		for ( var rp in relevantProperties) {
-			result.push(new Property(relevantProperties[rp].record));
+			runtimeProp = createRuntimeProperty(relevantProperties[rp].record, {name: relevantProperties[rp].name, value: relevantProperties[rp].value, sort: relevantProperties[rp].sort});
+			result.push(runtimeProp);
 		}
 	}
-	runtimeProperties = result;
+	
+	// Add user properties from file
+	var userPropNames = application.getUserPropertyNames();
+	if (userPropNames && userPropNames.length > 0) {
+		for (var up = 0; up < userPropNames.length; up++) {
+			var userPropValue = application.getUserProperty(userPropNames[up]);
+			runtimeProp = new RuntimeProperty(userPropNames[up], userPropValue);
+			if (result.indexOf(runtimeProp) == -1) {
+				result.push(runtimeProp);
+			} else {
+				application.output("Property " + userPropNames[up] + " already loaded from DB")
+			}
+		}
+	}
+	
+	var end = new Date();
+	application.output("[svyProperties] Loading runtime properties took " + (end.valueOf() - start.valueOf()) + " ms", LOGGINGLEVEL.INFO);
+	
 	return result;
 }
 
 /**
- * @param {scopes.svyProperties.PropertyDescription} propertyDescription
+ * Reloads the runtime properties
+ * 
+ * @properties={typeid:24,uuid:"6795B845-A902-49E8-804D-AC7D141845EB"}
+ */
+function reloadRuntimeProperties() {
+	runtimeProperties = loadRuntimeProperties();
+}
+
+/**
+ * @param {scopes.svyProperties.Property} propertyDescription
  *
  * @properties={typeid:24,uuid:"09B91526-05CA-46EA-909E-1CEBD6A204FC"}
  */
@@ -726,4 +1579,391 @@ function addProperty(propertyDescription) {
 	record.value_description = propertyDescription.valueDescriptions;
 	databaseManager.saveData(record);
 	return record;
+}
+
+/**
+ * Saves the given value to the property with the given name
+ * 
+ * @param {String} propertyName		- the name of the property
+ * @param {Object} propertyValue	- the new value
+ * @param {Number} [adminLevel]		- the admin level for which this property value is saved; if not given, the logged in user's level will be used
+ * 
+ * @throws {scopes.svyExceptions.SvyException}
+ *
+ * @properties={typeid:24,uuid:"A43388B0-686B-40F2-AD5C-0A9B4724C5B7"}
+ */
+function setPropertyValue(propertyName, propertyValue, adminLevel) {
+	
+	var runtimeProp = getRuntimeProperty(propertyName);
+	
+	if (!runtimeProp) {
+		throw new scopes.svyExceptions.IllegalArgumentException("Unknown property given to setPropertyValue or runtime properties not loaded");
+	}
+	
+	if (!adminLevel) {
+		adminLevel = scopes.svySecurityManager.getUser().adminLevel;
+	}
+	
+	var runtimePropId = runtimeProp.propertyId;
+	
+	/** @type {QBSelect<db:/svy_framework/nav_property_values>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_values");
+	query.result.addPk();
+	
+	var propertyOwnerId = getOwnerIdForAdminLevel(adminLevel);
+	
+	// TODO: store for each or treat them equal?
+	if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER) {
+		adminLevel = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
+	}
+	
+	query.where.add(query.columns.nav_property_id.eq(runtimePropId));
+	query.where.add(query.columns.admin_level.eq(adminLevel));	
+	query.where.add(query.columns.property_owner_id.eq(propertyOwnerId));	
+	
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+	var fs = databaseManager.getFoundSet(query);
+	
+	var propertyRecord;
+	if (!utils.hasRecords(fs)) {
+		propertyRecord = fs.getRecord(fs.newRecord());
+		propertyRecord.nav_property_id = runtimePropId;
+		propertyRecord.property_name = runtimeProp.propertyName;
+		propertyRecord.solution_name = application.getSolutionName();
+		if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER || adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER) {
+			propertyRecord.owner_id = globals.zero_uuid;
+			propertyRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
+		} else {
+			propertyRecord.owner_id = globals.svy_sec_lgn_owner_id;
+			propertyRecord.admin_level = adminLevel;			
+		}
+		propertyRecord.property_owner_id = propertyOwnerId;
+		propertyRecord.property_value = [{name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort}];
+	} else {
+		propertyRecord = fs.getRecord(1);
+		/** @type {Array<{name: String, value: Object}>} */
+		var currentValues = propertyRecord.property_value;
+		var newValues = new Array();
+		if (currentValues && currentValues.length > 0) {
+			var found = false;			
+			for (var i = 0; i < currentValues.length; i++) {
+				newValues[i] = currentValues[i];
+				if (currentValues[i].name == propertyName) {
+					newValues[i].value = propertyValue;
+					found = true;
+				}
+			}
+			if (!found) {
+				newValues.push({name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort});
+			}
+			propertyRecord.property_value = newValues;
+		} else {
+			propertyRecord.property_value = [{name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort}];
+		}
+	}
+	
+	databaseManager.saveData(propertyRecord);
+	runtimeProperties = loadRuntimeProperties();
+	
+	scopes.svyEventManager.fireEvent(null, this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
+	
+}
+
+/**
+ * Returns the ID of either the owner, organization or user according to the admin level
+ * 
+ * @param {Number} adminLevel
+ * 
+ * @return {String}
+ *
+ * @private 
+ * 
+ * @properties={typeid:24,uuid:"04842D38-93F4-4DD8-B60D-EE8896683C9C"}
+ */
+function getOwnerIdForAdminLevel(adminLevel) {
+	if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.TENANT_MANAGER) {
+		return globals.svy_sec_lgn_owner_id;
+	} else if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.ORGANIZATION_MANAGER) {
+		return globals.svy_sec_lgn_organization_id;
+	} else if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER || 
+			adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER) {
+		// TODO: is this what we use then?
+		return globals.zero_uuid.toString();
+	} else {
+		return globals.svy_sec_lgn_user_id;
+	}
+}
+
+/**
+ * @properties={typeid:24,uuid:"E0C41D84-7632-490D-82CD-D0C0F8706D92"}
+ */
+function initProperties() {
+	updateDefaultPropertyValues();
+	getLoadedProperties();
+}
+
+/**
+ * Updates the default property values for the logged in owner
+ *
+ * @properties={typeid:24,uuid:"50B0F774-D8A7-4370-917C-29AE32D71578"}
+ */
+function updateDefaultPropertyValues() {
+	var start = new Date();
+	
+	var ownerId = globals.zero_uuid;
+	
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */	
+	var fsValues = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+	
+	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
+	var propQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	propQuery.result.addPk();
+
+	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */	
+	var fs = databaseManager.getFoundSet(propQuery);
+	fs.loadAllRecords();
+	
+	/** @type {Array<PropertyValue>} */
+	var propValues;
+	/** @type {Array<PropertyValue>} */
+	var propSavedValues;	
+	/** @type {JSRecord<db:/svy_framework/nav_property>} */
+	var propValueRecord;
+	
+	/**
+	 * @param {Array<PropertyValue>} values
+	 * @param {Array<PropertyValue>} savedValues
+	 * @return {Boolean} arrayChanged
+	 */
+	function addMissingValues(values, savedValues) {
+		if (!savedValues) {
+			return true;
+		}
+		var result = false;
+		for (var i = 0; i < values.length; i++) {
+			var found = false;
+			for (var j = 0; j < savedValues.length; j++) {
+				if (savedValues[j].name == values[i].name) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				savedValues.push(values[i]);
+				application.output("Added property \"" + values[i].name + "\" to the owner's properties", LOGGINGLEVEL.INFO);
+				result = true;
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * @param {Array<PropertyValue>} values
+	 * @param {Array<PropertyValue>} savedValues
+	 * @return {Boolean} arrayChanged
+	 */
+	function removeDeletedValues(values, savedValues) {
+		if (!savedValues) {
+			return true;
+		}
+		var result = false;
+		for (var i = 0; i < savedValues.length; i++) {
+			var found = false;
+			for (var j = 0; j < values.length; j++) {
+				if (savedValues[i].name == values[j].name) {
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				savedValues.splice(i, 1);
+				application.output("Removed property \"" + savedValues[i].name + "\" from the owner's properties", LOGGINGLEVEL.INFO);				
+				result = true;
+			}
+		}
+		return result;
+	}
+	
+	function adjustDefaults(values, savedValues) {
+		if (!savedValues) {
+			return false;
+		}
+		
+		var valueAdjusted = false;
+		for (var i = 0; i < savedValues.length; i++) {
+			for (var j = 0; j < values.length; j++) {
+				if (values[j].name == savedValues[i].name) {
+					if (savedValues[i].value != values[j].value) {
+						savedValues[i].value = values[j].value;
+						valueAdjusted = true;
+					}
+					if (savedValues[i].sort != values[j].sortOrder) {
+						savedValues[i].sort = values[j].sortOrder;
+						valueAdjusted = true;						
+					}
+				}
+			}
+		}
+		return valueAdjusted;
+	}
+	
+	for (var i = 1; i <= fs.getSize(); i++) {
+		var propRecord = fs.getRecord(i);
+		if (utils.hasRecords(propRecord.nav_property_to_nav_property_values$default_properties)) {
+			propValueRecord = propRecord.nav_property_to_nav_property_values$default_properties.getRecord(1);
+		} else {
+			propValueRecord = fsValues.getRecord(fsValues.newRecord());
+			propValueRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
+			propValueRecord.nav_property_id = propRecord.nav_property_id;
+			propValueRecord.owner_id = ownerId;
+			propValueRecord.property_owner_id = ownerId;
+			propValueRecord.property_name = propRecord.property_name;
+			propValueRecord.solution_name = application.getSolutionName();
+		}
+		
+		propValues = propRecord.value_description;
+		propSavedValues = propValueRecord.property_value;
+		
+		var arrayAdded;
+		if (propValues && !propSavedValues) {
+			propSavedValues = new Array();
+			for (var j = 0; j < propValues.length; j++) {
+				propSavedValues.push(propValues[j]);
+			}
+			arrayAdded = true;
+		} else {
+			arrayAdded = addMissingValues(propValues, propSavedValues);
+		}
+		
+		var arrayRemoved = removeDeletedValues(propValues, propSavedValues);
+		
+		if (!arrayAdded && !arrayRemoved) {
+//			if (adjustDefaults(propValues, propSavedValues)) {
+//				propValueRecord.property_value = propSavedValues;
+//				databaseManager.saveData(propValueRecord);			
+//			}
+			continue;
+		}
+		
+		var propValuesToSave = new Array();			
+		for (var p = 0; p < propSavedValues.length; p++) {
+			propValuesToSave.push({name: propSavedValues[p].name, value: propSavedValues[p].value, sort: propSavedValues[p].sortOrder});
+		}
+		propValueRecord.property_value = propValuesToSave;
+		databaseManager.saveData(propValueRecord);
+	}
+	
+	var end = new Date();
+	application.output("[svyProperties] Updating default properties took " + (end.valueOf() - start.valueOf()) + " ms", LOGGINGLEVEL.INFO);
+}
+
+/**
+ * Sets a given user property to the given value<p>
+ * 
+ * Depending on the setting in <code>save_user_properties_in_db</code> the 
+ * user property is stored in the local .properties file or in the database
+ * 
+ * @param {String} propertyName
+ * @param {Object} propertyValue
+ * @param {String|UUID} [userId]
+ * 
+ * @return {RuntimeProperty} runtimeProperty
+ * 
+ * @author patrick
+ * @since 25.10.2012
+ *
+ * @properties={typeid:24,uuid:"428D5170-E839-4866-A967-A41B07E3B739"}
+ */
+function setUserProperty(propertyName, propertyValue, userId) {
+	if (!userId) {
+		userId = globals.svy_sec_lgn_user_id;
+	}
+	
+	/** @type {RuntimeProperty} */
+	var runtimeProperty = getRuntimeProperty(propertyName);
+	if (!getPropertyValue("save_user_properties_in_db")) {
+		if (runtimeProperty) {
+			runtimeProperty.value = propertyValue;
+		} else {
+			runtimeProperty = new RuntimeProperty(propertyName, propertyValue, userId);
+			application.setUserProperty(propertyName, propertyValue ? propertyValue.toString() : null);
+			runtimeProperties.push(runtimeProperty);
+		}
+		return runtimeProperty;
+	}
+	
+	if (!userId) {
+		application.output("No userId given in setUserProperty for property \"" + propertyName + "\" and globals.svy_sec_lgn_user_id has no value", LOGGINGLEVEL.ERROR);
+		return null;
+	}
+	
+	var user = scopes.svySecurityManager.getUserById(userId);
+	if (!user) {
+		return null;
+	}
+	
+	var record;
+	if (runtimeProperty && (!runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db"))) {
+		runtimeProperty.value = propertyValue;
+	} else if (runtimeProperty && runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")) {
+		runtimeProperties.splice(runtimeProperties.indexOf(runtimeProperty),1);
+		/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+		record = fs.getRecord(fs.newRecord());
+		record.solution_name = application.getSolutionName();
+		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
+		record.owner_id = user.ownerId;
+		record.property_name = propertyName;
+		record.property_owner_id = user.userId;
+		record.property_value = [{name: propertyName, value: propertyValue, sort: 1}];
+		runtimeProperty = createRuntimeProperty(record, {name: propertyName, value: propertyValue, sort: 1});
+		runtimeProperties.push(runtimeProperty);
+	} else {
+		/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+		record = fs.getRecord(fs.newRecord());
+		record.solution_name = application.getSolutionName();
+		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
+		record.owner_id = user.ownerId;
+		record.property_name = propertyName;
+		record.property_owner_id = user.userId;
+		record.property_value = [{name: propertyName, value: propertyValue, sort: 1}];
+		runtimeProperty = createRuntimeProperty(record, {name: propertyName, value: propertyValue, sort: 1});
+		runtimeProperties.push(runtimeProperty);
+	}
+	
+	databaseManager.saveData(record);
+	
+	return runtimeProperty;
+	
+}
+
+/**
+ * Adds a listener that is notified whenever a property value is changed<p>
+ * 
+ * The method fired will receive the Property object and the RuntimeProperty for the changed property
+ * 
+ * @param {Function} action
+ * 
+ * @author patrick
+ * @since 25.10.2012
+ * 
+ * @properties={typeid:24,uuid:"38CD589C-5D5D-4F4A-BB86-7AC6A8499BC2"}
+ */
+function addPropertyChangeListener(action) {
+	scopes.svyEventManager.addListener(this, PROPERTY_CHANGED_EVENT_ACTION, action);
+}
+
+/**
+ * Prints all runtime properties for the given adminLevel
+ * 
+ * @private 
+ * @properties={typeid:24,uuid:"5C156807-0FD5-47E7-8423-91C7DFD1BB0D"}
+ */
+function printRuntimeProperties(adminLevel) {
+	var props = loadRuntimeProperties(adminLevel);
+	props.sort(function(x1,x2) { return x1.propertyValueName > x2.propertyValueName });
+	for (var i = 0; i < props.length; i++) {
+		application.output(props[i].propertyValueName + ": " + props[i].value);
+	}
 }

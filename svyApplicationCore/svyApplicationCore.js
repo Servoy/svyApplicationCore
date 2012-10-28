@@ -17,15 +17,22 @@ function initModules(startupArguments) {
 	//Init self
 	//TODO: implement something is that is needed
 	
+	scopes.svyProperties.initProperties();
+	
 	//Init modules
 	var mods = scopes.svyUtils.getJSFormInstances(solutionModel.getForm('AbstractModuleDef')) 
 
 	for (var i = 0; i < mods.length; i++) {
 		/** @type {RuntimeForm<AbstractModuleDef>}*/
 		var form = forms[mods[i].name];
+		/** @type {{propertySet: Object, properties: Array<Object>}} */
+		var props = form.getDefaultProperties();
+		if (props) {
+			scopes.svyProperties.updateDefaultProperties(props);
+		}		
 		form.moduleInit.call(null, startupArguments);
 		application.output('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided from moduleInit on form \"" + form.controller.getName() + "\"]") + ' version ' + form.getVersion());
-		history.removeForm(mods[i].name)
+		history.removeForm(mods[i].name);
 	}
 }
 
