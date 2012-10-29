@@ -320,8 +320,8 @@ function createEditor_detailForm(event, formName) {
 	if (forms[valuesFormName]) {
 		var currValues = scopes.svyProperties.getRuntimeProperties(propertyEditor.getAdminLevel(), propertyNames);
 		for (var cv = 0; cv < currValues.length; cv++) {
-			var valueVarName = propertyValues[cv].propertyValueName.toLowerCase().replace(/ /g,"_");
-			forms[valuesFormName][valueVarName] = propertyValues[cv].value;
+			var valueVarName = currValues[cv].propertyValueName.toLowerCase().replace(/ /g,"_");
+			forms[valuesFormName][valueVarName] = currValues[cv].value;
 		}
 		mainForm.elements["content"].setRightForm(forms[valuesFormName]);
 		return;
