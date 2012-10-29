@@ -51,8 +51,8 @@ function createProperty(name, propertySet, sortOrder, adminLevel, header) {
 		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
-	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_properties");
 	
 	/** @type {PropertySet} */
 	var propertySetObject;
@@ -76,12 +76,12 @@ function createProperty(name, propertySet, sortOrder, adminLevel, header) {
 		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
 	
-	if (!scopes.svyUtils.isValueUnique(fs, "property_name", name, ["nav_property_sets_id"], [propertySetId]))	{
+	if (!scopes.svyUtils.isValueUnique(fs, "property_name", name, ["svy_property_sets_id"], [propertySetId]))	{
 		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name");
 	}
 	var propertyRecord = fs.getRecord(fs.newRecord());
 	propertyRecord.property_name = name;
-	propertyRecord.nav_property_sets_id = propertySetId;
+	propertyRecord.svy_property_sets_id = propertySetId;
 	if (sortOrder) {
 		propertyRecord.sort_order = sortOrder;
 	}
@@ -116,8 +116,8 @@ function createPropertySet(name, displayName, description, icon, formName, sortO
 	if (!name) {
 		throw scopes.svyExceptions.IllegalArgumentException("No name provided for createPropertySet");
 	}
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
-	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_sets");		
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_sets");		
 	if (!scopes.svyUtils.isValueUnique(fs, "name", name))	{
 		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name");
 	}
@@ -158,11 +158,11 @@ function createPropertySet(name, displayName, description, icon, formName, sortO
  * @properties={typeid:24,uuid:"006BEBB6-6D13-4DD9-AEDA-DA0A49FC7F64"}
  */
 function getProperty(name) {
-	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {QBSelect<db:/svy_framework/svy_properties>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	query.result.addPk();
 	query.where.add(query.columns.property_name.lower.eq(name.toLowerCase()));
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		return new Property(fs.getRecord(1));
@@ -181,11 +181,11 @@ function getProperty(name) {
  * @properties={typeid:24,uuid:"601AF58C-96B5-4A67-909B-72FA1B58AE53"}
  */
 function getPropertyById(id) {
-	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {QBSelect<db:/svy_framework/svy_properties>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	query.result.addPk();
-	query.where.add(query.columns.nav_property_id.eq(id.toString()));
-	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
+	query.where.add(query.columns.svy_properties_id.eq(id.toString()));
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		return new Property(fs.getRecord(1));
@@ -204,11 +204,11 @@ function getPropertyById(id) {
  * @properties={typeid:24,uuid:"8637E948-2FA9-4FBD-9E41-13B2C4B86311"}
  */
 function getPropertySet(name) {
-	/** @type {QBSelect<db:/svy_framework/nav_property_sets>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_sets");
+	/** @type {QBSelect<db:/svy_framework/svy_property_sets>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_sets");
 	query.result.addPk();
 	query.where.add(query.columns.name.lower.eq(name.toLowerCase()));
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		return new PropertySet(fs.getRecord(1));
@@ -227,11 +227,11 @@ function getPropertySet(name) {
  * @properties={typeid:24,uuid:"E6C00C43-1861-454C-B7D5-5074E00DEC7C"}
  */
 function getPropertySetById(propertySetId) {
-	/** @type {QBSelect<db:/svy_framework/nav_property_sets>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_sets");
+	/** @type {QBSelect<db:/svy_framework/svy_property_sets>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_sets");
 	query.result.addPk();
-	query.where.add(query.columns.nav_property_sets_id.eq(propertySetId.toString()));
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	query.where.add(query.columns.svy_property_sets_id.eq(propertySetId.toString()));
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		return new PropertySet(fs.getRecord(1));
@@ -409,8 +409,8 @@ function getPropertyValues(propertyName) {
  * @param {String} [valueName]				- the name of the property value; if not given, the property name is used
  * @param {Number} [securityLevel]			- the security level required to edit this property; if not given, scopes.svySecurityManager.ADMIN_LEVEL.NONE is used
  * @param {Number} [sortOrder]				- the sort order for this value
- * @param {UUID} [navPropertyId]			- the ID of the nav_property record; null for user properties
- * @param {UUID} [navPropertyValueId]		- the ID of the nav_property_values record; null for user properties stored in the client.properties
+ * @param {UUID} [navPropertyId]			- the ID of the svy_properties record; null for user properties
+ * @param {UUID} [navPropertyValueId]		- the ID of the svy_property_values record; null for user properties stored in the client.properties
  * @param {Date} [modificationDate]			- the last modification date of this property value
  * 
  * @constructor 
@@ -528,8 +528,8 @@ function RuntimeProperty(name, value, propertyOwner, valueName, securityLevel, s
 				$value = x;
 				application.setUserProperty(this.propertyName, x);
 			} else {
-				/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
-				var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+				/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
+				var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 				fs.loadRecords(this.propertyValueId);
 				var newValueArray = new Array();
 				if (utils.hasRecords(fs)) {
@@ -557,9 +557,9 @@ function RuntimeProperty(name, value, propertyOwner, valueName, securityLevel, s
 }
 
 /**
- * Creates a RuntimeProperty from the given nav_property record and propertyValue
+ * Creates a RuntimeProperty from the given svy_properties_values record and propertyValue
  * 
- * @param {JSRecord<db:/svy_framework/nav_property_values>} propertyValueRecord
+ * @param {JSRecord<db:/svy_framework/svy_property_values>} propertyValueRecord
  * @param {{name: String, value: Object, sort: Number}} propertyValue
  * 
  * @return {RuntimeProperty}
@@ -575,8 +575,8 @@ function createRuntimeProperty(propertyValueRecord, propertyValue) {
 	var valueName = propertyValue.name;
 	var securityLevel = propertyValueRecord.security_level;
 	var sortOrder = propertyValue.sort;
-	var navPropertyId = propertyValueRecord.nav_property_id;
-	var navPropertyValueId = propertyValueRecord.nav_property_values_id;
+	var navPropertyId = propertyValueRecord.svy_properties_id;
+	var navPropertyValueId = propertyValueRecord.svy_property_values_id;
 	var modificationDate = propertyValueRecord.modification_date;
 	return new RuntimeProperty(name, value, propertyOwner, valueName, securityLevel, sortOrder, navPropertyId, navPropertyValueId, modificationDate);
 }
@@ -586,7 +586,7 @@ function createRuntimeProperty(propertyValueRecord, propertyValue) {
  * 
  * @constructor 
  * 
- * @param {JSRecord<db:/svy_framework/nav_property>} propertyRecord
+ * @param {JSRecord<db:/svy_framework/svy_properties>} propertyRecord
  * 
  * @author patrick
  * 
@@ -596,7 +596,7 @@ function createRuntimeProperty(propertyValueRecord, propertyValue) {
 function Property(propertyRecord) {
 	
 	/**
-	 * @type {JSRecord<db:/svy_framework/nav_property>}
+	 * @type {JSRecord<db:/svy_framework/svy_properties>}
 	 */
 	var record = propertyRecord;
 	
@@ -638,14 +638,14 @@ function Property(propertyRecord) {
 	 * 
 	 * @type {UUID}
 	 */
-	this.propertyId = record.nav_property_id;
+	this.propertyId = record.svy_properties_id;
 	
 	/**
 	 * The ID of the property set
 	 * 
 	 * @type {UUID}
 	 */
-	this.propertySetId = record.nav_property_sets_id;
+	this.propertySetId = record.svy_property_sets_id;
 	
 	/**
 	 * The sort order for this property
@@ -753,17 +753,17 @@ function Property(propertyRecord) {
 	
 	Object.defineProperty(this, "propertyId", {
 		get: function() {
-			return record.nav_property_id;
+			return record.svy_properties_id;
 		}
 	})	
 	
 	Object.defineProperty(this, "propertySetId", {
 		get: function() {
-			return record.nav_property_sets_id;
+			return record.svy_property_sets_id;
 		},
 		set: function(x) {
 			if (x) {
-				record.nav_property_sets_id = x;
+				record.svy_property_sets_id = x;
 				databaseManager.saveData(record);
 			}
 		}
@@ -807,7 +807,7 @@ function Property(propertyRecord) {
  * Property set<br>
  * holds name, description and icon for a set of properties
  * 
- * @param {JSRecord<db:/svy_framework/nav_property_sets>} propertySetRecord
+ * @param {JSRecord<db:/svy_framework/svy_property_sets>} propertySetRecord
  * 
  * @constructor 
  *
@@ -816,7 +816,7 @@ function Property(propertyRecord) {
 function PropertySet(propertySetRecord) {
 	
 	/**
-	 * @type {JSRecord<db:/svy_framework/nav_property_sets>}
+	 * @type {JSRecord<db:/svy_framework/svy_property_sets>}
 	 */
 	var record = propertySetRecord;
 	
@@ -846,7 +846,7 @@ function PropertySet(propertySetRecord) {
 	 * 
 	 * @type {UUID}
 	 */
-	this.propertySetId = record.nav_property_sets_id;
+	this.propertySetId = record.svy_property_sets_id;
 	
 	/**
 	 * The icon of this property set<br>
@@ -869,6 +869,40 @@ function PropertySet(propertySetRecord) {
 	 * @type {Number}
 	 */
 	this.sortOrder = record.sort_order;
+	
+	/**
+	 * Returns all properties of this set
+	 * 
+	 * @return {Array<Property>}
+	 */
+	this.getProperties = function() {
+		/** @type {Array<Property>} */
+		var result = new Array();
+		if (utils.hasRecords(record.svy_property_sets_to_svy_properties)) {
+			for (var i = 1; i <= record.svy_property_sets_to_svy_properties.getSize(); i++) {
+				var propRecord = record.svy_property_sets_to_svy_properties.getRecord(i);
+				result.push(new Property(propRecord));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns all property names of this set
+	 * 
+	 * @return {Array<String>}
+	 */
+	this.getPropertyNames = function() {
+		/** @type {Array<String>} */
+		var result = new Array();
+		if (utils.hasRecords(record.svy_property_sets_to_svy_properties)) {
+			for (var i = 1; i <= record.svy_property_sets_to_svy_properties.getSize(); i++) {
+				var propRecord = record.svy_property_sets_to_svy_properties.getRecord(i);
+				result.push(propRecord.property_name);
+			}
+		}
+		return result;
+	}
 	
 	Object.defineProperty(this, "name", {
 		get: function() {
@@ -902,7 +936,7 @@ function PropertySet(propertySetRecord) {
 	
 	Object.defineProperty(this, "propertySetId", {
 		get: function() {
-			return record.nav_property_sets_id;
+			return record.svy_property_sets_id;
 		},
 		set: function(x) {
 		}
@@ -1326,13 +1360,13 @@ function updateDefaultProperties(props) {
 		givenPropertyNames.push(givenProperties[i].name);
 	}
 	
-	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {QBSelect<db:/svy_framework/svy_properties>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	query.result.addPk();
-	query.where.add(query.columns.nav_property_sets_id.eq(propertySet.propertySetId.toString()));
+	query.where.add(query.columns.svy_property_sets_id.eq(propertySet.propertySetId.toString()));
 	query.where.add(query.columns.property_name.isin(givenPropertyNames));
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
 	var fs = databaseManager.getFoundSet(query);
 	
 	function removeItem(name) {
@@ -1446,6 +1480,8 @@ function updateDefaultProperties(props) {
 			var newProperty = createProperty(givenProperty.name, propertySet, givenProperty.sort, givenProperty.securityLevel);
 			newProperty.addValueDescription(1, givenProperty.name, givenProperty.dataType, givenProperty.displayType, givenProperty.label, givenProperty.description, givenProperty.value, givenProperty.valueListName, givenProperty.valueListValues);
 		}
+		updateDefaultPropertyValues();
+		reloadRuntimeProperties();
 	}
 }
 
@@ -1481,12 +1517,12 @@ function loadRuntimeProperties(adminLevel) {
 		ownerId = null;
 	}
 	
-	/** @type {QBSelect<db:/svy_framework/nav_property_values>} */	
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_values");
+	/** @type {QBSelect<db:/svy_framework/svy_property_values>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
 	query.result.addPk();	
 	query.where.add(query.columns.owner_id.isin([null, ownerId, globals.zero_uuid.toString()]));
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
 	
 	/** @type {Array<RuntimeProperty>} */
@@ -1571,8 +1607,8 @@ function reloadRuntimeProperties() {
  * @properties={typeid:24,uuid:"09B91526-05CA-46EA-909E-1CEBD6A204FC"}
  */
 function addProperty(propertyDescription) {
-	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
-	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_properties");
 	var record = fs.getRecord(fs.newRecord());
 	record.property_name = propertyDescription.name;
 	record.value_description = propertyDescription.valueDescriptions;
@@ -1605,8 +1641,8 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 	
 	var runtimePropId = runtimeProp.propertyId;
 	
-	/** @type {QBSelect<db:/svy_framework/nav_property_values>} */
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_values");
+	/** @type {QBSelect<db:/svy_framework/svy_property_values>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
 	query.result.addPk();
 	
 	var propertyOwnerId = getOwnerIdForAdminLevel(adminLevel);
@@ -1616,17 +1652,17 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 		adminLevel = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
 	}
 	
-	query.where.add(query.columns.nav_property_id.eq(runtimePropId));
+	query.where.add(query.columns.svy_properties_id.eq(runtimePropId));
 	query.where.add(query.columns.admin_level.eq(adminLevel));	
 	query.where.add(query.columns.property_owner_id.eq(propertyOwnerId));	
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
 	
 	var propertyRecord;
 	if (!utils.hasRecords(fs)) {
 		propertyRecord = fs.getRecord(fs.newRecord());
-		propertyRecord.nav_property_id = runtimePropId;
+		propertyRecord.svy_properties_id = runtimePropId;
 		propertyRecord.property_name = runtimeProp.propertyName;
 		propertyRecord.solution_name = application.getSolutionName();
 		if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER || adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER) {
@@ -1711,14 +1747,14 @@ function updateDefaultPropertyValues() {
 	
 	var ownerId = globals.zero_uuid;
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */	
-	var fsValues = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */	
+	var fsValues = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 	
-	/** @type {QBSelect<db:/svy_framework/nav_property>} */	
-	var propQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {QBSelect<db:/svy_framework/svy_properties>} */	
+	var propQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	propQuery.result.addPk();
 
-	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */	
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */	
 	var fs = databaseManager.getFoundSet(propQuery);
 	fs.loadAllRecords();
 	
@@ -1726,7 +1762,7 @@ function updateDefaultPropertyValues() {
 	var propValues;
 	/** @type {Array<PropertyValue>} */
 	var propSavedValues;	
-	/** @type {JSRecord<db:/svy_framework/nav_property>} */
+	/** @type {JSRecord<db:/svy_framework/svy_properties>} */
 	var propValueRecord;
 	
 	/**
@@ -1808,12 +1844,12 @@ function updateDefaultPropertyValues() {
 	
 	for (var i = 1; i <= fs.getSize(); i++) {
 		var propRecord = fs.getRecord(i);
-		if (utils.hasRecords(propRecord.nav_property_to_nav_property_values$default_properties)) {
-			propValueRecord = propRecord.nav_property_to_nav_property_values$default_properties.getRecord(1);
+		if (utils.hasRecords(propRecord.svy_properties_to_svy_property_values$default_properties)) {
+			propValueRecord = propRecord.svy_properties_to_svy_property_values$default_properties.getRecord(1);
 		} else {
 			propValueRecord = fsValues.getRecord(fsValues.newRecord());
 			propValueRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
-			propValueRecord.nav_property_id = propRecord.nav_property_id;
+			propValueRecord.svy_properties_id = propRecord.svy_properties_id;
 			propValueRecord.owner_id = ownerId;
 			propValueRecord.property_owner_id = ownerId;
 			propValueRecord.property_name = propRecord.property_name;
@@ -1901,14 +1937,14 @@ function setUserProperty(propertyName, propertyValue, userId) {
 		return null;
 	}
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs;
 	var record;
 	if (runtimeProperty && (!runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db"))) {
 		runtimeProperty.value = propertyValue;
 	} else if (runtimeProperty && runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")) {
 		runtimeProperties.splice(runtimeProperties.indexOf(runtimeProperty),1);
-		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 		record = fs.getRecord(fs.newRecord());
 		record.solution_name = application.getSolutionName();
 		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
@@ -1919,7 +1955,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
 		runtimeProperty = createRuntimeProperty(record, {name: propertyName, value: propertyValue, sort: 1});
 		runtimeProperties.push(runtimeProperty);
 	} else {
-		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 		record = fs.getRecord(fs.newRecord());
 		record.solution_name = application.getSolutionName();
 		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;

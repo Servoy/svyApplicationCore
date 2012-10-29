@@ -1,4 +1,13 @@
 /**
+ * @type {Array<String>}
+ * 
+ * @private 
+ *
+ * @properties={typeid:35,uuid:"70E5B2BD-80A8-4C44-9ABF-92E05EFD8550",variableType:-4}
+ */
+var createdFormNames = new Array();
+
+/**
  * @param {Number} adminLevel
  * @param {Array<String>} propertyNames
  * @param {Boolean} hideNonEditable
@@ -34,7 +43,7 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 	 * Object for different settings of the main form containing 
 	 * the list of property sets and property details for each set
 	 */
-	this.mainForm = { width: 1000, height: 600, styleClass: "main", splitPaneDividerSize: 4, splitPaneStyleClass: "main", preventHorizontalScrollbarInPropertySets: true };
+	this.mainForm = { width: 800, height: 600, styleClass: "main", splitPaneDividerSize: 4, splitPaneStyleClass: "main", preventHorizontalScrollbarInPropertySets: true };
 	
 	/**
 	 * Object for different settings for the form containing the list of property sets:
@@ -76,12 +85,16 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 		width: function() { return this.mainForm.width - this.propertySetsForm.width },
 		styleClass: "propertyValues",
 		offsetTop: 10,
-		entrySpacing: 10,
+		entrySpacing: 5,
 		textStyleClass: "propertyValueText",
 		labelStyleClass: "propertyValueLabel",
 		descriptionStyleClass: "propertyValueDescription",
+		setDescriptionStyleClass: "propertySetDescription",
+		showSetDescription: true,
 		headerStyleClass: "propertyValueHeader",
-		headerOffset: 10
+		headerTopOffset: 20,
+		headerBottomOffset: 20,
+		setDescriptionOffset: 20
 	};
 	
 	this.getAdminLevel = function() {
@@ -108,28 +121,33 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 		/** @type {PropertyEditor} */
 		var _this = this;
 		
+		var fs = loadPropertySets(_this.getPropertyNames(), _this.getHideNonEditable(), _this.getAdminLevel());
+		var showPropertySets = utils.hasRecords(fs) && fs.getSize() > 1;
+		
 		history.removeForm(formName);
 		history.removeForm(formName + "_propertySets");
 		
 		solutionModel.removeForm(formName);
 		solutionModel.removeForm(formName + "_propertySets");
 		
-		var mainForm = createEditor_mainForm(_this);
+		var mainForm = createEditor_mainForm(_this, showPropertySets);
 		var listForm = createEditor_propertySetForm(_this);
 		
 		/** @type {RuntimeSplitPane} */
 		var runtimeSplitPane = forms[mainForm.name].elements["content"];
-		runtimeSplitPane.setLeftForm(forms[listForm.name]);
-		runtimeSplitPane.dividerSize = _this.mainForm.splitPaneDividerSize;
-		runtimeSplitPane.dividerLocation = _this.propertySetsForm.width + runtimeSplitPane.dividerSize;
-		if (_this.mainForm.preventHorizontalScrollbarInPropertySets) {
-			runtimeSplitPane.leftFormMinSize = runtimeSplitPane.dividerLocation;
+		if (showPropertySets) {
+			runtimeSplitPane.setLeftForm(forms[listForm.name]);
+			runtimeSplitPane.dividerSize = _this.mainForm.splitPaneDividerSize;
+			runtimeSplitPane.dividerLocation = _this.propertySetsForm.width + runtimeSplitPane.dividerSize;
+			if (_this.mainForm.preventHorizontalScrollbarInPropertySets) {
+				runtimeSplitPane.leftFormMinSize = runtimeSplitPane.dividerLocation;
+			}
 		}
 		
 		forms[mainForm.name]["propertyEditor"] = _this;
 		forms[mainForm.name]["adminLevel"] = adminLevel;
 		
-		createEditor_detailForm(null, _this.getFormName() + "_propertySets");		
+		createEditor_detailForm(null, showPropertySets, _this.getFormName() + "_propertySets");		
 		
 		return forms[mainForm.name];
 	}
@@ -145,6 +163,7 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 
 /**
  * @param {PropertyEditor} propertyEditor
+ * @param {Boolean} showPropertySets
  * 
  * @private 
  * 
@@ -153,15 +172,24 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
  * 
  * @properties={typeid:24,uuid:"CA5AE77C-F074-4177-9623-7AC4611418CC"}
  */
-function createEditor_mainForm(propertyEditor) {
+function createEditor_mainForm(propertyEditor, showPropertySets) {
 	var formName = propertyEditor.getFormName();
+	
+	if (createdFormNames.indexOf(formName) >= 0) {
+		history.removeForm(formName);
+		solutionModel.removeForm(formName);
+		createdFormNames.splice(createdFormNames.indexOf(formName),1);
+	}
+	
 	var jsForm = solutionModel.getForm(formName);
 	if (!jsForm) {
-		jsForm = solutionModel.newForm(formName, null, propertyEditor.styleName, false, propertyEditor.mainForm.width, propertyEditor.mainForm.height);
+		jsForm = solutionModel.newForm(formName, null, propertyEditor.styleName, false, propertyEditor.mainForm.width - (!showPropertySets ? propertyEditor.propertySetsForm.width : 0), propertyEditor.mainForm.height);
 		jsForm.navigator = SM_DEFAULTS.NONE;
 		jsForm.view = JSForm.LOCKED_RECORD_VIEW;
 		jsForm.styleName = propertyEditor.styleName;
 		jsForm.styleClass = propertyEditor.styleName;
+		jsForm.titleText = "i18n:svy.fr.property_editor";
+		createdFormNames.push(jsForm.name);
 	}
 	
 	// create "propertyEditor" variable
@@ -171,8 +199,12 @@ function createEditor_mainForm(propertyEditor) {
 	
 	var splitPane = jsForm.newTabPanel("content", 0, 0, propertyEditor.mainForm.width, propertyEditor.mainForm.height);
 	splitPane.anchors = SM_ANCHOR.ALL;
-	splitPane.tabOrientation = SM_ALIGNMENT.SPLIT_HORIZONTAL;
-	splitPane.styleClass = propertyEditor.mainForm.splitPaneStyleClass;
+	if (showPropertySets) {
+		splitPane.tabOrientation = SM_ALIGNMENT.SPLIT_HORIZONTAL;
+	} else {
+		splitPane.tabOrientation = SM_DEFAULTS.NONE;
+	}
+	splitPane.styleClass = propertyEditor.mainForm.splitPaneStyleClass;	
 	
 	return jsForm;
 }
@@ -190,6 +222,13 @@ function createEditor_mainForm(propertyEditor) {
 function createEditor_propertySetForm(propertyEditor) {
 	var formName = propertyEditor.getFormName() + "_propertySets";
 	var formSettings = propertyEditor.propertySetsForm;
+	
+	if (createdFormNames.indexOf(formName) >= 0) {
+		history.removeForm(formName);
+		solutionModel.removeForm(formName);
+		createdFormNames.splice(createdFormNames.indexOf(formName),1);
+	}
+	
 	var jsForm = solutionModel.getForm(formName);
 	if (!jsForm) {
 		jsForm = solutionModel.newForm(formName, null, propertyEditor.styleName, false, formSettings.width, 0);
@@ -197,15 +236,16 @@ function createEditor_propertySetForm(propertyEditor) {
 		jsForm.view = JSForm.LOCKED_RECORD_VIEW;
 		jsForm.styleName = propertyEditor.styleName;
 		jsForm.styleClass = formSettings.styleClass;
+		createdFormNames.push(jsForm.name);
 	}
 	
 	// Create a var to hold the selected property
 	var selectedVar = jsForm.newVariable("selectedPropertySetId", JSVariable.TEXT);
 	
-	var onActionMethod = solutionModel.getGlobalMethod("svyPropertyEditor", "onPropertySelected");
+	var onActionMethod = solutionModel.getGlobalMethod("svyPropertyEditor", "onPropertySetSelected");
 	
 	/**
-	 * @param {JSRecord<db:/svy_framework/nav_property_sets>} record
+	 * @param {JSRecord<db:/svy_framework/svy_property_sets>} record
 	 * @param {Number} index
 	 */
 	function createSetLabels(record, index) {
@@ -218,7 +258,7 @@ function createEditor_propertySetForm(propertyEditor) {
 			formSettings.rowHeight() + 10);
 		jsLabel.visible = i == 1 ? true : false;
 		jsLabel.styleClass = formSettings.selectionBgStyleClass;
-		jsLabel.name = utils.stringReplace("lblBg_" + record.nav_property_sets_id.toString(), "-", "_");		
+		jsLabel.name = utils.stringReplace("lblBg_" + record.svy_property_sets_id.toString(), "-", "_");		
 			
 		// Create label for icon
 		jsLabel = jsForm.newLabel(
@@ -255,9 +295,9 @@ function createEditor_propertySetForm(propertyEditor) {
 			formSettings.width - (2 * 5), 
 			formSettings.rowHeight() + 10);
 		jsLabel.transparent = true;
-		jsLabel.name = utils.stringReplace(record.nav_property_sets_id.toString(), "-", "_");
+		jsLabel.name = utils.stringReplace(record.svy_property_sets_id.toString(), "-", "_");
 		if (i == 1) {
-			selectedVar.defaultValue = "\"" + utils.stringReplace(record.nav_property_sets_id.toString(), "_", "-") + "\"";
+			selectedVar.defaultValue = "\"" + utils.stringReplace(record.svy_property_sets_id.toString(), "_", "-") + "\"";
 		}
 		jsLabel.onAction = onActionMethod;
 		jsLabel.showClick = false;
@@ -272,7 +312,7 @@ function createEditor_propertySetForm(propertyEditor) {
 	}
 	
 	for (var i = 1; i <= fs.getSize(); i++) {
-		/** @type {JSRecord<db:/svy_framework/nav_property_sets>} */
+		/** @type {JSRecord<db:/svy_framework/svy_property_sets>} */
 		var propSetRecord = fs.getRecord(i);
 		createSetLabels(propSetRecord, i);
 	}
@@ -284,13 +324,14 @@ function createEditor_propertySetForm(propertyEditor) {
 
 /**
  * @param {JSEvent} event
+ * @param {Boolean} propertySetsShown
  * @param {String} [formName]
  * 
  * @private 
  *
  * @properties={typeid:24,uuid:"BEC589B3-1E83-4EF0-A151-2AC709794EFD"}
  */
-function createEditor_detailForm(event, formName) {
+function createEditor_detailForm(event, propertySetsShown, formName) {
 	var originatingFormName;
 	if (event) {
 		originatingFormName = event.getFormName();
@@ -303,7 +344,9 @@ function createEditor_detailForm(event, formName) {
 	var propertySetId = forms[originatingFormName]["selectedPropertySetId"];
 	
 	/** @type {PropertyEditor} */
-	var propertyEditor = mainForm["propertyEditor"];	
+	var propertyEditor = mainForm["propertyEditor"];
+	
+	var formSettings = propertyEditor.propertyValuesForm;
 	
 	var propertyDescription = scopes.svyProperties.getPropertySetById(propertySetId);
 	if (propertyDescription.formName) {
@@ -317,13 +360,28 @@ function createEditor_detailForm(event, formName) {
 		return;
 	}	
 	var valuesFormName = mainForm.controller.getName() + "_propertyValues_" + utils.stringReplace(propertySetId, "-", "_");
+	
+	if (createdFormNames.indexOf(valuesFormName) >= 0) {
+		history.removeForm(valuesFormName);
+		solutionModel.removeForm(valuesFormName);
+		createdFormNames.splice(createdFormNames.indexOf(valuesFormName),1);
+	}
+	
 	if (forms[valuesFormName]) {
 		var currValues = scopes.svyProperties.getRuntimeProperties(propertyEditor.getAdminLevel(), propertyNames);
 		for (var cv = 0; cv < currValues.length; cv++) {
 			var valueVarName = currValues[cv].propertyValueName.toLowerCase().replace(/ /g,"_");
 			forms[valuesFormName][valueVarName] = currValues[cv].value;
 		}
-		mainForm.elements["content"].setRightForm(forms[valuesFormName]);
+		if (propertySetsShown) {
+			/** @type {RuntimeSplitPane} */
+			var runtimSplitPane = mainForm.elements["content"];
+			runtimSplitPane.setRightForm(forms[valuesFormName]);
+		} else {
+			/** @type {RuntimeTabPanel} */
+			var runtimeTabPanel = mainForm.elements["content"];
+			runtimeTabPanel.addTab(forms[valuesFormName]);
+		}
 		return;
 	}
 	
@@ -337,10 +395,10 @@ function createEditor_detailForm(event, formName) {
 	headerTextHeight = Math.ceil(headerTextHeight / 5) * 5;
 	
 	// load properties
-	/** @type {QBSelect<db:/svy_framework/nav_property>} */
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property");
+	/** @type {QBSelect<db:/svy_framework/svy_properties>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	query.result.addPk();
-	query.where.add(query.columns.nav_property_sets_id.eq(propertySetId));
+	query.where.add(query.columns.svy_property_sets_id.eq(propertySetId));
 	if (propertyEditor.getHideNonEditable()) {
 		query.where.add(query.columns.admin_level.le(mainForm["adminLevel"]));
 	}
@@ -349,10 +407,11 @@ function createEditor_detailForm(event, formName) {
 	}
 	query.sort.add(query.columns.sort_order.asc);
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
 	var fs = databaseManager.getFoundSet(query);
 	
 	var jsForm = solutionModel.newForm(valuesFormName, null, styleName, false, 400, 10);
+	createdFormNames.push(jsForm.name);
 	jsForm.navigator = SM_DEFAULTS.NONE;
 	jsForm.view = JSForm.LOCKED_RECORD_VIEW;
 	
@@ -419,7 +478,14 @@ function createEditor_detailForm(event, formName) {
 	
 	var fieldPositionX = formMargin + labelWidth + fieldOffset;
 	var fieldWidth = jsForm.width - fieldPositionX - formMargin;
-	var positionY = 15;
+	var positionY = formSettings.offsetTop;
+	
+	if (formSettings.showSetDescription && propertyDescription.description) {
+		var descriptionLabel = jsForm.newLabel(propertyDescription.description, formMargin, positionY, jsForm.width - (2 * formMargin), textHeight);
+		descriptionLabel.anchors = SM_ANCHOR.WEST | SM_ANCHOR.NORTH | SM_ANCHOR.EAST;
+		descriptionLabel.styleClass = formSettings.setDescriptionStyleClass;
+		positionY += headerTextHeight + formSettings.setDescriptionOffset;
+	}
 	
 	var onDataChangeMethod = jsForm.newMethod("function onDataChange(oldValue, newValue, event, propertyName, propertyValue) { scopes.svyProperties.setPropertyValue(propertyName, newValue, forms." + mainForm.controller.getName() + ".adminLevel); }");
 	
@@ -429,10 +495,11 @@ function createEditor_detailForm(event, formName) {
 		
 		if (propDescArray.length > 1) {
 			// more than one value; create header
-			var jsHeaderLabel = jsForm.newLabel(record.header_text ? record.header_text : record.property_name, formMargin, positionY + (i > 1 ? 5 : 0), jsForm.width - (2 * formMargin), textHeight);
+			positionY += (i == 1) ? 0 : formSettings.headerTopOffset;
+			var jsHeaderLabel = jsForm.newLabel(record.header_text ? record.header_text : record.property_name, formMargin, positionY, jsForm.width - (2 * formMargin), textHeight);
 			jsHeaderLabel.anchors = SM_ANCHOR.WEST | SM_ANCHOR.NORTH | SM_ANCHOR.EAST;
-			jsHeaderLabel.styleClass = propertyEditor.propertyValuesForm.headerStyleClass;
-			positionY += headerTextHeight + propertyEditor.propertyValuesForm.headerOffset;
+			jsHeaderLabel.styleClass = formSettings.headerStyleClass;
+			positionY += headerTextHeight + formSettings.entrySpacing;			
 		}
 		
 		for (j = 0; j < propDescArray.length; j++) {
@@ -487,14 +554,19 @@ function createEditor_detailForm(event, formName) {
 					jsComp.valuelist = solutionModel.getValueList(propDesc.valueListName);
 				}
 				if (propDesc.valueListValues) {
-					jsComp.valuelist = solutionModel.newValueList("valuelist_" + varName, JSValueList.CUSTOM_VALUES);
+					jsComp.valuelist = solutionModel.getValueList("valuelist_" + varName);
+					if (!jsComp.valuelist) {
+						jsComp.valuelist = solutionModel.newValueList("valuelist_" + varName, JSValueList.CUSTOM_VALUES);
+					}
 					jsComp.valuelist.customValues = propDesc.valueListValues.join("\n");
 				}
 				
 				if (propDesc.dataType == JSVariable.INTEGER) {
 					jsComp.format = "#,###|####";
+					jsComp.horizontalAlignment = SM_ALIGNMENT.CENTER;
 				} else if (propDesc.dataType == JSVariable.NUMBER) {
 					jsComp.format = "#,###.#|####.#";
+					jsComp.horizontalAlignment = SM_ALIGNMENT.RIGHT;
 				}
 				
 				jsLabel.labelFor = varName;
@@ -505,19 +577,19 @@ function createEditor_detailForm(event, formName) {
 				jsComp.editable = false;
 			}
 				
-			jsComp.styleClass = propertyEditor.propertyValuesForm.textStyleClass;
+			jsComp.styleClass = formSettings.textStyleClass;
 			jsComp.anchors = SM_ANCHOR.NORTH | SM_ANCHOR.WEST | SM_ANCHOR.EAST;
 			jsComp.name = varName;
 			jsComp.scrollbars = SM_SCROLLBAR.HORIZONTAL_SCROLLBAR_NEVER;		
 			
 			jsComp.onDataChange = solutionModel.wrapMethodWithArguments(onDataChangeMethod, [null, null, null, "'" + propDesc.name + "'", null]);
 			
-			positionY += textHeight + 5;
+			positionY += textHeight + formSettings.entrySpacing;
 		}
 		
 		if (propDescArray.length > 1) {
 			// add some offset
-			positionY += 10;
+			positionY += formSettings.headerBottomOffset;
 		}
 		
 		jsForm.getBodyPart().height = positionY + 10;
@@ -527,8 +599,15 @@ function createEditor_detailForm(event, formName) {
 		varName = propertyValues[pv].propertyValueName.toLowerCase().replace(/ /g,"_");
 		forms[valuesFormName][varName] = propertyValues[pv].value;
 	}
-	
-	mainForm.elements["content"].setRightForm(forms[valuesFormName]);
+	if (propertySetsShown) {
+		/** @type {RuntimeSplitPane} */
+		var splitPane = mainForm.elements["content"];
+		splitPane.setRightForm(forms[valuesFormName]);
+	} else {
+		/** @type {RuntimeTabPanel} */
+		var tabPanel = mainForm.elements["content"];
+		tabPanel.addTab(forms[valuesFormName]);
+	}
 }
 
 /**
@@ -541,7 +620,7 @@ function createEditor_detailForm(event, formName) {
  * @param {Boolean} [hideNonEditable]		- if <code>true</code> only property sets that have at least one editable property are returned
  * @param {Number} [adminLevel]				- required if <code>hideNonEditable</code> is true
  * 
- * @return {JSFoundSet<db:/svy_framework/nav_property_sets>}
+ * @return {JSFoundSet<db:/svy_framework/svy_property_sets>}
  * 
  * @private 
  * 
@@ -551,14 +630,14 @@ function createEditor_detailForm(event, formName) {
  * @properties={typeid:24,uuid:"41A63F48-F22A-41C6-9F7D-57DA6A3FB7D4"}
  */
 function loadPropertySets(propertyNames, hideNonEditable, adminLevel) {
-	/** @type {QBSelect<db:/svy_framework/nav_property_sets>} */
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/nav_property_sets");
+	/** @type {QBSelect<db:/svy_framework/svy_property_sets>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_sets");
 	query.result.addPk();
 	
 	if ((propertyNames && propertyNames.length > 0) || (hideNonEditable && adminLevel >= 0)) {
-		/** @type {QBJoin<db:/svy_framework/nav_property>} */
-		var joinProperties = query.joins.add("db:/" + globals.nav_db_framework + "/nav_property", JSRelation.INNER_JOIN);
-		joinProperties.on.add(query.columns.nav_property_sets_id.eq(joinProperties.columns.nav_property_sets_id));
+		/** @type {QBJoin<db:/svy_framework/svy_properties>} */
+		var joinProperties = query.joins.add("db:/" + globals.nav_db_framework + "/svy_properties", JSRelation.INNER_JOIN);
+		joinProperties.on.add(query.columns.svy_property_sets_id.eq(joinProperties.columns.svy_property_sets_id));
 		if (propertyNames && propertyNames.length > 0) {
 			query.where.add(joinProperties.columns.property_name.isin(propertyNames));
 		}
@@ -569,7 +648,7 @@ function loadPropertySets(propertyNames, hideNonEditable, adminLevel) {
 	
 	query.sort.add(query.columns.sort_order.asc);
 	
-	/** @type {JSFoundSet<db:/svy_framework/nav_property_sets>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet(query);
 	return fs;
 	
@@ -583,7 +662,7 @@ function loadPropertySets(propertyNames, hideNonEditable, adminLevel) {
  *
  * @properties={typeid:24,uuid:"05AA1ADD-98EA-4346-93D0-7300732327E6"}
  */
-function onPropertySelected(event, propertyEditor) {
+function onPropertySetSelected(event, propertyEditor) {
 	var form = forms[event.getFormName()];
 	var oldId = form["selectedPropertySetId"];
 	var newId = utils.stringReplace(event.getElementName(), "_", "-");
@@ -598,5 +677,5 @@ function onPropertySelected(event, propertyEditor) {
 	form.elements["lblBg_" + utils.stringReplace(oldId, "-", "_")].visible = false;
 	form.elements["lblBg_" + utils.stringReplace(newId, "-", "_")].visible = true;
 	
-	createEditor_detailForm(event);
+	createEditor_detailForm(event, true);
 }
