@@ -81,7 +81,6 @@ function getId() {
  * <code>valueListName</code> is the name of a value list to be used when this property is shown<br>
  * <code>valueListValues</code> is an array used to fill a custom value list<br>
  * 
- * @protected 
  * 
  * @properties={typeid:24,uuid:"1A9F7572-E49F-472B-A7DF-011A2CF251D3"}
  */

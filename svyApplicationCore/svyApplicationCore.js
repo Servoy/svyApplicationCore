@@ -26,7 +26,7 @@ function initModules(startupArguments) {
 		/** @type {RuntimeForm<AbstractModuleDef>}*/
 		var form = forms[mods[i].name];
 		/** @type {{propertySet: Object, properties: Array<Object>}} */
-		var props = form.getDefaultProperties();
+		var props = form.getProperties();
 		if (props) {
 			scopes.svyProperties.updateDefaultProperties(props);
 		}		

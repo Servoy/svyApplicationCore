@@ -412,7 +412,6 @@ function getPropertyValues(propertyName) {
  * @param {UUID} [navPropertyId]			- the ID of the nav_property record; null for user properties
  * @param {UUID} [navPropertyValueId]		- the ID of the nav_property_values record; null for user properties stored in the client.properties
  * @param {Date} [modificationDate]			- the last modification date of this property value
- * @param {Boolean} [isLoadedFromFile]		- if true, this property was loaded from file
  * 
  * @constructor 
  * 
@@ -1280,7 +1279,7 @@ function getValueArray(_values) {
  * 
  * This is usually called when modules are intialized
  * 
- * @param {{propertySet: {name: String, displayName: String, description: String, icon: String, sort: Number, formName: String}, properties: Array<{name: String, value: Object, securityLevel: Number, sort: Number, dataType: Number, displayType: Number, label: String, header: String, description: String, valueListName: String, valueListValues: Array}>}} props
+ * @param {{propertySet: Object, properties: Array<Object>}} props
  *
  * @properties={typeid:24,uuid:"CC1F58C5-B612-4476-B1F3-AF267DDAC38B"}
  */
@@ -1902,13 +1901,14 @@ function setUserProperty(propertyName, propertyValue, userId) {
 		return null;
 	}
 	
+	/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
+	var fs;
 	var record;
 	if (runtimeProperty && (!runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db"))) {
 		runtimeProperty.value = propertyValue;
 	} else if (runtimeProperty && runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")) {
 		runtimeProperties.splice(runtimeProperties.indexOf(runtimeProperty),1);
-		/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
-		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
 		record = fs.getRecord(fs.newRecord());
 		record.solution_name = application.getSolutionName();
 		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
@@ -1919,8 +1919,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
 		runtimeProperty = createRuntimeProperty(record, {name: propertyName, value: propertyValue, sort: 1});
 		runtimeProperties.push(runtimeProperty);
 	} else {
-		/** @type {JSFoundSet<db:/svy_framework/nav_property_values>} */
-		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
+		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/nav_property_values");
 		record = fs.getRecord(fs.newRecord());
 		record.solution_name = application.getSolutionName();
 		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
