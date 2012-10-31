@@ -81,6 +81,25 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 		rowHeight: function() { return Math.max(this.iconHeight, this.textHeight); }
 	};
 	
+	/**
+	 * Object for different settings for the form containing the actual properties (values):
+	 * <ul>
+	 * <li>width - The width of the form as a calculated result</li>
+	 * <li>styleClass - The style class for the form</li>
+	 * <li>offsetTop - The offset from the top (y coordinate of the first entry)</li>
+	 * <li>entrySpacing - The spacing between the entries</li>
+	 * <li>textStyleClass - The style class for the text of the property</li>
+	 * <li>labelStyleClass - The style class for the label of the property</li>
+	 * <li>descriptionStyleClass - The style class for the description text of the property</li>
+	 * <li>setDescriptionStyleClass - The style class for the header text showing the description of the property set</li>
+	 * <li>showSetDescription - If <code>true</code> the description of the property set is shown on top</li>
+	 * <li>headerStyleClass - Style class used for the label showing above a property with several values</li>
+	 * <li>headerTopOffset - The offset of the header from the top</li>
+	 * <li>headerBottomOffset - The offset of the first entry following the header</li>
+	 * <li>setDescriptionOffset - The offset after the property set description header</li>
+	 * </ul>
+	 * 
+	 */
 	this.propertyValuesForm = {
 		width: function() { return this.mainForm.width - this.propertySetsForm.width },
 		styleClass: "propertyValues",
@@ -97,26 +116,52 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 		setDescriptionOffset: 20
 	};
 	
+	/**
+	 * Returns the adminLevel property
+	 * @return {Number}
+	 */
 	this.getAdminLevel = function() {
 		return adminLevel;
 	}	
 	
+	/**
+	 * Returns the hideNonEditable property
+	 * @return {Boolean}
+	 */
 	this.getHideNonEditable = function() {
 		return hideNonEditable;
 	}	
 	
+	/**
+	 * Returns the form name of this Editor
+	 * @return {String}
+	 */
 	this.getFormName = function() {
 		return formName;
 	}
 	
+	/**
+	 * Returns the property names of this Editor
+	 * @return {Array<String>}
+	 */
 	this.getPropertyNames = function() {
 		return propertyNames;
 	}
 	
+	/**
+	 * Returns the generic icon
+	 * 
+	 * @return {String}
+	 */
 	this.getGenericIcon = function() {
 		return genericIconMedia;
 	}
 	
+	/**
+	 * Creates the PropertyEditor form
+	 * 
+	 * @return {RuntimeForm} form
+	 */
 	this.createForm = function() {
 		/** @type {PropertyEditor} */
 		var _this = this;
@@ -152,6 +197,10 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 		return forms[mainForm.name];
 	}
 	
+	/**
+	 * Creates the PropertyEditor form and shows it in a modal dialog
+	 *
+	 */
 	this.showInWindow = function() {
 		/** @type {PropertyEditor} */
 		var _this = this;
