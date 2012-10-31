@@ -1712,6 +1712,10 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
 	
+	if (propertyValue instanceof UUID) {
+		propertyValue = propertyValue.toString();
+	}
+	
 	var propertyRecord;
 	if (!utils.hasRecords(fs)) {
 		propertyRecord = fs.getRecord(fs.newRecord());
