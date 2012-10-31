@@ -319,17 +319,63 @@ function getRuntimeProperties(adminLevel, propertyNames) {
  * 
  * @return {Object} propertyValue
  * 
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * 
  * @author patrick
  * @since 06.09.2012
  *
  * @properties={typeid:24,uuid:"0267E8D6-0610-4B68-85B6-540E2D07CB8E"}
  */
 function getPropertyValue(propertyName) {
+	if (!propertyName) {
+		throw new scopes.svyExceptions.IllegalArgumentException("No property name given");
+	}
 	var values = getPropertyValues(propertyName);
 	if (values && values.length > 0) {
 		return values[0];
 	} else {
 		return null;
+	}
+}
+
+/**
+ * Returns the runtime value of the given property as a Boolean
+ * 
+ * @param {String} propertyName
+ * 
+ * @return {Boolean} result
+ * 
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
+ *
+ * @properties={typeid:24,uuid:"333863A8-8BF8-486D-8A91-9241A6B9E596"}
+ */
+function getPropertyValueAsBoolean(propertyName) {
+	var value = getPropertyValue(propertyName);
+	if (value) {
+		if (value instanceof String) {
+			/** @type {String} */
+			var stringValue = value;
+			stringValue = stringValue.toLowerCase();
+			if (stringValue.substr(1) == "t") {
+				return true;
+			} else if (stringValue.substr(1) == "y") {
+				return true;
+			} else if (stringValue.substr(1) == "1") {
+				return true;
+			} else {
+				return false;
+			}
+		} else if (value instanceof Number) {
+			if (value > 0) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return true;
+		}
+	} else {
+		return false;
 	}
 }
 
@@ -345,6 +391,9 @@ function getPropertyValue(propertyName) {
  * @properties={typeid:24,uuid:"7D050615-B328-4430-B63B-C610D09A91DB"}
  */
 function getPropertyValues(propertyName) {
+	if (!propertyName) {
+		throw new scopes.svyExceptions.IllegalArgumentException("No property name given");
+	}
 	var givenPropertyNames;
 	if (propertyName instanceof String) {
 		givenPropertyNames = [propertyName];
@@ -1628,6 +1677,10 @@ function addProperty(propertyDescription) {
  * @properties={typeid:24,uuid:"A43388B0-686B-40F2-AD5C-0A9B4724C5B7"}
  */
 function setPropertyValue(propertyName, propertyValue, adminLevel) {
+	
+	if (!propertyName) {
+		throw new scopes.svyExceptions.IllegalArgumentException("No property name given to setPropertyValue");
+	}
 	
 	var runtimeProp = getRuntimeProperty(propertyName);
 	
