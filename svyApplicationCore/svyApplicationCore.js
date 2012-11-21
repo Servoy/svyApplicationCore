@@ -51,14 +51,43 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 }
 
 /**
+ * Registers a listener for incoming databroadcast events.
+ * Note that a Client only receives databroadcast events for datasources to which is holds a reference, for example has a form loaded connected to the datasource
+ * 
  * @param {Function} listener
- * TODO @param {String} datasource
- * TODO @param {Number} action
- * TODO @param {Array<Array>} pks
+ * 
+ * @example <pre> &#47;**
+ *  * Var holding a reference to a foundset on the contacts table of the udm database, so this client receives databroadcast events for this table
+ *  * @private
+ *  * @type {JSFoundSet}
+ *  *&#47;
+ * var fs
+ *
+ * function onLoad() {
+ * 	fs = databaseManager.getFoundSet('db:/udm/contacts')
+ * 	fs.clear()
+ * 	scopes.svyApplicationCore.addDataBroadcastListener(dataBroadcastEventListener)
+ * }
+ * 	
+ * &#47;**
+ *  * @param {JSEvent} [event]
+ *  * @param {String} dataSource
+ *  * @param {Number} action
+ *  * @param {JSDataSet} pks
+ *  * @param {Boolean} cached
+ *  *&#47;
+ * function dataBroadcastEventListener(event, dataSource, action, pks, cached) {
+ * 	if (dataSource == 'db:/udm/contacts' && action & (SQL_ACTION_TYPES.INSERT_ACTION | SQL_ACTION_TYPES.DELETE_ACTION)) {
+ * 		//Your business logic here
+ * 	}
+ * }
+ *</pre>
+ * 
  * @properties={typeid:24,uuid:"DD317CC0-665B-4993-8669-D6B42A279B4D"}
  */
-function addDataBroadcastListener(listener /*, datasource, action, pks*/) {
+function addDataBroadcastListener(listener) {
 	//TODO: figure out how to filter and fire only for datasource/pk match
+	//TODO: add option to hold a reference to an empty foundset on the datasource, so the client gets the databroadcast for that entity
 	scopes.svyEventManager.addListener(this,'databroadcast', listener)
 }
 
