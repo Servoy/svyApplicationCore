@@ -47,7 +47,7 @@ function initModules(startupArguments) {
  * @properties={typeid:24,uuid:"FAA2B4E0-180C-4CDF-BE10-2D458AE6EC07"}
  */
 function fireDataBroadcastEvent(dataSource, action, pks, cached) {
-	scopes.svyEventManager.fireEvent(null,this,'databroadcast',arguments)
+	scopes.svyEventManager.fireEvent(null,this,'databroadcast', Array.prototype.slice.call(arguments, 0))
 }
 
 /**
