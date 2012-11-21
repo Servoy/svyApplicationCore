@@ -15,7 +15,7 @@
  */
 function initModules(startupArguments) {
 	//Init self
-	//TODO: implement something is that is needed
+	//TODO: implement something if that is needed
 	
 	scopes.svyProperties.initProperties();
 	
@@ -31,7 +31,7 @@ function initModules(startupArguments) {
 			scopes.svyProperties.updateDefaultProperties(props);
 		}		
 		form.moduleInit.call(null, startupArguments);
-		application.output('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided from moduleInit on form \"" + form.controller.getName() + "\"]") + ' version ' + form.getVersion());
+		application.output('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided from moduleInit on form \"" + form.controller.getName() + "\"]") + ' version ' + form.getVersion(), LOGGINGLEVEL.DEBUG);
 		history.removeForm(mods[i].name);
 	}
 }
@@ -51,32 +51,33 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 }
 
 /**
- * @param {Function} action
- * @param {String} datasource
- * @param {Array<Array>} pks
+ * @param {Function} listener
+ * TODO @param {String} datasource
+ * TODO @param {Number} action
+ * TODO @param {Array<Array>} pks
  * @properties={typeid:24,uuid:"DD317CC0-665B-4993-8669-D6B42A279B4D"}
  */
-function addDataBroadcastListener(action, datasource, pks) {
+function addDataBroadcastListener(listener /*, datasource, action, pks*/) {
 	//TODO: figure out how to filter and fire only for datasource/pk match
-	scopes.svyEventManager.addListener(this,'databroadcast',action)
+	scopes.svyEventManager.addListener(this,'databroadcast', listener)
 }
 
-/**
- * TODO: figure out how to properly type the parameter, of get is properly supported in Servoy
- * @param {Exception} exception exception to handle
- *
- * @returns {Boolean}
- *
- * @properties={typeid:24,uuid:"36335419-CFB4-40F3-990B-EF6E6355EB72"}
- */
-function fireException(exception) {
-	scopes.svyEventManager.fireEvent(null,this,'error',arguments)
-}
-
-/**
- * @param {Function} action
- * @properties={typeid:24,uuid:"3FABF7E3-F0B7-423E-AD12-001705FF601B"}
- */
-function addExceptionListener(action) {
-	scopes.svyEventManager.addListener(this,'error',action)
-}
+///**
+// * TODO: figure out how to properly type the parameter, of get is properly supported in Servoy
+// * @param {Exception} exception exception to handle
+// *
+// * @returns {Boolean}
+// *
+// * @properties={typeid:24,uuid:"36335419-CFB4-40F3-990B-EF6E6355EB72"}
+// */
+//function fireException(exception) {
+//	scopes.svyEventManager.fireEvent(null,this,'error',arguments)
+//}
+//
+///**
+// * @param {Function} action
+// * @properties={typeid:24,uuid:"3FABF7E3-F0B7-423E-AD12-001705FF601B"}
+// */
+//function addExceptionListener(action) {
+//	scopes.svyEventManager.addListener(this,'error',action)
+//}
