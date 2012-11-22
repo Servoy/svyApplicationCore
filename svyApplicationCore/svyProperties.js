@@ -1757,7 +1757,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 	databaseManager.saveData(propertyRecord);
 	runtimeProperties = loadRuntimeProperties();
 	
-	scopes.svyEventManager.fireEvent(null, this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
+	scopes.svyEventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
 	
 }
 

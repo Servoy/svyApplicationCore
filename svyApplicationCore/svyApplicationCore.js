@@ -47,7 +47,7 @@ function initModules(startupArguments) {
  * @properties={typeid:24,uuid:"FAA2B4E0-180C-4CDF-BE10-2D458AE6EC07"}
  */
 function fireDataBroadcastEvent(dataSource, action, pks, cached) {
-	scopes.svyEventManager.fireEvent(null,this,'databroadcast', Array.prototype.slice.call(arguments, 0))
+	scopes.svyEventManager.fireEvent(this,'databroadcast', Array.prototype.slice.call(arguments, 0))
 }
 
 /**
@@ -100,7 +100,7 @@ function addDataBroadcastListener(listener) {
 // * @properties={typeid:24,uuid:"36335419-CFB4-40F3-990B-EF6E6355EB72"}
 // */
 //function fireException(exception) {
-//	scopes.svyEventManager.fireEvent(null,this,'error',arguments)
+//	scopes.svyEventManager.fireEvent(this,'error',arguments)
 //}
 //
 ///**
