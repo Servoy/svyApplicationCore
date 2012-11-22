@@ -51,7 +51,7 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 }
 
 /**
- * Registers a listener for incoming databroadcast events.
+ * Registers a listener for incoming databroadcast events.<br><br>
  * Note that a Client only receives databroadcast events for datasources to which is holds a reference, for example has a form loaded connected to the datasource
  * 
  * @param {Function} listener
