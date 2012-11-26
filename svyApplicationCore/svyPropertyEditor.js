@@ -113,7 +113,9 @@ function PropertyEditor(adminLevel, propertyNames, hideNonEditable) {
 		headerStyleClass: "propertyValueHeader",
 		headerTopOffset: 20,
 		headerBottomOffset: 20,
-		setDescriptionOffset: 20
+		setDescriptionOffset: 20,
+		numberFieldWidth: 40,
+		dateFieldWidth: 60
 	};
 	
 	/**
@@ -572,7 +574,7 @@ function createEditor_detailForm(event, propertySetsShown, formName) {
 				
 				switch (propDesc.displayType) {
 					case JSField.CALENDAR:
-						jsComp = jsForm.newCalendar(jsVar, fieldPositionX, positionY, fieldWidth, textHeight);
+						jsComp = jsForm.newCalendar(jsVar, fieldPositionX, positionY, formSettings.dateFieldWidth, textHeight);
 						break;
 					case JSField.COMBOBOX:
 						jsComp = jsForm.newComboBox(jsVar, fieldPositionX, positionY, fieldWidth, textHeight);
@@ -595,7 +597,13 @@ function createEditor_detailForm(event, propertySetsShown, formName) {
 						jsComp = jsForm.newTypeAhead(jsVar, fieldPositionX, positionY, fieldWidth, textHeight);
 						break;
 					default:
-						jsComp = jsForm.newTextField(jsVar, fieldPositionX, positionY, fieldWidth, textHeight);
+						if (propDesc.dataType == JSVariable.INTEGER || propDesc.dataType == JSVariable.NUMBER) {
+							jsComp = jsForm.newTextField(jsVar, fieldPositionX, positionY, formSettings.numberFieldWidth, textHeight);
+						} else if (propDesc.dataType == JSVariable.DATETIME) {
+							jsComp = jsForm.newTextField(jsVar, fieldPositionX, positionY, formSettings.dateFieldWidth, textHeight);
+						} else {
+							jsComp = jsForm.newTextField(jsVar, fieldPositionX, positionY, fieldWidth, textHeight);
+						}
 						break;
 				}
 				
