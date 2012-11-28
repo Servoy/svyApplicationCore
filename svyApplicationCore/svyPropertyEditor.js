@@ -648,9 +648,9 @@ function createEditor_detailForm(event, propertySetsShown, formName) {
 			// add some offset
 			positionY += formSettings.headerBottomOffset;
 		}
-		
-		jsForm.getBodyPart().height = positionY + 10;
 	}
+	
+	jsForm.getBodyPart().height = positionY + 10;	
 	
 	for (var pv = 0; pv < propertyValues.length; pv++) {
 		varName = propertyValues[pv].propertyValueName.toLowerCase().replace(/ /g,"_");
