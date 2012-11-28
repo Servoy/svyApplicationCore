@@ -71,6 +71,8 @@ function setPropertyValue(propertyName, propertyValue) {
 /**
  * Returns all the property values for the property names given by getPropertyNames()
  * 
+ * @return {Array<scopes.svyProperties.RuntimeProperty>}
+ * 
  * @properties={typeid:24,uuid:"554D9FB5-6904-4A51-B423-3A712D1FE546"}
  */
 function getPropertyValues() {

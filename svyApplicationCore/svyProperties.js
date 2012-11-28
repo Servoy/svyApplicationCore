@@ -283,7 +283,7 @@ function getRuntimeProperty(propertyName) {
  * @param {Number} [adminLevel]
  * @param {Array<String>} [propertyNames]
  * 
- * @return {Array<RuntimeProperty>} properties
+ * @return {Array<scopes.svyProperties.RuntimeProperty>} properties
  * 
  * @author patrick
  * @since 11.09.2012
@@ -291,7 +291,7 @@ function getRuntimeProperty(propertyName) {
  * @properties={typeid:24,uuid:"2DD6C79F-0E99-4F9B-A534-53EBECC5096E"}
  */
 function getRuntimeProperties(adminLevel, propertyNames) {
-	/** @type {Array<RuntimeProperty>} */
+	/** @type {Array<scopes.svyProperties.RuntimeProperty>} */
 	var result = loadRuntimeProperties(adminLevel);
 	if (!propertyNames) {
 		return result;
@@ -1550,7 +1550,7 @@ function updateDefaultProperties(props) {
  * 
  * @param {Number} [adminLevel]
  * 
- * @return {Array<RuntimeProperty>} runtime properties for either the current user or the given admin level
+ * @return {Array<scopes.svyProperties.RuntimeProperty>} runtime properties for either the current user or the given admin level
  * 
  * @private 
  * @properties={typeid:24,uuid:"45FFC645-B941-42E6-A2A1-63AA5F16D0B8"}
@@ -1574,7 +1574,7 @@ function loadRuntimeProperties(adminLevel) {
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
 	
-	/** @type {Array<RuntimeProperty>} */
+	/** @type {Array<scopes.svyProperties.RuntimeProperty>} */
 	var result = new Array();
 	var runtimeProp;
 	
@@ -1626,7 +1626,7 @@ function loadRuntimeProperties(adminLevel) {
 	if (userPropNames && userPropNames.length > 0) {
 		for (var up = 0; up < userPropNames.length; up++) {
 			var userPropValue = application.getUserProperty(userPropNames[up]);
-			runtimeProp = new RuntimeProperty(userPropNames[up], userPropValue);
+			runtimeProp = new scopes.svyProperties.RuntimeProperty(userPropNames[up], userPropValue);
 			if (result.indexOf(runtimeProp) == -1) {
 				result.push(runtimeProp);
 			} else {
