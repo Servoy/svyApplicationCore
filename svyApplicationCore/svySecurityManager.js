@@ -1979,7 +1979,7 @@ function Owner(ownerRecord) {
  * @author patrick
  * @since 2012-10-02
  *
- * @properties={typeid:24,uuid:"D897A452-AE7F-459F-A273-4DA71BCC24BB"}
+ * @properties={typeid:24,uuid:"ECA13B00-D635-4076-8631-9017686968B1"}
  */
 function updateSecurityHash(record, serverName, ownerName) {
 	if (!PERFORM_HASH_CHECKS) {
