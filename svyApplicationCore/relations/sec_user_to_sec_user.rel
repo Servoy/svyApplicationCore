@@ -1,0 +1,6 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/sec_user",
+name:"sec_user_to_sec_user",
+primaryDataSource:"db:/svy_framework/sec_user",
+typeid:22,
+uuid:"EB5CDD8B-7909-484E-BE5E-EC2CE27D211F"

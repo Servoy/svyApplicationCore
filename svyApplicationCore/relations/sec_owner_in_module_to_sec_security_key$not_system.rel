@@ -1,0 +1,11 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/sec_security_key",
+items:[
+{foreignColumnName:"system_flag",operator:261,primaryDataProviderID:"globals.one",typeid:23,uuid:"3641E92F-A0DA-442B-840F-2A74C2611756"},
+{foreignColumnName:"module_id",primaryDataProviderID:"module_id",typeid:23,uuid:"751B97CD-25AB-4677-939A-E985C2C7ABD6"}
+],
+joinType:1,
+name:"sec_owner_in_module_to_sec_security_key$not_system",
+primaryDataSource:"db:/svy_framework/sec_owner_in_module",
+typeid:22,
+uuid:"011035F8-7000-47A3-A5B8-E4EF8DC77F13"

@@ -1,0 +1,9 @@
+foreignDataSource:"db:/svy_framework/svy_properties",
+items:[
+{foreignColumnName:"svy_properties_id",primaryDataProviderID:"svy_properties_id",typeid:23,uuid:"997BC519-B631-49A4-8726-3F8A4368AF37"}
+],
+joinType:1,
+name:"svy_property_values_to_svy_properties",
+primaryDataSource:"db:/svy_framework/svy_property_values",
+typeid:22,
+uuid:"B68C67DA-02DE-48D8-81F9-AFE9870F1E5B"

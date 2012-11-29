@@ -1,6 +1,6 @@
-dataSource:"db:/svy_framework/sec_organization",
+dataSource:"db:/svy_framework/sec_owner_in_module",
 onAfterDeleteMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
 onAfterInsertMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
 onAfterUpdateMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
 typeid:39,
-uuid:"907AB3ED-D0AB-44C9-9A8A-FBE6EEB221E1"
+uuid:"35338D2D-F748-4323-AC26-4F712E18F1A9"

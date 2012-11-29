@@ -1,0 +1,10 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/sec_security_key",
+items:[
+{foreignColumnName:"module_id",primaryDataProviderID:"module_id",typeid:23,uuid:"D0267C47-7B0B-4076-B96D-490C075AF04F"}
+],
+joinType:1,
+name:"sec_module_to_sec_security_key",
+primaryDataSource:"db:/svy_framework/sec_module",
+typeid:22,
+uuid:"408ED126-8AFA-4341-92E3-99708C573848"
