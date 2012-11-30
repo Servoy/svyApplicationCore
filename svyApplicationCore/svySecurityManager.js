@@ -60,6 +60,26 @@ var ADMIN_LEVEL = new function() {
  */
 var PERFORM_HASH_CHECKS = false;
 
+/**
+ * @param {String|UUID} applicationID
+ * @return {Application}
+ * @author Sean
+ * @properties={typeid:24,uuid:"65929948-DD81-4824-84A8-B919DF1D678F"}
+ */
+function getApplicationByID(applicationID){
+	if(!applicationID){
+		throw new scopes.svyExceptions.IllegalArgumentException('Application ID Required');
+	}
+	if(applicationID instanceof String){
+		applicationID = application.getUUID(applicationID);
+	}
+	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
+	var fs = databaseManager.getFoundSet('svy_framework','prov_application');
+	if(fs.loadRecords(applicationID)){
+		return new Application(fs.getSelectedRecord());
+	}
+	return null;
+}
 
 /**
  * Returns an array with all groups
@@ -108,6 +128,28 @@ function getGroup(groupname) {
 	} else {
 		return null;
 	}
+}
+
+/**
+ * Gets a Module object by id
+ * @param {UUID|String} moduleID
+ * @return {Module} null if not found
+ * @author Sean
+ * @properties={typeid:24,uuid:"629F43E3-9ACF-43C5-8362-D30D69640E37"}
+ */
+function getModuleByID(moduleID){
+	if(!moduleID){
+		throw new scopes.svyExceptions.IllegalArgumentException('Module cannot be null');
+	}
+	if(moduleID instanceof String){
+		moduleID = application.getUUID(moduleID);
+	}
+	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
+	var fs = databaseManager.getFoundSet(globals.nav_db_framework,'sec_module');
+	if(fs.loadRecords(moduleID)){
+		return new Module(fs.getSelectedRecord());
+	}
+	return null;
 }
 
 /**
@@ -374,6 +416,33 @@ function getUserById(userId) {
 }
 
 /**
+ * Creates a new application record and returns an Object handle
+ * 
+ * @param {String} name must be unique
+ * @return {Application}
+ * @throws {scopes.svyExceptions.ValueNotUniqueException} 
+ * @author Sean
+ * @properties={typeid:24,uuid:"6CC68D24-ED77-4B34-B6B0-4EF3490EDF79"}
+ */
+function createApplication(name){
+	if(!name){
+		throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+	}
+	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
+	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework,'prov_application');
+	if(!scopes.svyUtils.isValueUnique(fs,'application_name',name)){
+		throw new scopes.svyExceptions.ValueNotUniqueException(fs,'application_name');
+	}
+	if(!fs.newRecord()){
+		throw new scopes.svyExceptions.NewRecordFailedException('Could not create Application',null,null,fs);
+	}
+	var record = fs.getSelectedRecord();
+	record.application_name = name;
+	save(record);
+	return new Application(record);
+}
+
+/**
  * Creates and returns a new security key with the given name and optional description
  * 
  * @param {String} name
@@ -401,6 +470,33 @@ function createKey(name, description, owner) {
 	} else {
 		return null;
 	}
+}
+
+/**
+ * Creates a new svy_framework/sec_module record in the database and returns a module object
+ * 
+ * @param {String} name must be unique
+ * @return {Module}
+ * @throws {scopes.svyExceptions.ValueNotUniqueException}
+ * @author Sean
+ * @properties={typeid:24,uuid:"14038587-E684-4051-A469-3A1D97C18392"}
+ */
+function createModule(name){
+	if(!name){
+		throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+	}
+	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
+	var fs = databaseManager.getFoundSet(globals.nav_db_framework,'sec_module');
+	if(!scopes.svyUtils.isValueUnique(fs,'name',name)){
+		throw new scopes.svyExceptions.ValueNotUniqueException(fs,'name');
+	}
+	if(!fs.newRecord()){
+		throw new scopes.svyExceptions.NewRecordFailedException('Cound not create module record',null,null,fs);
+	}
+	var record = fs.getSelectedRecord();
+	record.name = name;
+	save(record);
+	return new Module(record);
 }
 
 /**
@@ -1967,6 +2063,214 @@ function Owner(ownerRecord) {
 	});
 	
 	Object.seal(this);	
+}
+
+/**
+ * Wrapper class for db:/svy_framework/sec_module record
+ * 
+ * @param {JSRecord<db:/svy_framework/sec_module>} moduleRecord
+ * @constructor 
+ * @properties={typeid:24,uuid:"C1138192-FBC2-4F1D-A7BF-8D4B13F3379B"}
+ */
+function Module(moduleRecord){
+	var record = moduleRecord;
+	
+	/**
+	 * The module PK ID
+	 * @type {UUID}
+	 */
+	this.id = record.module_id;
+	Object.defineProperty(this,'id',{
+		get:function(){return record.module_id;}
+	});
+	
+	/**
+	 * The name of the module. Must be unique.
+	 * @type {String}
+	 */
+	this.name = record.name;
+	Object.defineProperty(this,'name',{
+		get:function(){return record.name},
+		set:function(x){
+			if(!x){
+				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+			}
+			if(!scopes.svyUtils.isValueUnique(record,'name',x)){
+				throw new scopes.svyExceptions.ValueNotUniqueException(record,'name');
+			}
+			record.name = x;
+			save(record);
+		}
+	});
+	
+	/**
+	 * Description of the module
+	 * @type {String}
+	 */
+	this.description = record.description;
+	Object.defineProperty(this,'description',{
+		get:function(){return record.description},
+		set:function(x){
+			record.description = x;
+			save(record);
+		}
+	});
+	
+	Object.seal(this);
+}
+
+/**
+ * Application wrapper class for db:/svy_framework/prov_application
+ * Basic container of modules
+ * 
+ * @param {JSRecord<db:/svy_framework/prov_application>} applicationRecord
+ * @constructor 
+ * @author Sean
+ * @properties={typeid:24,uuid:"E68458CB-E38A-4039-AE02-6117088D5AA4"}
+ */
+function Application(applicationRecord){
+	var record = applicationRecord;
+	
+	/**
+	 * The application ID
+	 * @type {UUID}
+	 */
+	this.id = record.application_id;
+	Object.defineProperty(this,'name',{
+		get:function(){return record.application_id}
+	});
+	
+	/**
+	 * The name of the application. Must be unique in database
+	 * @type {String}
+	 */
+	this.name = record.application_name;
+	Object.defineProperty(this,'name',{
+		get:function(){return record.application_name;},
+		set:function(x){
+			if(!x){
+				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+			}
+			if(!scopes.svyUtils.isValueUnique(record,'application_name',x)){
+				throw new scopes.svyExceptions.ValueNotUniqueException(record,'application_name');
+			}
+			record.application_name = x;
+			save(record);
+		}
+	});
+	
+	/**
+	 * The name of the corresponding servoy solution
+	 * @type {String}
+	 */
+	this.servoySolutionName = record.servoy_solution_name;
+	Object.defineProperty(this,'servoy_solution_name',{
+		get:function(){return record.servoy_solution_name;},
+		set:function(x){
+			if(!x){
+				throw new scopes.svyExceptions.IllegalArgumentException('solution name is required');
+			}
+			record.servoy_solution_name = x;
+			save(record);
+		}
+	});
+	
+	/**
+	 * Links a module to this application
+	 * @param {UUID|String} moduleID
+	 */
+	this.addModule = function(moduleID){
+		if(!moduleID){
+			throw new scopes.svyExceptions.IllegalArgumentException('Module cannot be null');
+		}
+		if(moduleID instanceof String){
+			moduleID = application.getUUID(moduleID);
+		}
+		if(this.containsModule(moduleID)){
+			return false;
+		}
+		if(!record.prov_application_to_prov_application_modules.newRecord()){
+			throw new scopes.svyExceptions.NewRecordFailedException('Failed to create record',null,null,record.prov_application_to_prov_application_modules);
+		}
+		record.prov_application_to_prov_application_modules.module_id = moduleID;
+		save(record.prov_application_to_prov_application_modules);
+		return true;
+	}
+	
+	/**
+	 * Test if a module is added to this application
+	 * @param {UUID|String} moduleID
+	 * @return {Boolean}
+	 */
+	this.containsModule = function(moduleID){
+		if(!moduleID){
+			throw new scopes.svyExceptions.IllegalArgumentException('Module ID cannot be null');
+		}
+		if(moduleID instanceof String){
+			moduleID = application.getUUID(moduleID);
+		}
+		for(var i = 1; i <= record.prov_application_to_prov_application_modules.getSize(); i++){
+			var link = record.prov_application_to_prov_application_modules.getRecord(i);
+			if(link.module_id == moduleID){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Removes the specified module from this application
+	 * @param {JSRecord<db:/svy_framework/sec_module>|UUID|String} moduleRecordOrID
+	 * @return {Boolean} false if the module never belonged in the first place
+	 */
+	this.removeModule = function(moduleRecordOrID){
+		if(!moduleRecordOrID){
+			throw new scopes.svyExceptions.IllegalArgumentException('Module ID or Record cannot be null');
+		}
+		if(moduleRecordOrID instanceof JSRecord){
+			moduleRecordOrID = moduleRecordOrID.module_id;
+		}
+		if(moduleRecordOrID instanceof String){
+			moduleRecordOrID = application.getUUID(moduleRecordOrID);
+		}
+		var modules = record.prov_application_to_prov_application_modules;
+		for(var i = 1; i <= modules.getSize(); i++){
+			var module = modules.getRecord(i);
+			if(module.module_id == moduleRecordOrID){
+				if(!modules.deleteRecord(module)){
+					throw new scopes.svyExceptions.DeleteRecordFailedException('Failed to delete record',null,null,module);
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Returns the modules belonging to this application
+	 * @return {Array<Module>}
+	 */
+	this.getModules = function(){
+		var modules = [];
+		for(var i = 1; i <= record.prov_application_to_prov_application_modules.getSize(); i++){
+			var id = record.prov_application_to_prov_application_modules.getRecord(i).module_id;
+			modules.push(new Module(id));
+		}
+		return modules;
+	}
+	
+	Object.seal(this);
+}
+/**
+ * @param {JSRecord|JSFoundSet} record
+ * @private
+ * @author Sean
+ * @properties={typeid:24,uuid:"B4D1DC91-CF15-48AC-8B5D-39047104982F"}
+ */
+function save(record){
+	if(!databaseManager.saveData(record)){
+		throw new scopes.svyExceptions.SaveDataFailedException('Save data failed:' + record.exception,null,null,record);
+	}
 }
 
 /**

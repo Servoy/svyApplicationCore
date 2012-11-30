@@ -1,0 +1,11 @@
+allowCreationRelatedRecords:true,
+deleteRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/prov_application_modules",
+items:[
+{foreignColumnName:"module_id",primaryDataProviderID:"module_id",typeid:23,uuid:"D258D4C3-489B-4BB2-9C0B-C1AF3D20F56D"}
+],
+joinType:1,
+name:"sec_module_to_prov_application_modules",
+primaryDataSource:"db:/svy_framework/sec_module",
+typeid:22,
+uuid:"21EE1A37-5F0C-4C25-B6EA-C4375C40A6F8"

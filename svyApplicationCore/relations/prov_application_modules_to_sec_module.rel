@@ -1,0 +1,9 @@
+foreignDataSource:"db:/svy_framework/sec_module",
+items:[
+{foreignColumnName:"module_id",primaryDataProviderID:"module_id",typeid:23,uuid:"342531FD-7F22-48C6-835B-77C1622582F2"}
+],
+joinType:1,
+name:"prov_application_modules_to_sec_module",
+primaryDataSource:"db:/svy_framework/prov_application_modules",
+typeid:22,
+uuid:"44A43617-3404-4E65-B1E4-5CF831FEE0F9"
