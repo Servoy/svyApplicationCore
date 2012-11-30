@@ -61,21 +61,26 @@ var ADMIN_LEVEL = new function() {
 var PERFORM_HASH_CHECKS = false;
 
 /**
+ * Returns the Application with the given ID or null if not found
+ * 
  * @param {String|UUID} applicationID
+ * 
  * @return {Application}
+ * 
  * @author Sean
+ * 
  * @properties={typeid:24,uuid:"65929948-DD81-4824-84A8-B919DF1D678F"}
  */
 function getApplicationByID(applicationID){
-	if(!applicationID){
+	if (!applicationID) {
 		throw new scopes.svyExceptions.IllegalArgumentException('Application ID Required');
 	}
-	if(applicationID instanceof String){
+	if (applicationID instanceof String) {
 		applicationID = application.getUUID(applicationID);
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
-	var fs = databaseManager.getFoundSet('svy_framework','prov_application');
-	if(fs.loadRecords(applicationID)){
+	var fs = databaseManager.getFoundSet('svy_framework', 'prov_application');
+	if (fs.loadRecords(applicationID)) {
 		return new Application(fs.getSelectedRecord());
 	}
 	return null;
@@ -131,22 +136,26 @@ function getGroup(groupname) {
 }
 
 /**
- * Gets a Module object by id
+ * Gets a Module object by id or null if not found
+ * 
  * @param {UUID|String} moduleID
+ * 
  * @return {Module} null if not found
+ * 
  * @author Sean
+ * 
  * @properties={typeid:24,uuid:"629F43E3-9ACF-43C5-8362-D30D69640E37"}
  */
 function getModuleByID(moduleID){
-	if(!moduleID){
-		throw new scopes.svyExceptions.IllegalArgumentException('Module cannot be null');
+	if (!moduleID) {
+		throw new scopes.svyExceptions.IllegalArgumentException('ModuleID cannot be null');
 	}
-	if(moduleID instanceof String){
+	if (moduleID instanceof String) {
 		moduleID = application.getUUID(moduleID);
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
-	var fs = databaseManager.getFoundSet(globals.nav_db_framework,'sec_module');
-	if(fs.loadRecords(moduleID)){
+	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
+	if (fs.loadRecords(moduleID)) {
 		return new Module(fs.getSelectedRecord());
 	}
 	return null;
@@ -419,22 +428,26 @@ function getUserById(userId) {
  * Creates a new application record and returns an Object handle
  * 
  * @param {String} name must be unique
+ * 
  * @return {Application}
+ * 
  * @throws {scopes.svyExceptions.ValueNotUniqueException} 
+ * 
  * @author Sean
+ * 
  * @properties={typeid:24,uuid:"6CC68D24-ED77-4B34-B6B0-4EF3490EDF79"}
  */
 function createApplication(name){
-	if(!name){
+	if (!name) {
 		throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
-	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework,'prov_application');
-	if(!scopes.svyUtils.isValueUnique(fs,'application_name',name)){
-		throw new scopes.svyExceptions.ValueNotUniqueException(fs,'application_name');
+	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, 'prov_application');
+	if (!scopes.svyUtils.isValueUnique(fs, 'application_name', name)) {
+		throw new scopes.svyExceptions.ValueNotUniqueException(fs, 'application_name');
 	}
-	if(!fs.newRecord()){
-		throw new scopes.svyExceptions.NewRecordFailedException('Could not create Application',null,null,fs);
+	if (!fs.newRecord()) {
+		throw new scopes.svyExceptions.NewRecordFailedException('Could not create Application', null, null, fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.application_name = name;
@@ -465,7 +478,7 @@ function createKey(name, description, owner) {
 	keyRecord.name = name;
 	keyRecord.description = description;
 	keyRecord.owner_id = owner ? owner.ownerId : "00000000-0000-0000-0000-000000000000";
-	if (databaseManager.saveData(keyRecord)) {
+	if (save(keyRecord)) {
 		return new Key(keyRecord);
 	} else {
 		return null;
@@ -473,25 +486,29 @@ function createKey(name, description, owner) {
 }
 
 /**
- * Creates a new svy_framework/sec_module record in the database and returns a module object
+ * Creates a new module
  * 
  * @param {String} name must be unique
+ * 
  * @return {Module}
+ * 
  * @throws {scopes.svyExceptions.ValueNotUniqueException}
+ * 
  * @author Sean
+ * 
  * @properties={typeid:24,uuid:"14038587-E684-4051-A469-3A1D97C18392"}
  */
 function createModule(name){
-	if(!name){
+	if (!name) {
 		throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
-	var fs = databaseManager.getFoundSet(globals.nav_db_framework,'sec_module');
-	if(!scopes.svyUtils.isValueUnique(fs,'name',name)){
-		throw new scopes.svyExceptions.ValueNotUniqueException(fs,'name');
+	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
+	if (!scopes.svyUtils.isValueUnique(fs, 'name', name)) {
+		throw new scopes.svyExceptions.ValueNotUniqueException(fs, 'name');
 	}
-	if(!fs.newRecord()){
-		throw new scopes.svyExceptions.NewRecordFailedException('Cound not create module record',null,null,fs);
+	if (!fs.newRecord()) {
+		throw new scopes.svyExceptions.NewRecordFailedException('Cound not create module record', null, null, fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.name = name;
@@ -555,7 +572,7 @@ function createOwner(ownerName) {
 	
 	var ownerRecord = fs.getRecord(fs.newRecord());
 	ownerRecord.name = ownerName;
-	if(!databaseManager.saveData(ownerRecord)) throw scopes.svyExceptions.SaveDataFailedException('Failed to save owner record',null,null,ownerRecord);
+	save(ownerRecord);
 	return new Owner(ownerRecord);
 }
 
@@ -593,9 +610,7 @@ function createUser(userName, password, owner, organization) {
 	var userRecord = userFs.getRecord(userFs.newRecord());
 	userRecord.user_name = userName;
 	userRecord.owner_id = owner.ownerId;
-	if (!databaseManager.saveData(userRecord)) {
-		return null;
-	}
+	save(userRecord);
 	var user = new User(userRecord);
 	if (password) {
 		user.changePassword(password);
@@ -1090,7 +1105,7 @@ function User(userRecord) {
 	Object.defineProperty(this, "userName", {
         set: function (x) {
             record.user_name = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.user_name;
@@ -1113,7 +1128,7 @@ function User(userRecord) {
 				throw new scopes.svyExceptions.IllegalArgumentException("The owner with the ID " + x + " could not be found");
 			}
 			record.owner_id = owner.ownerId;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });		
 	
@@ -1124,7 +1139,7 @@ function User(userRecord) {
 		set: function(x) {
 			if (plugins.mail.isValidEmailAddress(x)) {
 				record.com_email = x;
-				databaseManager.saveData(record);
+				save(record);
 			} else {
 				throw new scopes.svyExceptions.IllegalArgumentException("Invalid email address: " + x);
 			}
@@ -1303,7 +1318,7 @@ function Group(ownerRecord) {
 		var userInGroupRec = fs.getRecord(fs.newRecord());
 		userInGroupRec.group_id = groupId;
 		userInGroupRec.user_org_id = userOrgId;
-		return databaseManager.saveData(userInGroupRec);
+		return save(userInGroupRec);
 	}
 	
 	/**
@@ -1325,13 +1340,13 @@ function Group(ownerRecord) {
 		var newUserRightRec = fs.getRecord(fs.newRecord());
 		newUserRightRec.group_id = _this.groupId;
 		newUserRightRec.security_key_id = keyToAdd.keyId;
-		return databaseManager.saveData(newUserRightRec);
+		return save(newUserRightRec);
 	}
 	
 	Object.defineProperty(this, "name", {
         set: function (x) {
             record.name = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.name;
@@ -1341,7 +1356,7 @@ function Group(ownerRecord) {
 	Object.defineProperty(this, "description", {
         set: function (x) {
             record.description = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.description;
@@ -1469,7 +1484,7 @@ function Key(keyRecord) {
 		secTableRecord.flag_update = canUpdate ? 1 : 0; 
 		secTableRecord.flag_delete = canDelete ? 1 : 0; 
 		secTableRecord.flag_tracking = tracking ? 1 : 0; 
-		return databaseManager.saveData(secTableRecord);
+		return save(secTableRecord);
 	}
 	
 	/**
@@ -1532,7 +1547,7 @@ function Key(keyRecord) {
 		}
 		secElementRecord.flag_editable = editable ? 1 : 0; 
 		secElementRecord.flag_visible = visible ? 1 : 0; 
-		return databaseManager.saveData(secElementRecord);
+		return save(secElementRecord);
 	}
 	
 	Object.defineProperty(this, "keyId", {
@@ -1544,7 +1559,7 @@ function Key(keyRecord) {
 	Object.defineProperty(this, "name", {
         set: function (x) {
             record.name = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.name;
@@ -1554,7 +1569,7 @@ function Key(keyRecord) {
 	Object.defineProperty(this, "description", {
         set: function (x) {
             record.description = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.description;
@@ -1564,7 +1579,7 @@ function Key(keyRecord) {
 	Object.defineProperty(this, "owner", {
         set: function (x) {
             record.owner_id = x.ownerId;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
         	if (!record.owner_id || record.owner_id.toString() == "00000000-0000-0000-0000-000000000000") {
@@ -1763,7 +1778,7 @@ function Organization(organizationRecord) {
         		throw new scopes.svyExceptions.ValueNotUniqueException(organizationRecord, "name");
         	}
             record.name = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.name;
@@ -1941,7 +1956,7 @@ function Owner(ownerRecord) {
 	Object.defineProperty(this, "name", {
         set: function (x) {
             record.name = x;
-            databaseManager.saveData(record);
+            save(record);
         },
         get: function () {
             return record.name;
@@ -1960,7 +1975,7 @@ function Owner(ownerRecord) {
         },
 		set: function(fieldName) {
 			record.filter_field_organization = fieldName;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });		
 	
@@ -1970,7 +1985,7 @@ function Owner(ownerRecord) {
         },
 		set: function(length) {
 			record.password_min_lenght = length;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });		
 	
@@ -1980,7 +1995,7 @@ function Owner(ownerRecord) {
         },
 		set: function(days) {
 			record.password_renew = days;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });			
 	
@@ -1990,7 +2005,7 @@ function Owner(ownerRecord) {
         },
 		set: function(value) {
 			record.password_num_let = value ? 1 : 0;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });	
 	
@@ -2000,7 +2015,7 @@ function Owner(ownerRecord) {
         },
 		set: function(value) {
 			record.company_name = value;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });	
 	
@@ -2011,7 +2026,7 @@ function Owner(ownerRecord) {
 		set: function(value) {
 			if (value >= 0) {
 				record.password_times_wrong = value;
-				databaseManager.saveData(record);
+				save(record);
 			}
 		}
     });	
@@ -2022,7 +2037,7 @@ function Owner(ownerRecord) {
         },
 		set: function(value) {
 			record.database_name = value;
-			databaseManager.saveData(record);
+			save(record);
 		}
     });	
 	
@@ -2033,7 +2048,7 @@ function Owner(ownerRecord) {
 		set: function(value) {
 			if (value >= 0) {
 				record.license_amount = value;
-				databaseManager.saveData(record);
+				save(record);
 			}
 		}
     });	
@@ -2045,7 +2060,7 @@ function Owner(ownerRecord) {
 		set: function(value) {
 			if (value instanceof Date) {
 				record.registration_date = value;
-				databaseManager.saveData(record);
+				save(record);
 			}
 		}
     });	
@@ -2124,8 +2139,11 @@ function Module(moduleRecord){
  * Basic container of modules
  * 
  * @param {JSRecord<db:/svy_framework/prov_application>} applicationRecord
+ * 
  * @constructor 
+ * 
  * @author Sean
+ * 
  * @properties={typeid:24,uuid:"E68458CB-E38A-4039-AE02-6117088D5AA4"}
  */
 function Application(applicationRecord){
@@ -2136,61 +2154,67 @@ function Application(applicationRecord){
 	 * @type {UUID}
 	 */
 	this.id = record.application_id;
-	Object.defineProperty(this,'name',{
-		get:function(){return record.application_id}
-	});
+	Object.defineProperty(this, 'id', {
+			get: function() {
+				return record.application_id
+			}
+		});
 	
 	/**
 	 * The name of the application. Must be unique in database
 	 * @type {String}
 	 */
 	this.name = record.application_name;
-	Object.defineProperty(this,'name',{
-		get:function(){return record.application_name;},
-		set:function(x){
-			if(!x){
-				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+	Object.defineProperty(this, 'name', {
+			get: function() {
+				return record.application_name;
+			},
+			set: function(x) {
+				if (!x) {
+					throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+				}
+				if (!scopes.svyUtils.isValueUnique(record, 'application_name', x)) {
+					throw new scopes.svyExceptions.ValueNotUniqueException(record, 'application_name');
+				}
+				record.application_name = x;
+				save(record);
 			}
-			if(!scopes.svyUtils.isValueUnique(record,'application_name',x)){
-				throw new scopes.svyExceptions.ValueNotUniqueException(record,'application_name');
-			}
-			record.application_name = x;
-			save(record);
-		}
-	});
+		});
 	
 	/**
 	 * The name of the corresponding servoy solution
 	 * @type {String}
 	 */
 	this.servoySolutionName = record.servoy_solution_name;
-	Object.defineProperty(this,'servoy_solution_name',{
-		get:function(){return record.servoy_solution_name;},
-		set:function(x){
-			if(!x){
-				throw new scopes.svyExceptions.IllegalArgumentException('solution name is required');
+	Object.defineProperty(this, 'servoySolutionName', {
+			get: function() {
+				return record.servoy_solution_name;
+			},
+			set: function(x) {
+				if (!x) {
+					throw new scopes.svyExceptions.IllegalArgumentException('solution name is required');
+				}
+				record.servoy_solution_name = x;
+				save(record);
 			}
-			record.servoy_solution_name = x;
-			save(record);
-		}
-	});
+		});
 	
 	/**
 	 * Links a module to this application
 	 * @param {UUID|String} moduleID
 	 */
 	this.addModule = function(moduleID){
-		if(!moduleID){
+		if (!moduleID) {
 			throw new scopes.svyExceptions.IllegalArgumentException('Module cannot be null');
 		}
-		if(moduleID instanceof String){
+		if (moduleID instanceof String) {
 			moduleID = application.getUUID(moduleID);
 		}
-		if(this.containsModule(moduleID)){
+		if (this.containsModule(moduleID)) {
 			return false;
 		}
-		if(!record.prov_application_to_prov_application_modules.newRecord()){
-			throw new scopes.svyExceptions.NewRecordFailedException('Failed to create record',null,null,record.prov_application_to_prov_application_modules);
+		if (!record.prov_application_to_prov_application_modules.newRecord()) {
+			throw new scopes.svyExceptions.NewRecordFailedException('Failed to create record', null, null, record.prov_application_to_prov_application_modules);
 		}
 		record.prov_application_to_prov_application_modules.module_id = moduleID;
 		save(record.prov_application_to_prov_application_modules);
@@ -2203,15 +2227,15 @@ function Application(applicationRecord){
 	 * @return {Boolean}
 	 */
 	this.containsModule = function(moduleID){
-		if(!moduleID){
+		if (!moduleID) {
 			throw new scopes.svyExceptions.IllegalArgumentException('Module ID cannot be null');
 		}
-		if(moduleID instanceof String){
+		if (moduleID instanceof String) {
 			moduleID = application.getUUID(moduleID);
 		}
-		for(var i = 1; i <= record.prov_application_to_prov_application_modules.getSize(); i++){
+		for (var i = 1; i <= record.prov_application_to_prov_application_modules.getSize(); i++) {
 			var link = record.prov_application_to_prov_application_modules.getRecord(i);
-			if(link.module_id == moduleID){
+			if (link.module_id == moduleID) {
 				return true;
 			}
 		}
@@ -2224,21 +2248,21 @@ function Application(applicationRecord){
 	 * @return {Boolean} false if the module never belonged in the first place
 	 */
 	this.removeModule = function(moduleRecordOrID){
-		if(!moduleRecordOrID){
+		if (!moduleRecordOrID) {
 			throw new scopes.svyExceptions.IllegalArgumentException('Module ID or Record cannot be null');
 		}
-		if(moduleRecordOrID instanceof JSRecord){
+		if (moduleRecordOrID instanceof JSRecord) {
 			moduleRecordOrID = moduleRecordOrID.module_id;
 		}
-		if(moduleRecordOrID instanceof String){
+		if (moduleRecordOrID instanceof String) {
 			moduleRecordOrID = application.getUUID(moduleRecordOrID);
 		}
 		var modules = record.prov_application_to_prov_application_modules;
-		for(var i = 1; i <= modules.getSize(); i++){
+		for (var i = 1; i <= modules.getSize(); i++) {
 			var module = modules.getRecord(i);
-			if(module.module_id == moduleRecordOrID){
-				if(!modules.deleteRecord(module)){
-					throw new scopes.svyExceptions.DeleteRecordFailedException('Failed to delete record',null,null,module);
+			if (module.module_id == moduleRecordOrID) {
+				if (!modules.deleteRecord(module)) {
+					throw new scopes.svyExceptions.DeleteRecordFailedException('Failed to delete record', null, null, module);
 				}
 				return true;
 			}
@@ -2261,16 +2285,19 @@ function Application(applicationRecord){
 	
 	Object.seal(this);
 }
+
 /**
  * @param {JSRecord|JSFoundSet} record
+ * @returns {Boolean} success
  * @private
  * @author Sean
  * @properties={typeid:24,uuid:"B4D1DC91-CF15-48AC-8B5D-39047104982F"}
  */
 function save(record){
-	if(!databaseManager.saveData(record)){
-		throw new scopes.svyExceptions.SaveDataFailedException('Save data failed:' + record.exception,null,null,record);
+	if (!databaseManager.saveData(record)) {
+		throw new scopes.svyExceptions.SaveDataFailedException('Save data failed:' + record.exception, null, null, record);
 	}
+	return true;
 }
 
 /**
@@ -2311,7 +2338,7 @@ function updateSecurityHash(record, serverName, ownerName) {
 	if (utils.hasRecords(fs)) {
 		var ownerRecord = fs.getRecord(1);
 		ownerRecord.hash = createHash(serverName);
-		databaseManager.saveData(ownerRecord);
+		save(ownerRecord);
 	}
 }
 
@@ -2629,16 +2656,12 @@ function removeDataForOrganization(organizationId) {
 		query.where.add(query.getColumn(filterField).eq(organizationId.toString()));
 		foundset.loadRecords(query);
 		if (utils.hasRecords(foundset)) {
+			var deleteCount = databaseManager.getFoundSetCount(foundset);
 			try {
-				var deleteCount = databaseManager.getFoundSetCount(foundset);
-				foundset.deleteAllRecords();
-				if (!databaseManager.saveData(foundset)) {
-					failedTables.push(tableNames[i]);
-				} else {
-					application.output("Deleted " + deleteCount + " records for organization from table \"" + userDbName + "." + tableNames[i] + "\"", LOGGINGLEVEL.INFO);
-				}
-			}
-			catch(e) {
+				foundset.deleteAllRecords();		
+				save(foundset);
+				application.output("Deleted " + deleteCount + " records for organization from table \"" + userDbName + "." + tableNames[i] + "\"", LOGGINGLEVEL.INFO);
+			} catch (e) {
 				failedTables.push(tableNames[i]);
 				application.output("Failed to delete records for organization from table \"" + userDbName + "." + tableNames[i] + "\": " + e.message, LOGGINGLEVEL.ERROR);
 			}
