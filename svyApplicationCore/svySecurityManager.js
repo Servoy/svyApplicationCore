@@ -10,39 +10,37 @@
  * @final
  * @properties={typeid:35,uuid:"D0A4C4A2-CCFC-45E8-86A3-8A5748045075",variableType:-4}
  */
-var ADMIN_LEVEL = new function() { 
+var ADMIN_LEVEL = {
 	
 	/**
 	 * Normal user with no special privileges
 	 * @type {Number}
 	 */
-	this.NONE = 0;
+	NONE: 0,
 	
 	/**
 	 * The manager of an organization
 	 * @type {Number}
 	 */
-	this.ORGANIZATION_MANAGER = 1;
+	ORGANIZATION_MANAGER: 1,
 	
 	/**
 	 * The manager of an owner/tenant
 	 * @type {Number}
 	 */
-	this.TENANT_MANAGER = 2;
+	TENANT_MANAGER: 2,
 	
 	/**
 	 * The manager of the application
 	 * @type {Number}
 	 */
-	this.APPLICATION_MANAGER = 4;
+	APPLICATION_MANAGER: 4,
 	
 	/**
 	 * The developer of the application
 	 * @type {Number}
 	 */
-	this.DEVELOPER = 8;
-	
-	Object.freeze(this);
+	DEVELOPER: 8
 	
 };
 
