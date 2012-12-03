@@ -551,7 +551,7 @@ function createOrganization(organizationName, owner) {
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
  * }
  * 
- *  @throws {scopes.svyExceptions.ValueNotUniqueException} - the owner name must be unique
+ * @throws {scopes.svyExceptions.ValueNotUniqueException} - the owner name must be unique
  * 
  * @author patrick
  * @since 02.08.2012
