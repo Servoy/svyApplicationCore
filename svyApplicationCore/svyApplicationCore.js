@@ -15,8 +15,6 @@
  */
 function initModules(startupArguments) {
 	//Init self
-	//TODO: implement something if that is needed
-	
 	scopes.svyProperties.initProperties();
 	
 	//Init modules
