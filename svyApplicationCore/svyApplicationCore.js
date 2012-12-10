@@ -56,7 +56,6 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
  * 
  * @example <pre> &#47;**
  *  * Var holding a reference to a foundset on the contacts table of the udm database, so this client receives databroadcast events for this table
- *  * @private
  *  * @type {JSFoundSet}
  *  *&#47;
  * var fs
