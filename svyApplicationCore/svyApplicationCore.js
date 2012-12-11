@@ -67,13 +67,12 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
  * }
  * 	
  * &#47;**
- *  * @param {JSEvent} [event]
  *  * @param {String} dataSource
  *  * @param {Number} action
  *  * @param {JSDataSet} pks
  *  * @param {Boolean} cached
  *  *&#47;
- * function dataBroadcastEventListener(event, dataSource, action, pks, cached) {
+ * function dataBroadcastEventListener(dataSource, action, pks, cached) {
  * 	if (dataSource == 'db:/udm/contacts' && action & (SQL_ACTION_TYPES.INSERT_ACTION | SQL_ACTION_TYPES.DELETE_ACTION)) {
  * 		//Your business logic here
  * 	}
