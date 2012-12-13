@@ -1894,6 +1894,12 @@ function Owner(ownerRecord) {
 	this.registrationDate = record.registration_date;
 	
 	/**
+	 * The date the account was activated
+	 * @type {Date}
+	 */
+	this.activationDate = record.activation_date;
+	
+	/**
 	 * Returns all organizations of this owner as an array
 	 * 
 	 * @return {Array<Organization>} organizations
@@ -1907,6 +1913,18 @@ function Owner(ownerRecord) {
 				var organizationRecord = record.sec_owner_to_sec_organization.getRecord(i);
 				result.push(new Organization(organizationRecord));
 			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Gets an array of users in this company
+	 * @return {Array<User>}
+	 */
+	this.getUsers = function(){
+		var result = [];
+		for(var i = 1; i <= record.sec_owner_to_sec_user.getSize(); i++){
+			result.push(new User(record.sec_owner_to_sec_user.getRecord(i)));
 		}
 		return result;
 	}
@@ -2058,6 +2076,18 @@ function Owner(ownerRecord) {
 		set: function(value) {
 			if (value instanceof Date) {
 				record.registration_date = value;
+				save(record);
+			}
+		}
+    });	
+	
+	Object.defineProperty(this, "activationDate", {
+        get: function () {
+            return record.activation_date;
+        },
+		set: function(value) {
+			if (value instanceof Date) {
+				record.activation_date = value;
 				save(record);
 			}
 		}
