@@ -12,6 +12,8 @@ var today = new Date();
 
 /**
  * @type {String}
+ * 
+ * @deprecated Will be removed in version 5. Use {@link #scopes#svySecurityManager#getSecurityKeysForInQuery()} instead
  *
  * @properties={typeid:35,uuid:"275878D1-E628-4EE3-A14A-533E93FE8BFA"}
  */

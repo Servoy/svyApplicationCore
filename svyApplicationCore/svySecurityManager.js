@@ -59,6 +59,12 @@ var ADMIN_LEVEL = {
 var PERFORM_HASH_CHECKS = false;
 
 /**
+ * @type {Array<scopes.svySecurityManager.Key>}
+ * @properties={typeid:35,uuid:"F684D9DE-BDB5-4543-84FB-D0ABF67CFED5",variableType:-4}
+ */
+var securityKeys = new Array();
+
+/**
  * Returns the Application with the given ID or null if not found
  * 
  * @param {String|UUID} applicationID
@@ -77,8 +83,38 @@ function getApplicationByID(applicationID){
 		applicationID = application.getUUID(applicationID);
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
-	var fs = databaseManager.getFoundSet('svy_framework', 'prov_application');
+	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'prov_application');
 	if (fs.loadRecords(applicationID)) {
+		return new Application(fs.getSelectedRecord());
+	}
+	return null;
+}
+
+/**
+ * Returns the Application with the given name or null if not found<p>
+ * 
+ * If no application name is given, the current solution name is used
+ * 
+ * @param {String} [applicationName]
+ * 
+ * @return {Application}
+ * 
+ * @author patrick
+ * @since 2012-12-12
+ *
+ * @properties={typeid:24,uuid:"50268174-D81C-409A-93D4-642AF60B9F74"}
+ */
+function getApplication(applicationName) {
+	if (!applicationName) {
+		applicationName = application.getSolutionName();
+	}
+	/** @type {QBSelect<db:/svy_framework/prov_application>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/prov_application");
+	query.result.addPk();
+	query.where.add(query.columns.application_name.eq(applicationName));
+	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
 		return new Application(fs.getSelectedRecord());
 	}
 	return null;
@@ -477,7 +513,7 @@ function createKey(name, description, owner) {
 	keyRecord.description = description;
 	keyRecord.owner_id = owner ? owner.ownerId : "00000000-0000-0000-0000-000000000000";
 	if (save(keyRecord)) {
-		return new Key(keyRecord);
+		return new Key(keyRecord.security_key_id, keyRecord.name, keyRecord.description, keyRecord.owner_id);
 	} else {
 		return null;
 	}
@@ -849,67 +885,10 @@ function User(userRecord) {
 	/**
 	 * Returns an Array<Key> of all keys of this User
 	 * 
-	 * @return {Array<Key>} keys
+	 * @return {Array<scopes.svySecurityManager.Key>} keys
 	 */
 	this.getKeys = function() {
-
-		/** @type {Array<Key>} */
-		var result = new Array();
-		
-		var ownerId = getOwner().ownerId;
-		if (ownerId instanceof UUID) ownerId = ownerId.toString();
-		var now = new Date();
-		var userOrgId = getUserOrgId(getOrganization(), this);
-		if (userOrgId instanceof UUID) userOrgId = userOrgId.toString();	
-		
-		/** @type {QBSelect<db:/svy_framework/sec_security_key>} */
-		 var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_security_key");
-		 query.result.addPk();
-		/** @type {QBSelect<db:/svy_framework/sec_user_right>} */
-		 var keyQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user_right");
-		 keyQuery.result.add(keyQuery.columns.security_key_id);
-
-		 /** @type {QBSelect<db:/svy_framework/sec_security_key>} */
-		 var subselect = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_security_key");
-		 subselect.result.addPk();
-		 /** @type {QBJoin<db:/svy_framework/sec_user_right>} */
-		 var userRightJoin = subselect.joins.add("db:/" + globals.nav_db_framework + "/sec_user_right", JSRelation.INNER_JOIN, "sur");
-		 userRightJoin.on.add(subselect.columns.security_key_id.eq(userRightJoin.columns.security_key_id));
-		 /** @type {QBJoin<db:/svy_framework/sec_user_in_group>} */
-		 var userInGroupJoin = subselect.joins.add("db:/" + globals.nav_db_framework + "/sec_user_in_group", JSRelation.INNER_JOIN, "sug");
-		 userInGroupJoin.on.add(userRightJoin.columns.group_id.eq(userInGroupJoin.columns.group_id));
-		
-		 /** @type {QBSelect<db:/svy_framework/sec_owner_in_module>} */
-		 var moduleSubselect = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_owner_in_module");
-		 moduleSubselect.result.addPk();
-		 moduleSubselect.where.add(moduleSubselect.columns.owner_id.eq(ownerId));
-		 moduleSubselect.where.add(moduleSubselect.columns.start_date.le(now));
-		 moduleSubselect.where.add(moduleSubselect.columns.end_date.ge(now));
-
-		 subselect.where.add(query.and.add(userInGroupJoin.columns.user_org_id.eq(userOrgId)));
-		 subselect.where.add(query.or.add(subselect.columns.module_id.isNull).add(subselect.columns.module_id.isin(moduleSubselect)));
-
-		 /** @type {QBSelect<db:/svy_framework/sec_user_right>} */
-		 var notExistsSubselect = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user_right");
-		 notExistsSubselect.result.addPk();
-		 notExistsSubselect.where.add(keyQuery.columns.security_key_id.eq(notExistsSubselect.columns.security_key_id));
-		 notExistsSubselect.where.add(notExistsSubselect.columns.user_org_id.eq(userOrgId));
-		 notExistsSubselect.where.add(notExistsSubselect.columns.is_denied.eq(1));
-		
-		 keyQuery.where.add(keyQuery.and.add(keyQuery.columns.security_key_id.isin(subselect)).add(keyQuery.not(keyQuery.exists(notExistsSubselect))));
-		 keyQuery.where.add(keyQuery.or.add(keyQuery.columns.user_org_id.eq(userOrgId)).add(
-	        keyQuery.columns.is_denied.isNull).add(keyQuery.and.add(keyQuery.columns.is_denied.eq(0))));
-		 query.where.add(query.columns.security_key_id.isin(keyQuery));
-		 
-		/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
-		var fs = databaseManager.getFoundSet(query);
-		if (utils.hasRecords(fs)) {
-			for (var i = 1; i <= fs.getSize(); i++) {
-				var _secRecord = fs.getRecord(i);
-				result.push(new Key(_secRecord));
-			}
-		}
-		return result;
+		return securityKeys;
 	}
 	
 	/**
@@ -1024,8 +1003,8 @@ function User(userRecord) {
 	 */
 	this.hasKeyName = function(keyName) {
 		/** @type {User} */
-		var _this = this;
-		var keys = _this.getKeys();
+		var that = this;
+		var keys = that.getKeys();
 		for (var i = 0; i < keys.length; i++) {
 			/** @type {Key} */
 			var key = keys[i];
@@ -1045,8 +1024,8 @@ function User(userRecord) {
 	 */
 	this.hasKeyId = function(keyId) {
 		/** @type {User} */
-		var _this = this;
-		var keys = _this.getKeys();
+		var that = this;
+		var keys = that.getKeys();
 		for (var i = 0; i < keys.length; i++) {
 			/** @type {Key} */
 			var key = keys[i];
@@ -1371,7 +1350,10 @@ function Group(ownerRecord) {
 }
 
 /**
- * @param {JSRecord<db:/svy_framework/sec_security_key>} keyRecord
+ * @param {UUID} keyID
+ * @param {String} keyName
+ * @param {String} [keyDescription]
+ * @param {UUID} [keyOwnerId]
  * 
  * @constructor 
  * 
@@ -1380,28 +1362,39 @@ function Group(ownerRecord) {
  *
  * @properties={typeid:24,uuid:"1CA88ECA-97B1-4086-9E95-748727448057"}
  */
-function Key(keyRecord) {
-	
-	/** @type {JSRecord<db:/svy_framework/sec_security_key>} */
-	var record = keyRecord;
+function Key(keyID, keyName, keyDescription, keyOwnerId) {
 	
 	/**
 	 * The name of this key
 	 * @type {String}
 	 */
-	this.name = record.name;
+	this.name = "";
+	
+	var $name = keyName;
 	
 	/**
 	 * Description of this Key
 	 * @type {String}
 	 */
-	this.description = record.description;
+	this.description = "";
+	
+	var $description = keyDescription;
 	
 	/**
 	 * Gets the ID of this key
 	 * @type {UUID}
 	 */
-	this.keyId = record.security_key_id;
+	this.keyId = "";
+	
+	var $keyId = keyID;
+	
+	/**
+	 * Gets the ownerId of this key
+	 * @type {UUID}
+	 */
+	this.ownerId = "";
+	
+	var $ownerId = keyOwnerId;
 	
 	/**
 	 * Gets the Owner of this key
@@ -1414,6 +1407,9 @@ function Key(keyRecord) {
 	 * @return {Array<Group>} groups
 	 */
 	this.getGroups = function() {
+		/** @type {Key} */
+		var that = this;
+		
 		/** @type {Array<Group>} */
 		var result = new Array();
 		
@@ -1424,7 +1420,7 @@ function Key(keyRecord) {
 		var userRightJoin = query.joins.add("db:/" + globals.nav_db_framework + "/sec_user_right");
 		userRightJoin.on.add(query.columns.group_id.eq(userRightJoin.columns.group_id));
 		query.where.add(query.columns.group_id.not.isNull);
-		query.where.add(userRightJoin.columns.security_key_id.eq(record.security_key_id));
+		query.where.add(userRightJoin.columns.security_key_id.eq(that.keyId.toString()));
 		
 		/** @type {JSFoundset<db:/svy_framework/sec_group>} */		
 		var fs = databaseManager.getFoundSet(query);
@@ -1456,14 +1452,14 @@ function Key(keyRecord) {
 	 */
 	this.addTableSecurity = function(serverName, tableName, canRead, canInsert, canUpdate, canDelete, tracking) {
 		/** @type {Key} */
-		var _this = this;
+		var that = this;
 		
 		/** @type {QBSelect<db:/svy_framework/sec_table>} */
 		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_table");
 		query.result.addPk();
 		query.where.add(query.columns.server_name.eq(serverName));
 		query.where.add(query.columns.table_name.eq(tableName));
-		query.where.add(query.columns.security_key_id.eq(_this.keyId.toString()));
+		query.where.add(query.columns.security_key_id.eq(that.keyId.toString()));
 		
 		var fs = databaseManager.getFoundSet(query);
 		
@@ -1473,7 +1469,7 @@ function Key(keyRecord) {
 			secTableRecord = fs.getRecord(fs.newRecord());
 			secTableRecord.server_name = serverName;
 			secTableRecord.table_name = tableName;
-			secTableRecord.security_key_id = _this.keyId;
+			secTableRecord.security_key_id = that.keyId;
 		} else {
 			secTableRecord = fs.getRecord(1);
 		}
@@ -1521,14 +1517,14 @@ function Key(keyRecord) {
 		}
 		
 		/** @type {Key} */
-		var _this = this;
+		var that = this;
 		
 		/** @type {QBSelect<db:/svy_framework/sec_element>} */
 		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_element");
 		query.result.addPk();
 		query.where.add(query.columns.form_name.eq(formName));
 		query.where.add(query.columns.element_name.eq(elementName));
-		query.where.add(query.columns.security_key_id.eq(_this.keyId.toString()));
+		query.where.add(query.columns.security_key_id.eq(that.keyId.toString()));
 		
 		var fs = databaseManager.getFoundSet(query);
 		
@@ -1536,7 +1532,7 @@ function Key(keyRecord) {
 		var secElementRecord;
 		if (!utils.hasRecords(fs)) {
 			secElementRecord = fs.getRecord(fs.newRecord());
-			secElementRecord.security_key_id = _this.keyId;
+			secElementRecord.security_key_id = that.keyId;
 			secElementRecord.form_name = formName;
 			secElementRecord.servoy_form_id = formName;			
 			secElementRecord.element_name = elementName;
@@ -1550,42 +1546,71 @@ function Key(keyRecord) {
 	
 	Object.defineProperty(this, "keyId", {
         get: function () {
-            return record.security_key_id;
+            return $keyId;
         }
     });
 	
 	Object.defineProperty(this, "name", {
         set: function (x) {
-            record.name = x;
-            save(record);
+        	var record = getKeyRecord();
+        	if (record) {
+        		record.name = x;
+                save(record);
+                $name = x;
+        	}
         },
         get: function () {
-            return record.name;
+            return $name;
         }
     });
 	
 	Object.defineProperty(this, "description", {
         set: function (x) {
-            record.description = x;
-            save(record);
+        	var record = getKeyRecord();
+        	if (record) {
+	        	record.description = x;
+	            save(record);
+	            $description = x;	            
+        	}
         },
         get: function () {
-            return record.description;
+            return $description;
         }
     });
 	
 	Object.defineProperty(this, "owner", {
         set: function (x) {
-            record.owner_id = x.ownerId;
-            save(record);
+        	var record = getKeyRecord();
+        	if (record) {
+        		record.owner_id = x.ownerId;
+                save(record);
+                $ownerId = x;                
+        	}
         },
         get: function () {
-        	if (!record.owner_id || record.owner_id.toString() == "00000000-0000-0000-0000-000000000000") {
+        	if (!$ownerId || $ownerId.toString() == "00000000-0000-0000-0000-000000000000") {
         		return null;
         	}
-            return new Owner(record.owner_id);
+            return new Owner($ownerId);
         }
     });	
+	
+	/**
+	 * Loads the actual record
+	 * @private
+	 * @return {JSRecord<db:/svy_framework/sec_security_key>}
+	 */
+	function getKeyRecord() {
+		application.output("getKeyRecord called")
+		/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
+		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
+		fs.loadRecords($keyId);
+		if (utils.hasRecords(fs)) {
+			return fs.getSelectedRecord();
+		} else {
+			return null;
+		}
+	}
 	
 	Object.defineProperties(this, {
 		"getGroups": {
@@ -2502,7 +2527,7 @@ function filterTables() {
 	
 	var success;
 	
-	var keyIdList = globals.sec_keys.split(",");
+	var keyIdList = getSecurityKeysIds();
 	
 	/** @type {QBSelect<db:/svy_framework/sec_table_filter>} */
 	var query = databaseManager.createSelect("db:/" + serverName + "/sec_table_filter");
@@ -2731,5 +2756,181 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
  * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
  */
 var init = function() {
+	loadSecurityKeys();
 	PasswordRuleViolationException.prototype = 	new scopes.svyExceptions.IllegalArgumentException("Password rule violated");
 }()
+
+/**
+ * Gets all the security keys for the logged in user
+ * 
+ * @private 
+ * 
+ * @properties={typeid:24,uuid:"321EDB6A-DD45-4990-B0FF-BF76D381C5D6"}
+ */
+function loadSecurityKeys() {
+	var serverName = globals.nav_db_framework;
+	var query = '\
+					SELECT DISTINCT	surd.security_key_id \
+					FROM sec_user_right surd \
+					WHERE (\
+						surd.security_key_id IN (\
+							SELECT	ssk.security_key_id  \
+							FROM	sec_security_key ssk, \
+									sec_user_right sur, \
+									sec_user_in_group sug \
+							WHERE	ssk.security_key_id = sur.security_key_id \
+							AND		sur.group_id = sug.group_id \
+							AND		sug.user_org_id = ? \
+							AND		(\
+								ssk.module_id IS NULL OR ssk.module_id IN (\
+									SELECT	som.module_id \
+									FROM	sec_owner_in_module som \
+									WHERE	som.owner_id = ? \
+									AND		som.start_date <= ? \
+									AND		som.end_date >= ? \
+								)\
+							)\
+						)\
+						AND NOT EXISTS (\
+							SELECT	* \
+							FROM	sec_user_right surd2, sec_user_in_group sug2 \
+							WHERE	surd.security_key_id = surd2.security_key_id \
+							AND		(\
+								surd2.user_org_id = ? \
+								OR (\
+									surd2.group_id = sug2.group_id\
+									AND sug2.user_org_id = ?\
+								)\
+							)\
+							AND		surd2.is_denied = 1 \
+						) \
+					)\
+					OR	surd.user_org_id = ? \
+					AND	(\
+						surd.is_denied IS NULL \
+						OR	surd.is_denied = 0 \
+					)\
+					UNION\
+					(\
+						SELECT	ssk2.security_key_id  \
+						FROM	sec_security_key ssk2, \
+								prov_package_modules ppm,\
+								prov_owner_packages pop \
+						WHERE	ssk2.module_id = ppm.module_id \
+						AND		ppm.package_id = pop.package_id \
+						AND 	pop.start_date <= ? \
+						AND   ( pop.end_date >= ? OR pop.end_date is null) \
+						AND		pop.owner_id = ? \
+						AND	 ssk2.security_key_id NOT IN \
+						( \
+							( 	SELECT 	sur4.security_key_id \
+								FROM 	sec_user_right sur4 \
+								WHERE 	sur4.user_org_id = ? \
+								AND 	sur4.is_denied = 1 \
+							)\
+							UNION \
+							(	SELECT	sur5.security_key_id \
+								FROM 	sec_user_right sur5, \
+										sec_user_in_group uig5 \
+								WHERE 	sur5.group_id = uig5.group_id \
+								AND 	sur5.is_denied = 1 \
+							)\
+						)\
+					)';
+	
+	var queryArgs = new Array();
+	queryArgs[0] = globals.svy_sec_lgn_user_org_id.toString();
+	queryArgs[1] = globals.svy_sec_lgn_owner_id.toString();
+	queryArgs[2] = application.getServerTimeStamp();
+	queryArgs[3] = application.getServerTimeStamp();
+	queryArgs[4] = globals.svy_sec_lgn_user_org_id.toString();
+	queryArgs[5] = globals.svy_sec_lgn_user_org_id.toString();
+	queryArgs[6] = globals.svy_sec_lgn_user_org_id.toString();
+	queryArgs[7] = application.getServerTimeStamp();
+	queryArgs[8] = application.getServerTimeStamp();
+	queryArgs[9] = globals.svy_sec_lgn_owner_id.toString();
+	queryArgs[10] = globals.svy_sec_lgn_user_org_id.toString();
+	
+	var dataset = databaseManager.getDataSetByQuery(serverName, query, queryArgs, -1);
+	
+	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
+	var keyFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
+	keyFs.loadRecords(dataset)
+
+	securityKeys = new Array()
+	for (var i = 1; i <= keyFs.getSize(); i++) {
+		var record = keyFs.getRecord(i);
+		var key = new scopes.svySecurityManager.Key(record.security_key_id, record.name, record.description, record.owner_id);
+		securityKeys.push(key);
+	}
+}
+
+/**
+ * Returns the IDs of all keys of the logged in user as a quoted, 
+ * comma separated list that can be directly parsed into IN queries
+ * 
+ * @return {String}
+ * 
+ * @author patrick
+ * @date 2012-12-12
+ * 
+ * @properties={typeid:24,uuid:"A4498256-7071-43FF-B2EE-67820EBA787E"}
+ */
+function getSecurityKeysForInQuery() {
+	var result = new Array();
+	securityKeys.forEach(function addIdString(key) {result.push("'" + key.keyId + "'");});
+	if (result.length == 0) {
+		result.push("'" + globals.zero_uuid_string + "'");
+	}
+	return result.join(",");
+}
+
+/**
+ * Returns an array with all security key IDs of the logged in user<br>
+ * or [00000000-0000-0000-0000-000000000000] if the user has no keys
+ * 
+ * @return {Array<String>}
+ * 
+ * @author patrick
+ * @date 2012-12-12
+ * 
+ * @properties={typeid:24,uuid:"820CD12B-245A-454E-A571-28155168F06A"}
+ */
+function getSecurityKeysIds() {
+	/** @type {Array<String>} */
+	var result = new Array();
+	securityKeys.forEach(function addIdString(key) {result.push(key.keyId.toString());});
+	if (result.length == 0) {
+		result.push(globals.zero_uuid_string);
+	}
+	return result;
+}
+
+/**
+ * Returns <code>true</code> if the logged in user has 
+ * the key with the given name or UUID
+ * 
+ * @param {String|UUID} key
+ * 
+ * @return {Boolean} hasKey
+ * 
+ * @author patrick
+ * @date 2012-12-12
+ *
+ * @properties={typeid:24,uuid:"43986720-C100-4F2C-9D75-D2BF6ADA9E16"}
+ */
+function hasKey(key) {
+	function filterByName(x) {
+		return x.name == key;
+	}
+	function filterByUuid(x) {
+		return x.keyId == key;
+	}
+	var filtered;
+	if (key instanceof UUID) {
+		filtered = securityKeys.filter(filterByUuid);
+	} else {
+		filtered = securityKeys.filter(filterByName);
+	}
+	return filtered.length > 0;
+}
