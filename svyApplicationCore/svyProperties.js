@@ -17,6 +17,17 @@ var runtimeProperties = loadRuntimeProperties();
 var PROPERTY_CHANGED_EVENT_ACTION = "propertyChanged";
 
 /**
+ * The solution/application context for which properties are handled
+ * 
+ * @type {scopes.svySecurityManager.Application}
+ * 
+ * @private 
+ *
+ * @properties={typeid:35,uuid:"04A0B1A5-6B37-462E-93F7-C968381ECA60",variableType:-4}
+ */
+var APPLICATION_CONTEXT = scopes.svySecurityManager.getApplication();
+
+/**
  * @private 
  * 
  * @return {Array<RuntimeProperty>}
@@ -35,6 +46,7 @@ function getLoadedProperties() {
  * 
  * @param {String} name								- the name of this property
  * @param {String|UUID|PropertySet} propertySet		- the propertySet given as name, ID or PropertySet object
+ * @param {String|UUID} [applicationId]				- an optional applicationId of the application that this property is exclusively for
  * @param {Number} [sortOrder]						- the sortOrder of this property in the set
  * @param {Number} [adminLevel]						- the minimum admin level required to edit this property
  * @param {String} [header]							- the header text that is placed above the property values
@@ -46,7 +58,7 @@ function getLoadedProperties() {
  *
  * @properties={typeid:24,uuid:"ADD262C0-596E-4356-875E-6DE4303070D1"}
  */
-function createProperty(name, propertySet, sortOrder, adminLevel, header) {
+function createProperty(name, propertySet, applicationId, sortOrder, adminLevel, header) {
 	if (!name || !propertySet) {
 		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
@@ -68,10 +80,15 @@ function createProperty(name, propertySet, sortOrder, adminLevel, header) {
 		propertySetId = propertySetObject.propertySetId;
 	} else if (propertySet instanceof UUID) {
 		propertySetId = propertySet.toString();
+		propertySetObject = getPropertySetById(propertySetId);
+		if (!propertySetObject) {
+			throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+		}
 	} else if (propertySet instanceof PropertySet) {
 		/** @type {PropertySet} */
 		var tmpObject = propertySet;		
 		propertySetId = tmpObject.propertySetId;
+		propertySetObject = propertySet;
 	} else {
 		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
@@ -82,6 +99,10 @@ function createProperty(name, propertySet, sortOrder, adminLevel, header) {
 	var propertyRecord = fs.getRecord(fs.newRecord());
 	propertyRecord.property_name = name;
 	propertyRecord.svy_property_sets_id = propertySetId;
+	if (applicationId || propertySetObject.applicationId) {
+		// either application specific itself or by its set
+		propertyRecord.application_id = applicationId ? applicationId : propertySetObject.applicationId;
+	}
 	if (sortOrder) {
 		propertyRecord.sort_order = sortOrder;
 	}
@@ -99,6 +120,7 @@ function createProperty(name, propertySet, sortOrder, adminLevel, header) {
  * Creates a new PropertySet
  * 
  * @param {String} name						- the name of this property set
+ * @param {String|UUID} [applicationId]		- an optional applicationId of the application that this property is exclusively for
  * @param {String} [displayName] 			- the name that is shown (usually i18n)
  * @param {String} [description]			- the description of this property set (usually i18n)
  * @param {String} [icon]					- the icon of this property set as a String URL or byte[]
@@ -112,17 +134,20 @@ function createProperty(name, propertySet, sortOrder, adminLevel, header) {
  *
  * @properties={typeid:24,uuid:"DF2A8A29-EBBA-41C3-9652-2B2184F12421"}
  */
-function createPropertySet(name, displayName, description, icon, formName, sortOrder) {
+function createPropertySet(name, applicationId, displayName, description, icon, formName, sortOrder) {
 	if (!name) {
 		throw scopes.svyExceptions.IllegalArgumentException("No name provided for createPropertySet");
 	}
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_sets");		
 	if (!scopes.svyUtils.isValueUnique(fs, "name", name))	{
-		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name");
+		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name \"" + name + "\"");
 	}
 	var record = fs.getRecord(fs.newRecord());
 	record.name = name;
+	if (applicationId) {
+		record.application_id = applicationId;
+	}
 	if (displayName) {
 		record.display_name = displayName;
 	}
@@ -697,6 +722,20 @@ function Property(propertyRecord) {
 	this.propertySetId = record.svy_property_sets_id;
 	
 	/**
+	 * The ID of the application this property is uniquely for
+	 * 
+	 * @type {UUID}
+	 */
+	this.applicationId = record.application_id;
+	
+	/**
+	 * The name of the servoy solution this property is uniquely for
+	 * 
+	 * @type {String}
+	 */
+	this.solutionName = (record.application_id && utils.hasRecords(record.svy_properties_to_prov_application)) ? record.svy_properties_to_prov_application.servoy_solution_name : null;
+	
+	/**
 	 * The sort order for this property
 	 * 
 	 * @type {Number}
@@ -816,7 +855,29 @@ function Property(propertyRecord) {
 				databaseManager.saveData(record);
 			}
 		}
-	})	
+	})
+	
+	Object.defineProperty(this, "applicationId", {
+		get: function() {
+			return record.application_id;
+		},
+		set: function(x) {
+			if (x) {
+				record.application_id = x;
+				databaseManager.saveData(record);
+			}
+		}
+	})
+	
+	Object.defineProperty(this, "solutionName", {
+		get: function() {
+			if (utils.hasRecords(record.svy_properties_to_prov_application)) {
+				return record.svy_properties_to_prov_application.servoy_solution_name;
+			} else {
+				return null;
+			}
+		}
+	})
 	
 	Object.defineProperty(this, "securityLevel", {
 		get: function() {
@@ -891,6 +952,13 @@ function PropertySet(propertySetRecord) {
 	this.description = record.description;
 	
 	/**
+	 * The ID of the application this set is uniquely for
+	 * 
+	 * @type {UUID}
+	 */
+	this.applicationId = record.application_id;
+	
+	/**
 	 * The ID of this property set
 	 * 
 	 * @type {UUID}
@@ -962,6 +1030,16 @@ function PropertySet(propertySetRecord) {
 			databaseManager.saveData(record);
 		}
 	})
+	
+	Object.defineProperty(this, "applicationId", {
+		get: function() {
+			return record.application_id;
+		},
+		set: function(x) {
+			record.application_id = x;
+			databaseManager.saveData(record);
+		}
+	})	
 	
 	Object.defineProperty(this, "displayName", {
 		get: function() {
@@ -1059,7 +1137,21 @@ function PropertyValue(propertyDescription, sortOrder, name, dataType, displayTy
 	 * 
 	 * @type {String}
 	 */
-	this.name = "";		
+	this.name = "";
+	
+	/**
+	 * The Id of the application this property value is for
+	 * 
+	 * @type {UUID}
+	 */
+	this.application_id = propertyDescriptionObj.applicationId;
+	
+	/**
+	 * The name of the solution this value is for
+	 * 
+	 * @type {String}
+	 */
+	this.solutionName = propertyDescriptionObj.solutionName;
 	
 	/**
 	 * Internal var holding name
@@ -1211,6 +1303,16 @@ function PropertyValue(propertyDescription, sortOrder, name, dataType, displayTy
 		result.sort = _this.sortOrder;
 		return result;
 	}
+	
+	Object.defineProperty(this, "applicationId", {
+		get: function() {
+			return $description;
+		},
+		set: function(x) {
+			$description = x;
+			propertyDescriptionObj.saveValueDescription();
+		}
+	})
 	
 	Object.defineProperty(this, "description", {
 		get: function() {
@@ -1367,13 +1469,14 @@ function getValueArray(_values) {
  * @properties={typeid:24,uuid:"CC1F58C5-B612-4476-B1F3-AF267DDAC38B"}
  */
 function updateDefaultProperties(props) {
-	/** @type {{name: String, displayName: String, description: String, icon: String, sort: Number, formName: String}} */
+	/** @type {{name: String, applicationName: String, displayName: String, description: String, icon: String, sort: Number, formName: String}} */
 	var givenSet = props.propertySet;
 	// Get a property set
 	var propertySet = getPropertySet(givenSet.name);
 	if (!propertySet) {
 		propertySet = createPropertySet(
 			givenSet.name, 
+			givenSet.applicationName,
 			givenSet.displayName, 
 			givenSet.description, 
 			givenSet.icon, 
@@ -1384,6 +1487,9 @@ function updateDefaultProperties(props) {
 		if (propertySet.description != givenSet.description) {
 			propertySet.description = givenSet.description;
 		}
+		if (propertySet.applicationName != givenSet.applicationName) {
+			propertySet.applicationName = givenSet.applicationName;
+		}		
 		if (propertySet.displayName != givenSet.displayName) {
 			propertySet.displayName = givenSet.displayName;
 		}
@@ -1402,7 +1508,7 @@ function updateDefaultProperties(props) {
 	}
 	
 	// now see which properties already exist
-	/** @type {Array<{name: String, value: Object, securityLevel: Number, sort: Number, dataType: Number, displayType: Number, label: String, header: String, description: String, valueListName: String, valueListValues: Array}>} */
+	/** @type {Array<{name: String, applicationName: String, value: Object, securityLevel: Number, sort: Number, dataType: Number, displayType: Number, label: String, header: String, description: String, valueListName: String, valueListValues: Array}>} */
 	var givenProperties = props.properties;
 	var givenPropertyNames = new Array();
 	for (var i = 0; i < givenProperties.length; i++) {
@@ -1472,6 +1578,10 @@ function updateDefaultProperties(props) {
 							propValues[p].dataType = valueItem.dataType;
 							itemChanged = true;
 						}
+						if ("applicationName" in valueItem && propValues[p].solutionName !== valueItem.applicationName) {
+							propValues[p].solutionName = valueItem.applicationName;
+							itemChanged = true;
+						}
 						if ("description" in valueItem && propValues[p].description !== valueItem.description) {
 							propValues[p].description = valueItem.description;
 							itemChanged = true;
@@ -1526,7 +1636,7 @@ function updateDefaultProperties(props) {
 	if (givenProperties && givenProperties.length > 0) {
 		for (var rp = 0; rp < givenProperties.length; rp++) {
 			var givenProperty = givenProperties[rp];
-			var newProperty = createProperty(givenProperty.name, propertySet, givenProperty.sort, givenProperty.securityLevel);
+			var newProperty = createProperty(givenProperty.name, propertySet, givenProperty.applicationName, givenProperty.sort, givenProperty.securityLevel);
 			newProperty.addValueDescription(1, givenProperty.name, givenProperty.dataType, givenProperty.displayType, givenProperty.label, givenProperty.description, givenProperty.value, givenProperty.valueListName, givenProperty.valueListValues);
 		}
 		updateDefaultPropertyValues();
@@ -1721,7 +1831,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 		propertyRecord = fs.getRecord(fs.newRecord());
 		propertyRecord.svy_properties_id = runtimePropId;
 		propertyRecord.property_name = runtimeProp.propertyName;
-		propertyRecord.solution_name = application.getSolutionName();
+		propertyRecord.application_id = APPLICATION_CONTEXT ? APPLICATION_CONTEXT.id : null;
 		if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER || adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER) {
 			propertyRecord.owner_id = globals.zero_uuid;
 			propertyRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
@@ -1804,16 +1914,24 @@ function updateDefaultPropertyValues() {
 	
 	var ownerId = globals.zero_uuid;
 	
+	var filterOnSolutionName = getPropertyValueAsBoolean("filter_on_solution_name");
+	
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */	
 	var fsValues = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 	
 	/** @type {QBSelect<db:/svy_framework/svy_properties>} */	
 	var propQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	propQuery.result.addPk();
+	if (filterOnSolutionName) {
+		if (APPLICATION_CONTEXT) {
+			propQuery.where.add(propQuery.columns.application_id.isin([null, APPLICATION_CONTEXT.id]));
+		} else {
+			propQuery.where.add(propQuery.columns.application_id.isin([null]));
+		}
+	}
 
 	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */	
 	var fs = databaseManager.getFoundSet(propQuery);
-	fs.loadAllRecords();
 	
 	/** @type {Array<PropertyValue>} */
 	var propValues;
@@ -1899,10 +2017,25 @@ function updateDefaultPropertyValues() {
 		return valueAdjusted;
 	}
 	
+	/** @type {QBSelect<db:/svy_framework/svy_property_values>} */
+	var valueQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
+	valueQuery.result.addPk();
+	valueQuery.where.add(valueQuery.columns.owner_id.eq(globals.zero_uuid_string));
+	valueQuery.where.add(valueQuery.columns.svy_properties_id.eq(valueQuery.getParameter("propertyId")));
+	if (filterOnSolutionName) {
+		if (APPLICATION_CONTEXT) {
+			valueQuery.where.add(valueQuery.columns.application_id.isin([null, APPLICATION_CONTEXT.id]));
+		} else {
+			valueQuery.where.add(valueQuery.columns.application_id.isin([null]));
+		}
+	}
+	
 	for (var i = 1; i <= fs.getSize(); i++) {
 		var propRecord = fs.getRecord(i);
-		if (utils.hasRecords(propRecord.svy_properties_to_svy_property_values$default_properties)) {
-			propValueRecord = propRecord.svy_properties_to_svy_property_values$default_properties.getRecord(1);
+		valueQuery.params["propertyId"] = propRecord.svy_properties_id;
+		fsValues.loadRecords(valueQuery);
+		if (utils.hasRecords(fsValues)) {
+			propValueRecord = fsValues.getRecord(1);
 		} else {
 			propValueRecord = fsValues.getRecord(fsValues.newRecord());
 			propValueRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
@@ -1910,7 +2043,7 @@ function updateDefaultPropertyValues() {
 			propValueRecord.owner_id = ownerId;
 			propValueRecord.property_owner_id = ownerId;
 			propValueRecord.property_name = propRecord.property_name;
-			propValueRecord.solution_name = application.getSolutionName();
+			propValueRecord.application_id = propRecord.admin_level >= scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER ? null : propRecord.application_id;
 		}
 		
 		propValues = propRecord.value_description;
@@ -2003,7 +2136,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
 		runtimeProperties.splice(runtimeProperties.indexOf(runtimeProperty),1);
 		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 		record = fs.getRecord(fs.newRecord());
-		record.solution_name = application.getSolutionName();
+		record.application_id = APPLICATION_CONTEXT ? APPLICATION_CONTEXT.id : null;
 		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
 		record.owner_id = user.ownerId;
 		record.property_name = propertyName;
@@ -2014,7 +2147,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
 	} else {
 		fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_values");
 		record = fs.getRecord(fs.newRecord());
-		record.solution_name = application.getSolutionName();
+		record.application_id = APPLICATION_CONTEXT ? APPLICATION_CONTEXT.id : null;
 		record.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
 		record.owner_id = user.ownerId;
 		record.property_name = propertyName;
@@ -2058,4 +2191,67 @@ function printRuntimeProperties(adminLevel) {
 	for (var i = 0; i < props.length; i++) {
 		application.output(props[i].propertyValueName + ": " + props[i].value);
 	}
+}
+
+/**
+ * Sets the application/solution context for which properties are handled<p>
+ * 
+ * This should only be called if properties are used outside the security system of the BAP<br>
+ * since the BAP filters on solution_name by itself<p>
+ * 
+ * Note: This call will trigger a reload of runtimeProperties
+ * 
+ * @param {String|UUID} applicationIdOrName
+ *
+ * @properties={typeid:24,uuid:"1BDF15F8-076D-45D8-81E8-9D21C0F564DC"}
+ */
+function setApplicationContext(applicationIdOrName) {
+	if (!applicationIdOrName) {
+		throw new scopes.svyExceptions.IllegalArgumentException("application name or id is required for setApplicationContext");
+	}
+	var app;
+	if (applicationIdOrName instanceof UUID) {
+		app = scopes.svySecurityManager.getApplicationByID(applicationIdOrName);
+	} else {
+		app = scopes.svySecurityManager.getApplication(applicationIdOrName);
+	}
+	if (!app) {
+		throw new scopes.svyExceptions.IllegalArgumentException("application with name or id \"" + applicationIdOrName + "\" does not exist");
+	}
+	
+	var currentFilters = databaseManager.getTableFilterParams(globals.nav_db_framework);
+	currentFilters = currentFilters.filter(function(item) {
+		return item[0] == "svy_property_values" || item[0] == "svy_properties" || item[0] == "svy_property_sets";
+	});
+	var success;
+	if (currentFilters.length > 0) {
+		// currently filtered
+		for (var i = 0; i < currentFilters.length; i++) {
+			/** @type {String} */
+			var filterName = currentFilters[i][4];
+			if (filterName) {
+				success = databaseManager.removeTableFilterParam(globals.nav_db_framework, filterName);
+				if (!success) {
+					throw new scopes.svyExceptions.IllegalStateException("Failed to remove table filter for table " + currentFilters[i][0]);
+				}
+			}
+		}
+	}
+	
+	// create table filters
+	success = databaseManager.addTableFilterParam(globals.nav_db_framework, "svy_property_values", "application_id", "^||=", app.id, "solution_filter_svy_property_values");
+	if (!success) {
+		throw new scopes.svyExceptions.IllegalStateException("Failed to create table filter for table svy_property_values");
+	}
+	success = databaseManager.addTableFilterParam(globals.nav_db_framework, "svy_properties", "application_id", "^||=", app.id, "solution_filter_svy_properties");
+	if (!success) {
+		throw new scopes.svyExceptions.IllegalStateException("Failed to create table filter for table svy_properties");
+	}
+	success = databaseManager.addTableFilterParam(globals.nav_db_framework, "svy_property_sets", "application_id", "^||=", app.id, "solution_filter_svy_property_sets");
+	if (!success) {
+		throw new scopes.svyExceptions.IllegalStateException("Failed to create table filter for table svy_property_sets");
+	}	
+	
+	APPLICATION_CONTEXT = app;	
+	reloadRuntimeProperties();	
 }
