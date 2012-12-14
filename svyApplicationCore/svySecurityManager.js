@@ -2749,18 +2749,6 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
 }
 
 /**
- * Set exception prototypes to super class
- * 
- * @protected  
- * 
- * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
- */
-var init = function() {
-	loadSecurityKeys();
-	PasswordRuleViolationException.prototype = 	new scopes.svyExceptions.IllegalArgumentException("Password rule violated");
-}()
-
-/**
  * Gets all the security keys for the logged in user
  * 
  * @private 
@@ -2934,3 +2922,15 @@ function hasKey(key) {
 	}
 	return filtered.length > 0;
 }
+
+/**
+ * Set exception prototypes to super class
+ * 
+ * @protected  
+ * 
+ * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
+ */
+var init = function() {
+	loadSecurityKeys();
+	PasswordRuleViolationException.prototype = 	new scopes.svyExceptions.IllegalArgumentException("Password rule violated");
+}()
