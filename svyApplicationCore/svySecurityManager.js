@@ -60,9 +60,12 @@ var PERFORM_HASH_CHECKS = false;
 
 /**
  * @type {Array<scopes.svySecurityManager.Key>}
+ * 
+ * @private 
+ * 
  * @properties={typeid:35,uuid:"F684D9DE-BDB5-4543-84FB-D0ABF67CFED5",variableType:-4}
  */
-var securityKeys = new Array();
+var securityKeys = null;
 
 /**
  * Returns the Application with the given ID or null if not found
@@ -888,6 +891,9 @@ function User(userRecord) {
 	 * @return {Array<scopes.svySecurityManager.Key>} keys
 	 */
 	this.getKeys = function() {
+		if (securityKeys == null) {
+			loadSecurityKeys();
+		}
 		return securityKeys;
 	}
 	
@@ -2865,6 +2871,9 @@ function loadSecurityKeys() {
  * @properties={typeid:24,uuid:"A4498256-7071-43FF-B2EE-67820EBA787E"}
  */
 function getSecurityKeysForInQuery() {
+	if (securityKeys == null) {
+		loadSecurityKeys();
+	}
 	var result = new Array();
 	securityKeys.forEach(function addIdString(key) {result.push("'" + key.keyId + "'");});
 	if (result.length == 0) {
@@ -2885,6 +2894,9 @@ function getSecurityKeysForInQuery() {
  * @properties={typeid:24,uuid:"820CD12B-245A-454E-A571-28155168F06A"}
  */
 function getSecurityKeysIds() {
+	if (securityKeys == null) {
+		loadSecurityKeys();
+	}
 	/** @type {Array<String>} */
 	var result = new Array();
 	securityKeys.forEach(function addIdString(key) {result.push(key.keyId.toString());});
@@ -2908,6 +2920,9 @@ function getSecurityKeysIds() {
  * @properties={typeid:24,uuid:"43986720-C100-4F2C-9D75-D2BF6ADA9E16"}
  */
 function hasKey(key) {
+	if (securityKeys == null) {
+		loadSecurityKeys();
+	}
 	function filterByName(x) {
 		return x.name == key;
 	}
@@ -2931,6 +2946,5 @@ function hasKey(key) {
  * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
  */
 var init = function() {
-	loadSecurityKeys();
 	PasswordRuleViolationException.prototype = 	new scopes.svyExceptions.IllegalArgumentException("Password rule violated");
 }()
