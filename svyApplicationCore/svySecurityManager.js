@@ -68,6 +68,15 @@ var PERFORM_HASH_CHECKS = false;
 var securityKeys = null;
 
 /**
+ * @type {Array<scopes.svySecurityManager.Key>}
+ * 
+ * @private 
+ * 
+ * @properties={typeid:35,uuid:"54104078-EB68-47C8-AA33-C224DD6F7583",variableType:-4}
+ */
+var runtimeSecurityKeys = null;
+
+/**
  * Returns the Application with the given ID or null if not found
  * 
  * @param {String|UUID} applicationID
@@ -891,10 +900,7 @@ function User(userRecord) {
 	 * @return {Array<scopes.svySecurityManager.Key>} keys
 	 */
 	this.getKeys = function() {
-		if (securityKeys == null) {
-			loadSecurityKeys();
-		}
-		return securityKeys;
+		return getRuntimeSecurityKeys();
 	}
 	
 	/**
@@ -1360,6 +1366,7 @@ function Group(ownerRecord) {
  * @param {String} keyName
  * @param {String} [keyDescription]
  * @param {UUID} [keyOwnerId]
+ * @param {UUID} [keyModuleId]
  * 
  * @constructor 
  * 
@@ -1368,7 +1375,7 @@ function Group(ownerRecord) {
  *
  * @properties={typeid:24,uuid:"1CA88ECA-97B1-4086-9E95-748727448057"}
  */
-function Key(keyID, keyName, keyDescription, keyOwnerId) {
+function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 	
 	/**
 	 * The name of this key
@@ -1407,6 +1414,19 @@ function Key(keyID, keyName, keyDescription, keyOwnerId) {
 	 * @type {Owner}
 	 */
 	this.owner = null;
+	
+	/**
+	 * Gets the moduleId of this key
+	 */
+	this.moduleId = "";
+	
+	var $moduleId = "";
+	
+	/**
+	 * Gets the Module of this key
+	 * @type {Module}
+	 */
+	this.moduleId = null;
 	
 	/**
 	 * Returns all groups with this key
@@ -1584,20 +1604,69 @@ function Key(keyID, keyName, keyDescription, keyOwnerId) {
         }
     });
 	
-	Object.defineProperty(this, "owner", {
+	Object.defineProperty(this, "ownerId", {
         set: function (x) {
         	var record = getKeyRecord();
         	if (record) {
-        		record.owner_id = x.ownerId;
+        		record.owner_id = x;
                 save(record);
                 $ownerId = x;                
+        	}
+        },
+        get: function () {
+        	return $ownerId;
+        }
+    });	
+	
+	Object.defineProperty(this, "moduleId", {
+        set: function (x) {
+        	var record = getKeyRecord();
+        	if (record) {
+        		record.module_id = x;
+                save(record);
+                $moduleId = x;                
+        	}
+        },
+        get: function () {
+        	return $moduleId;
+        }
+    });		
+	
+	Object.defineProperty(this, "owner", {
+        set: function (x) {
+        	/** @type {Owner} */
+        	var givenOwner = x;
+        	var record = getKeyRecord();
+        	if (record) {
+        		record.owner_id = givenOwner.ownerId;
+                save(record);
+                $ownerId = givenOwner.ownerId;                
         	}
         },
         get: function () {
         	if (!$ownerId || $ownerId.toString() == "00000000-0000-0000-0000-000000000000") {
         		return null;
         	}
-            return new Owner($ownerId);
+        	return getOwnerById($ownerId);
+        }
+    });		
+	
+	Object.defineProperty(this, "module", {
+        set: function (x) {
+        	/** @type {Module} */
+        	var givenModule = x;
+        	var record = getKeyRecord();
+        	if (record) {
+        		record.module_id = givenModule.id;
+                save(record);
+                $moduleId = givenModule.id;                
+        	}
+        },
+        get: function () {
+        	if (!$moduleId || $moduleId.toString() == "00000000-0000-0000-0000-000000000000") {
+        		return null;
+        	}
+            return getModuleByID($moduleId);
         }
     });	
 	
@@ -2000,6 +2069,42 @@ function Owner(ownerRecord) {
 		return fs.deleteOrganization(organization.orgId, ownerRecord);
 	}
 	
+	/**
+	 * Returns all modules of this owner
+	 * 
+	 * @return {Array<Module>}
+	 */
+	this.getModules = function() {
+		/** @type {Array<Module>} */
+		var result = new Array();
+		var fs = ownerRecord.sec_owner_to_sec_owner_in_module;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			var moduleRecord = fs.getRecord(i);
+			if (utils.hasRecords(moduleRecord.sec_owner_in_module_to_sec_module)) {
+				result.push(new Module(moduleRecord.sec_owner_in_module_to_sec_module.getRecord(1)));
+			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns all active modules of this owner
+	 * 
+	 * @return {Array<Module>}
+	 */
+	this.getActiveModules = function() {
+		/** @type {Array<Module>} */
+		var result = new Array();
+		var fs = ownerRecord.sec_owner_to_sec_owner_in_module$active;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			var moduleRecord = fs.getRecord(i);
+			if (utils.hasRecords(moduleRecord.sec_owner_in_module_to_sec_module)) {
+				result.push(new Module(moduleRecord.sec_owner_in_module_to_sec_module.getRecord(1)));
+			}
+		}
+		return result;
+	}	
+	
 	Object.defineProperty(this, "name", {
         set: function (x) {
             record.name = x;
@@ -2133,9 +2238,17 @@ function Owner(ownerRecord) {
 		},
 		"deleteOrganization": {
 			enumerable: false
+		},
+		"getModules": {
+			enumerable: false
+		},
+		"getUsers": {
+			enumerable: false
+		},
+		"createUser": {
+			enumerable: false
 		}
 	});
-	
 	Object.seal(this);	
 }
 
@@ -2154,6 +2267,7 @@ function Module(moduleRecord){
 	 * @type {UUID}
 	 */
 	this.id = record.module_id;
+	
 	Object.defineProperty(this,'id',{
 		get:function(){return record.module_id;}
 	});
@@ -2163,6 +2277,7 @@ function Module(moduleRecord){
 	 * @type {String}
 	 */
 	this.name = record.name;
+	
 	Object.defineProperty(this,'name',{
 		get:function(){return record.name},
 		set:function(x){
@@ -2182,6 +2297,7 @@ function Module(moduleRecord){
 	 * @type {String}
 	 */
 	this.description = record.description;
+	
 	Object.defineProperty(this,'description',{
 		get:function(){return record.description},
 		set:function(x){
@@ -2189,6 +2305,24 @@ function Module(moduleRecord){
 			save(record);
 		}
 	});
+	
+	/**
+	 * Returns all owner who have been assigned to this module
+	 * 
+	 * @return {Array<Owner>}
+	 */
+	this.getOwners = function() {
+		/** @type {Array<Owner>} */
+		var result = new Array();
+		var fs = record.sec_module_to_sec_owner_in_module;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			var ownerRecord = fs.getRecord(i);
+			if (utils.hasRecords(ownerRecord.sec_owner_in_module_to_sec_owner)) {
+				result.push(new Owner(ownerRecord));
+			}
+		}
+		return result;
+	}
 	
 	Object.seal(this);
 }
@@ -2762,6 +2896,12 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
  * @properties={typeid:24,uuid:"321EDB6A-DD45-4990-B0FF-BF76D381C5D6"}
  */
 function loadSecurityKeys() {
+	securityKeys = new Array();
+	
+	if (!globals.svy_sec_lgn_user_org_id || ! globals.svy_sec_lgn_owner_id || ! globals.svy_sec_lgn_user_org_id) {
+		return;
+	}
+	
 	var serverName = globals.nav_db_framework;
 	var query = '\
 					SELECT DISTINCT	surd.security_key_id \
@@ -2849,12 +2989,11 @@ function loadSecurityKeys() {
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
 	var keyFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
-	keyFs.loadRecords(dataset)
-
-	securityKeys = new Array()
+	keyFs.loadRecords(dataset);
+	
 	for (var i = 1; i <= keyFs.getSize(); i++) {
 		var record = keyFs.getRecord(i);
-		var key = new scopes.svySecurityManager.Key(record.security_key_id, record.name, record.description, record.owner_id);
+		var key = new scopes.svySecurityManager.Key(record.security_key_id, record.name, record.description, record.owner_id, record.module_id);
 		securityKeys.push(key);
 	}
 }
@@ -2871,11 +3010,9 @@ function loadSecurityKeys() {
  * @properties={typeid:24,uuid:"A4498256-7071-43FF-B2EE-67820EBA787E"}
  */
 function getSecurityKeysForInQuery() {
-	if (securityKeys == null) {
-		loadSecurityKeys();
-	}
+	var runtimeKeys = getRuntimeSecurityKeys();
 	var result = new Array();
-	securityKeys.forEach(function addIdString(key) {result.push("'" + key.keyId + "'");});
+	runtimeKeys.forEach(function addIdString(key) {result.push("'" + key.keyId + "'");});
 	if (result.length == 0) {
 		result.push("'" + globals.zero_uuid_string + "'");
 	}
@@ -2894,12 +3031,10 @@ function getSecurityKeysForInQuery() {
  * @properties={typeid:24,uuid:"820CD12B-245A-454E-A571-28155168F06A"}
  */
 function getSecurityKeysIds() {
-	if (securityKeys == null) {
-		loadSecurityKeys();
-	}
+	var runtimeKeys = getRuntimeSecurityKeys();
 	/** @type {Array<String>} */
 	var result = new Array();
-	securityKeys.forEach(function addIdString(key) {result.push(key.keyId.toString());});
+	runtimeKeys.forEach(function addIdString(key) {result.push(key.keyId.toString());});
 	if (result.length == 0) {
 		result.push(globals.zero_uuid_string);
 	}
@@ -2920,9 +3055,8 @@ function getSecurityKeysIds() {
  * @properties={typeid:24,uuid:"43986720-C100-4F2C-9D75-D2BF6ADA9E16"}
  */
 function hasKey(key) {
-	if (securityKeys == null) {
-		loadSecurityKeys();
-	}
+	var runtimeKeys = getRuntimeSecurityKeys();
+	
 	function filterByName(x) {
 		return x.name == key;
 	}
@@ -2931,11 +3065,93 @@ function hasKey(key) {
 	}
 	var filtered;
 	if (key instanceof UUID) {
-		filtered = securityKeys.filter(filterByUuid);
+		filtered = runtimeKeys.filter(filterByUuid);
 	} else {
-		filtered = securityKeys.filter(filterByName);
+		filtered = runtimeKeys.filter(filterByName);
 	}
 	return filtered.length > 0;
+}
+
+/**
+ * Returns all security keys<p>
+ * 
+ * Concatenates all keys assigned to the user and all keys added at runtime
+ * 
+ * @private 
+ * 
+ * @properties={typeid:24,uuid:"E74F5441-547A-4391-9AA5-97F1D757C899"}
+ */
+function getRuntimeSecurityKeys() {
+	if (securityKeys == null) {
+		loadSecurityKeys();
+	}
+	if (runtimeSecurityKeys == null) {
+		runtimeSecurityKeys = new Array();
+	}
+	return securityKeys.concat(runtimeSecurityKeys);
+}
+
+
+/**
+ * Adds the given key to the list of loaded security keys
+ * 
+ * @param {UUID|String} keyId
+ * @param {String} keyName
+ * @param {String} [keyDescription]
+ * @param {UUID|String} [keyOwnerId]
+ * @param {UUID|String} [keyModuleId]
+ * 
+ * @return {scopes.svySecurityManager.Key}
+ * 
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
+ *
+ * @properties={typeid:24,uuid:"B2513CBE-E5E8-4ECD-A75C-51DD2248F9FC"}
+ */
+function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) {
+	if (!keyId && !keyName) {
+		throw new scopes.svyExceptions.IllegalArgumentException('Key ID and name cannot be null');
+	}
+	var id = keyId;
+	if (keyId instanceof String) {
+		id = application.getUUID(keyId);
+	}
+	var ownerId = keyOwnerId;
+	if (keyOwnerId instanceof String) {
+		ownerId = application.getUUID(keyOwnerId);
+	}
+	var moduleId = keyModuleId;
+	if (keyModuleId instanceof String) {
+		moduleId = application.getUUID(keyModuleId);
+	}	
+	var newKey = new scopes.svySecurityManager.Key(id, keyName, keyDescription, ownerId, moduleId);
+	if (runtimeSecurityKeys == null) {
+		runtimeSecurityKeys = new Array();
+	}
+	runtimeSecurityKeys.push(newKey);
+	return newKey;
+}
+
+/**
+ * Removes the key with the given Id from the list of runtime keys
+ * 
+ * @param {UUID|String} keyId
+ *
+ * @properties={typeid:24,uuid:"5ABE723C-054F-4F82-A3E9-174286CB87EA"}
+ */
+function removeRuntimeKey(keyId) {
+	if (runtimeSecurityKeys == null) {
+		return;
+	}
+	var id = keyId;
+	if (keyId instanceof String) {
+		id = application.getUUID(keyId);
+	} 
+	for (var i = 0; i < runtimeSecurityKeys.length; i++) {
+		var runtimeKey = runtimeSecurityKeys[i];
+		if (runtimeKey.keyId == id) {
+			runtimeSecurityKeys.splice(i, 1);
+		}
+	}
 }
 
 /**
