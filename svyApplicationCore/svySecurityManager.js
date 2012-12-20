@@ -2390,7 +2390,23 @@ function Application(applicationRecord){
 				record.servoy_solution_name = x;
 				save(record);
 			}
-		});
+	});
+	
+	/**
+	 * Gets the deeplink URL for the web client
+	 * @return {String}
+	 */
+	this.getDeepLinkWebClient = function(){
+		return record.solution_deeplink_wc;
+	}
+	
+	/**
+	 * Gets the deep link URL for the smart client
+	 * @return {String}
+	 */
+	this.getDeepLinkSmartClient = function(){
+		return record.solution_deeplink_sc;
+	}
 	
 	/**
 	 * Links a module to this application
