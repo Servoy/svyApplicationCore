@@ -1525,16 +1525,16 @@ function updateDefaultProperties(props) {
 	var fs = databaseManager.getFoundSet(query);
 	
 	function removeItem(name) {
-		for (var x = 0; x < givenProperties.length; x++) {
-			if (givenProperties[x].name == name) {
-				givenProperties.splice(x, 1);
+		for (var z = 0; z < givenProperties.length; z++) {
+			if (givenProperties[z].name == name) {
+				givenProperties.splice(z, 1);
 			}
 		}		
 	}
 	
 	function findValueItem(name) {
-		function filterForName(x) {
-			if (x.name == name) {
+		function filterForName(z) {
+			if (z.name == name) {
 				return true;
 			} else {
 				return false;
@@ -1815,9 +1815,9 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 		adminLevel = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
 	}
 	
-	query.where.add(query.columns.svy_properties_id.eq(runtimePropId));
+	query.where.add(query.columns.svy_properties_id.eq(runtimePropId.toString()));
 	query.where.add(query.columns.admin_level.eq(adminLevel));	
-	query.where.add(query.columns.property_owner_id.eq(propertyOwnerId));	
+	query.where.add(query.columns.property_owner_id.eq(propertyOwnerId.toString()));	
 	
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
@@ -1950,17 +1950,17 @@ function updateDefaultPropertyValues() {
 			return true;
 		}
 		var result = false;
-		for (var i = 0; i < values.length; i++) {
+		for (var x = 0; x < values.length; x++) {
 			var found = false;
-			for (var j = 0; j < savedValues.length; j++) {
-				if (savedValues[j].name == values[i].name) {
+			for (var y = 0; y < savedValues.length; y++) {
+				if (savedValues[y].name == values[x].name) {
 					found = true;
 					break;
 				}
 			}
 			if (!found) {
-				savedValues.push(values[i]);
-				application.output("Added property \"" + values[i].name + "\" to the owner's properties", LOGGINGLEVEL.INFO);
+				savedValues.push(values[x]);
+				application.output("Added property \"" + values[x].name + "\" to the owner's properties", LOGGINGLEVEL.INFO);
 				result = true;
 			}
 		}
@@ -1977,17 +1977,17 @@ function updateDefaultPropertyValues() {
 			return true;
 		}
 		var result = false;
-		for (var i = 0; i < savedValues.length; i++) {
+		for (var x = 0; x < savedValues.length; x++) {
 			var found = false;
-			for (var j = 0; j < values.length; j++) {
-				if (savedValues[i].name == values[j].name) {
+			for (var y = 0; y < values.length; y++) {
+				if (savedValues[x].name == values[y].name) {
 					found = true;
 					break;
 				}
 			}
 			if (!found) {
-				savedValues.splice(i, 1);
-				application.output("Removed property \"" + savedValues[i].name + "\" from the owner's properties", LOGGINGLEVEL.INFO);				
+				savedValues.splice(x, 1);
+				application.output("Removed property \"" + savedValues[x].name + "\" from the owner's properties", LOGGINGLEVEL.INFO);				
 				result = true;
 			}
 		}
@@ -2000,15 +2000,15 @@ function updateDefaultPropertyValues() {
 		}
 		
 		var valueAdjusted = false;
-		for (var i = 0; i < savedValues.length; i++) {
-			for (var j = 0; j < values.length; j++) {
-				if (values[j].name == savedValues[i].name) {
-					if (savedValues[i].value != values[j].value) {
-						savedValues[i].value = values[j].value;
+		for (var x = 0; x < savedValues.length; x++) {
+			for (var y = 0; y < values.length; y++) {
+				if (values[y].name == savedValues[x].name) {
+					if (savedValues[x].value != values[y].value) {
+						savedValues[x].value = values[y].value;
 						valueAdjusted = true;
 					}
-					if (savedValues[i].sort != values[j].sortOrder) {
-						savedValues[i].sort = values[j].sortOrder;
+					if (savedValues[x].sort != values[y].sortOrder) {
+						savedValues[x].sort = values[y].sortOrder;
 						valueAdjusted = true;						
 					}
 				}
@@ -2032,7 +2032,7 @@ function updateDefaultPropertyValues() {
 	
 	for (var i = 1; i <= fs.getSize(); i++) {
 		var propRecord = fs.getRecord(i);
-		valueQuery.params["propertyId"] = propRecord.svy_properties_id;
+		valueQuery.params["propertyId"] = propRecord.svy_properties_id.toString();
 		fsValues.loadRecords(valueQuery);
 		if (utils.hasRecords(fsValues)) {
 			propValueRecord = fsValues.getRecord(1);
