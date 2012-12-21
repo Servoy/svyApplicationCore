@@ -900,6 +900,8 @@ function User(userRecord) {
 	 * @return {Array<scopes.svySecurityManager.Key>} keys
 	 */
 	this.getKeys = function() {
+		// TODO: this is wrong, it will only give the keys for the current user, not any user
+		// See todo in loadSecurityKeys to see what needs to be changed there
 		return getRuntimeSecurityKeys();
 	}
 	
@@ -2912,6 +2914,8 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
  * @properties={typeid:24,uuid:"321EDB6A-DD45-4990-B0FF-BF76D381C5D6"}
  */
 function loadSecurityKeys() {
+	// TODO: this method needs to be able to load the key for any user/userOrg to correctly handle User.getKeys()
+	// It should also be possible call the loading of keys from another scope (currently, this is private)
 	securityKeys = new Array();
 	
 	if (!globals.svy_sec_lgn_user_org_id || ! globals.svy_sec_lgn_owner_id || ! globals.svy_sec_lgn_user_org_id) {
@@ -3155,6 +3159,8 @@ function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) 
  * @properties={typeid:24,uuid:"5ABE723C-054F-4F82-A3E9-174286CB87EA"}
  */
 function removeRuntimeKey(keyId) {
+	// TODO: the keyId that is given here should also remove any key loaded from the DB
+	// I guess these need to be stored in an array as well and taken care of in getRuntimeSecurityKeys
 	if (runtimeSecurityKeys == null) {
 		return;
 	}
