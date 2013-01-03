@@ -2399,7 +2399,7 @@ function Application(applicationRecord){
 	 * @return {String}
 	 */
 	this.getDeepLinkWebClient = function(){
-		return record.solution_deeplink_wc;
+		return scopes.modUtils$system.getSolutionDeepLinkSmartClient(record.servoy_solution_name);
 	}
 	
 	/**
@@ -2407,7 +2407,7 @@ function Application(applicationRecord){
 	 * @return {String}
 	 */
 	this.getDeepLinkSmartClient = function(){
-		return record.solution_deeplink_sc;
+		return scopes.modUtils$system.getSolutionDeepLinkSmartClient(record.servoy_solution_name);
 	}
 	
 	/**
