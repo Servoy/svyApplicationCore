@@ -585,7 +585,7 @@ function changePassword(newPassword, record)
 	newPasswordRecord.start_date = new Date(now.getTime() + 1);
 	
 	if (ownerRecord.password_renew) {
-		newPasswordRecord.end_date = scopes.svyDateUtils.addDays(newPasswordRecord.start_date, ownerRecord.password_renew);
+		newPasswordRecord.end_date = scopes.modUtils$date.addDays(newPasswordRecord.start_date, ownerRecord.password_renew);
 	} else {
 		newPasswordRecord.end_date = new Date(newPasswordRecord.start_date.getFullYear() + maxPasswordValidity, 
 			newPasswordRecord.start_date.getMonth(), 
