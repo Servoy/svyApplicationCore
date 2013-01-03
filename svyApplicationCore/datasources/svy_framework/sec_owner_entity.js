@@ -6,7 +6,7 @@
  * @param {UUID} organizationId
  * @param {JSRecord<db:/svy_framework/sec_owner>} [record]
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @properties={typeid:24,uuid:"13EB5360-FD11-4FBD-A2E8-5C758D047737"}
  */
@@ -16,7 +16,7 @@ function deleteOrganization(organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	if (utils.hasRecords(record.sec_owner_to_sec_organization)) {
@@ -61,9 +61,9 @@ function deleteOrganization(organizationId, record)
  * 
  * @return {JSRecord<db:/svy_framework/sec_organization>} the sec_organization record created
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
- * @throws {scopes.svyExceptions.ValueNotUniqueException} -the name of the new organization has to be unique for this owner
- * @throws {scopes.svyExceptions.SaveDataFailedException} - the new organization could not be saved
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} -the name of the new organization has to be unique for this owner
+ * @throws {scopes.modUtils$exceptions.SaveDataFailedException} - the new organization could not be saved
  * 
  * @author patrick
  * @since 2012-10-12
@@ -76,11 +76,11 @@ function createOrganization(organizationName, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	if (!scopes.svyUtils.isValueUnique(sec_owner_to_sec_organization, "name", organizationName, ["owner_id"], [record.owner_id.toString()])) {
-		throw new scopes.svyExceptions.ValueNotUniqueException(null, "name");
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "name");
 	}
 	
 	var organizationRecord = record.sec_owner_to_sec_organization.getRecord(record.sec_owner_to_sec_organization.newRecord());
@@ -88,6 +88,6 @@ function createOrganization(organizationName, record)
 	if (databaseManager.saveData(organizationRecord)) {
 		return organizationRecord;
 	} else {
-		throw new scopes.svyExceptions.SaveDataFailedException(organizationRecord.exception ? organizationRecord.exception.getMessage() : "", "", [], record.sec_owner_to_sec_organization);
+		throw new scopes.modUtils$exceptions.SaveDataFailedException(organizationRecord.exception ? organizationRecord.exception.getMessage() : "", "", [], record.sec_owner_to_sec_organization);
 	}
 }

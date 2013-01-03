@@ -89,7 +89,7 @@ var runtimeSecurityKeys = null;
  */
 function getApplicationByID(applicationID){
 	if (!applicationID) {
-		throw new scopes.svyExceptions.IllegalArgumentException('Application ID Required');
+		throw new scopes.modUtils$exceptions.IllegalArgumentException('Application ID Required');
 	}
 	if (applicationID instanceof String) {
 		applicationID = application.getUUID(applicationID);
@@ -194,7 +194,7 @@ function getGroup(groupname) {
  */
 function getModuleByID(moduleID){
 	if (!moduleID) {
-		throw new scopes.svyExceptions.IllegalArgumentException('ModuleID cannot be null');
+		throw new scopes.modUtils$exceptions.IllegalArgumentException('ModuleID cannot be null');
 	}
 	if (moduleID instanceof String) {
 		moduleID = application.getUUID(moduleID);
@@ -466,7 +466,7 @@ function getUserById(userId) {
 		userRecord = foundset.getRecord(1);
 		return new User(userRecord);	
 	} else {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 }
 
@@ -477,7 +477,7 @@ function getUserById(userId) {
  * 
  * @return {Application}
  * 
- * @throws {scopes.svyExceptions.ValueNotUniqueException} 
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} 
  * 
  * @author Sean
  * 
@@ -485,15 +485,15 @@ function getUserById(userId) {
  */
 function createApplication(name){
 	if (!name) {
-		throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+		throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, 'prov_application');
 	if (!scopes.svyUtils.isValueUnique(fs, 'application_name', name)) {
-		throw new scopes.svyExceptions.ValueNotUniqueException(fs, 'application_name');
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(fs, 'application_name');
 	}
 	if (!fs.newRecord()) {
-		throw new scopes.svyExceptions.NewRecordFailedException('Could not create Application', null, null, fs);
+		throw new scopes.modUtils$exceptions.NewRecordFailedException('Could not create Application', null, null, fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.application_name = name;
@@ -538,7 +538,7 @@ function createKey(name, description, owner) {
  * 
  * @return {Module}
  * 
- * @throws {scopes.svyExceptions.ValueNotUniqueException}
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException}
  * 
  * @author Sean
  * 
@@ -546,15 +546,15 @@ function createKey(name, description, owner) {
  */
 function createModule(name){
 	if (!name) {
-		throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+		throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
 	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
 	if (!scopes.svyUtils.isValueUnique(fs, 'name', name)) {
-		throw new scopes.svyExceptions.ValueNotUniqueException(fs, 'name');
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(fs, 'name');
 	}
 	if (!fs.newRecord()) {
-		throw new scopes.svyExceptions.NewRecordFailedException('Cound not create module record', null, null, fs);
+		throw new scopes.modUtils$exceptions.NewRecordFailedException('Cound not create module record', null, null, fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.name = name;
@@ -599,7 +599,7 @@ function createOrganization(organizationName, owner) {
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
  * }
  * 
- * @throws {scopes.svyExceptions.ValueNotUniqueException} - the owner name must be unique
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} - the owner name must be unique
  * 
  * @author patrick
  * @since 02.08.2012
@@ -608,12 +608,12 @@ function createOrganization(organizationName, owner) {
  */
 function createOwner(ownerName) {
 	if (!ownerName)
-		throw new scopes.svyExceptions.IllegalArgumentException('Owner Name cannot be null');
+		throw new scopes.modUtils$exceptions.IllegalArgumentException('Owner Name cannot be null');
 	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	
 	if (!scopes.svyUtils.isValueUnique(fs,"name",ownerName)) {
-		throw new scopes.svyExceptions.ValueNotUniqueException(null, "ownername");
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "ownername");
 	}
 	
 	var ownerRecord = fs.getRecord(fs.newRecord());
@@ -630,7 +630,7 @@ function createOwner(ownerName) {
  * @param {Owner} [owner]
  * @param {Organization} [organization]
  * 
- * @throws {scopes.svyExceptions.ValueNotUniqueException} the user name has to be unique for an owner
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} the user name has to be unique for an owner
  * 
  * @return {User} newUser
  * 
@@ -650,7 +650,7 @@ function createUser(userName, password, owner, organization) {
 	/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 	var userFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user");
 	if (!scopes.svyUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"],[owner.ownerId.toString()])) {
-		throw new scopes.svyExceptions.ValueNotUniqueException(null, "owner_id");
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "owner_id");
 	}
 		
 	var userRecord = userFs.getRecord(userFs.newRecord());
@@ -709,7 +709,7 @@ function User(userRecord) {
 	 * 
 	 * @type {String}
 	 * 
-	 * @throws scopes.svyExceptions.InvalidEmailAddressException
+	 * @throws scopes.modUtils$exceptions.InvalidEmailAddressException
 	 */
 	this.emailAddress = userRecord.com_email;
 	
@@ -718,7 +718,7 @@ function User(userRecord) {
 	 * 
 	 * @type {UUID}
 	 * 
-	 * @throws scopes.svyExceptions.NoOwnerException if the given ownerId could not be found or reached
+	 * @throws scopes.modUtils$exceptions.NoOwnerException if the given ownerId could not be found or reached
 	 */
 	this.ownerId = userRecord.owner_id;
 	
@@ -727,7 +727,7 @@ function User(userRecord) {
 	 * 
 	 * @param {String} newPassword
 	 * 
-	 * @throws {scopes.svyExceptions.SvyException}
+	 * @throws {scopes.modUtils$exceptions.SvyException}
 	 * 
 	 * @return {boolean} success
 	 */
@@ -939,13 +939,13 @@ function User(userRecord) {
 	 * @param {Date} start
 	 * @param {Date} end
 	 * 
-	 * @throws {scopes.svyExceptions.IllegalArgumentException}
+	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
 	 * 
 	 * @return {Array<UserLogin>}
 	 */
 	this.getLoginsBetween = function(start, end) {
 		if (!start || !end) {
-			throw new scopes.svyExceptions.IllegalArgumentException("Missing date for getLoginsBetween");
+			throw new scopes.modUtils$exceptions.IllegalArgumentException("Missing date for getLoginsBetween");
 		}
 		
 		var queryStart;
@@ -954,12 +954,12 @@ function User(userRecord) {
 		if (start instanceof Date || start instanceof String) {
 			queryStart = new Date(start.valueOf());
 		} else {
-			throw new scopes.svyExceptions.IllegalArgumentException("Wrong argument passed for start in getLoginsBetween");
+			throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong argument passed for start in getLoginsBetween");
 		}
 		if (end instanceof Date || end instanceof String) {
 			queryEnd = new Date(end.valueOf());
 		} else {
-			throw new scopes.svyExceptions.IllegalArgumentException("Wrong argument passed for end in getLoginsBetween");
+			throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong argument passed for end in getLoginsBetween");
 		}
 		
 		if (queryStart > queryEnd) {
@@ -1116,7 +1116,7 @@ function User(userRecord) {
 		set: function(x) {
 			var owner = getOwnerById(x);
 			if (!owner) {
-				throw new scopes.svyExceptions.IllegalArgumentException("The owner with the ID " + x + " could not be found");
+				throw new scopes.modUtils$exceptions.IllegalArgumentException("The owner with the ID " + x + " could not be found");
 			}
 			record.owner_id = owner.ownerId;
 			save(record);
@@ -1132,7 +1132,7 @@ function User(userRecord) {
 				record.com_email = x;
 				save(record);
 			} else {
-				throw new scopes.svyExceptions.IllegalArgumentException("Invalid email address: " + x);
+				throw new scopes.modUtils$exceptions.IllegalArgumentException("Invalid email address: " + x);
 			}
 		}
     });	
@@ -1804,7 +1804,7 @@ function Organization(organizationRecord) {
 	 * 
 	 * @return {String} name
 	 * 
-	 * @throws {scopes.svyExceptions.ValueNotUniqueException} the name of the organization has to be unique for a given owner
+	 * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} the name of the organization has to be unique for a given owner
 	 */
 	this.name = organizationRecord.name;
 	
@@ -1875,7 +1875,7 @@ function Organization(organizationRecord) {
 	Object.defineProperty(this, "name", {
         set: function (x) {
         	if (!scopes.svyUtils.isValueUnique(organizationRecord, "name", x, ["owner_id"], [organizationRecord.owner_id.toString()])) {
-        		throw new scopes.svyExceptions.ValueNotUniqueException(organizationRecord, "name");
+        		throw new scopes.modUtils$exceptions.ValueNotUniqueException(organizationRecord, "name");
         	}
             record.name = x;
             save(record);
@@ -2284,10 +2284,10 @@ function Module(moduleRecord){
 		get:function(){return record.name},
 		set:function(x){
 			if(!x){
-				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+				throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 			}
 			if(!scopes.svyUtils.isValueUnique(record,'name',x)){
-				throw new scopes.svyExceptions.ValueNotUniqueException(record,'name');
+				throw new scopes.modUtils$exceptions.ValueNotUniqueException(record,'name');
 			}
 			record.name = x;
 			save(record);
@@ -2366,10 +2366,10 @@ function Application(applicationRecord){
 			},
 			set: function(x) {
 				if (!x) {
-					throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
+					throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 				}
 				if (!scopes.svyUtils.isValueUnique(record, 'application_name', x)) {
-					throw new scopes.svyExceptions.ValueNotUniqueException(record, 'application_name');
+					throw new scopes.modUtils$exceptions.ValueNotUniqueException(record, 'application_name');
 				}
 				record.application_name = x;
 				save(record);
@@ -2387,7 +2387,7 @@ function Application(applicationRecord){
 			},
 			set: function(x) {
 				if (!x) {
-					throw new scopes.svyExceptions.IllegalArgumentException('solution name is required');
+					throw new scopes.modUtils$exceptions.IllegalArgumentException('solution name is required');
 				}
 				record.servoy_solution_name = x;
 				save(record);
@@ -2416,7 +2416,7 @@ function Application(applicationRecord){
 	 */
 	this.addModule = function(moduleID){
 		if (!moduleID) {
-			throw new scopes.svyExceptions.IllegalArgumentException('Module cannot be null');
+			throw new scopes.modUtils$exceptions.IllegalArgumentException('Module cannot be null');
 		}
 		if (moduleID instanceof String) {
 			moduleID = application.getUUID(moduleID);
@@ -2425,7 +2425,7 @@ function Application(applicationRecord){
 			return false;
 		}
 		if (!record.prov_application_to_prov_application_modules.newRecord()) {
-			throw new scopes.svyExceptions.NewRecordFailedException('Failed to create record', null, null, record.prov_application_to_prov_application_modules);
+			throw new scopes.modUtils$exceptions.NewRecordFailedException('Failed to create record', null, null, record.prov_application_to_prov_application_modules);
 		}
 		record.prov_application_to_prov_application_modules.module_id = moduleID;
 		save(record.prov_application_to_prov_application_modules);
@@ -2439,7 +2439,7 @@ function Application(applicationRecord){
 	 */
 	this.containsModule = function(moduleID){
 		if (!moduleID) {
-			throw new scopes.svyExceptions.IllegalArgumentException('Module ID cannot be null');
+			throw new scopes.modUtils$exceptions.IllegalArgumentException('Module ID cannot be null');
 		}
 		if (moduleID instanceof String) {
 			moduleID = application.getUUID(moduleID);
@@ -2460,7 +2460,7 @@ function Application(applicationRecord){
 	 */
 	this.removeModule = function(moduleRecordOrID){
 		if (!moduleRecordOrID) {
-			throw new scopes.svyExceptions.IllegalArgumentException('Module ID or Record cannot be null');
+			throw new scopes.modUtils$exceptions.IllegalArgumentException('Module ID or Record cannot be null');
 		}
 		if (moduleRecordOrID instanceof JSRecord) {
 			moduleRecordOrID = moduleRecordOrID.module_id;
@@ -2473,7 +2473,7 @@ function Application(applicationRecord){
 			var module = modules.getRecord(i);
 			if (module.module_id == moduleRecordOrID) {
 				if (!modules.deleteRecord(module)) {
-					throw new scopes.svyExceptions.DeleteRecordFailedException('Failed to delete record', null, null, module);
+					throw new scopes.modUtils$exceptions.DeleteRecordFailedException('Failed to delete record', null, null, module);
 				}
 				return true;
 			}
@@ -2506,7 +2506,7 @@ function Application(applicationRecord){
  */
 function save(record){
 	if (!databaseManager.saveData(record)) {
-		throw new scopes.svyExceptions.SaveDataFailedException('Save data failed:' + record.exception, null, null, record);
+		throw new scopes.modUtils$exceptions.SaveDataFailedException('Save data failed:' + record.exception, null, null, record);
 	}
 	return true;
 }
@@ -2903,7 +2903,7 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
 	 */
 	this.record = record;
 	
-	scopes.svyExceptions.IllegalArgumentException.call(this, message, i18nKey, i18nArguments);
+	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message, i18nKey, i18nArguments);
 }
 
 /**
@@ -3123,13 +3123,13 @@ function getRuntimeSecurityKeys() {
  * 
  * @return {scopes.svySecurityManager.Key}
  * 
- * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"B2513CBE-E5E8-4ECD-A75C-51DD2248F9FC"}
  */
 function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) {
 	if (!keyId && !keyName) {
-		throw new scopes.svyExceptions.IllegalArgumentException('Key ID and name cannot be null');
+		throw new scopes.modUtils$exceptions.IllegalArgumentException('Key ID and name cannot be null');
 	}
 	var id = keyId;
 	if (keyId instanceof String) {
@@ -3184,5 +3184,5 @@ function removeRuntimeKey(keyId) {
  * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
  */
 var init = function() {
-	PasswordRuleViolationException.prototype = 	new scopes.svyExceptions.IllegalArgumentException("Password rule violated");
+	PasswordRuleViolationException.prototype = 	new scopes.modUtils$exceptions.IllegalArgumentException("Password rule violated");
 }()

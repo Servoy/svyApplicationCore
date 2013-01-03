@@ -5,7 +5,7 @@
  * 
  * @return {Date} lastLogin
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -18,7 +18,7 @@ function getLastLogin(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	if (utils.hasRecords(record.sec_user_to_sec_user_login_attempt)) {
 		return record.sec_user_to_sec_user_login_attempt.max_attempt_datetime;
@@ -35,7 +35,7 @@ function getLastLogin(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @see scopes.svySecurityManager.ADMIN_LEVEL for possible values
  * 
@@ -50,7 +50,7 @@ function setAdminLevel(level, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	if (level == null) {
@@ -74,7 +74,7 @@ function setAdminLevel(level, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -87,7 +87,7 @@ function activateUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	record.flag_inactive = 0;
@@ -103,7 +103,7 @@ function activateUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -116,7 +116,7 @@ function deactivateUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	record.flag_inactive = 1;
@@ -131,7 +131,7 @@ function deactivateUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -144,7 +144,7 @@ function deleteUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	// remove related records
@@ -165,8 +165,8 @@ function deleteUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
- * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  * 
  * @author patrick
  * @since 19.09.2012
@@ -179,7 +179,7 @@ function assignKey(keyId, organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	if (keyId instanceof UUID) {
@@ -200,7 +200,7 @@ function assignKey(keyId, organizationId, record)
 	} 
 	
 	if (!userOrgRecord) {
-		throw new scopes.svyExceptions.IllegalArgumentException("User not member of the given organization");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("User not member of the given organization");
 	}
 	
 	var userRightRecord;
@@ -230,7 +230,7 @@ function assignKey(keyId, organizationId, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -243,7 +243,7 @@ function addToGroup(groupId, organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	try {
@@ -303,7 +303,7 @@ function addToGroup(groupId, organizationId, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -316,7 +316,7 @@ function addToOrganization(organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	var orgId = organizationId;
@@ -348,7 +348,7 @@ function addToOrganization(organizationId, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -361,7 +361,7 @@ function removeFromOrganization(organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	var orgId = organizationId;
@@ -398,7 +398,7 @@ function removeFromGroup(groupId, organizationId, record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	if (groupId instanceof UUID) {
@@ -447,7 +447,7 @@ function removeFromGroup(groupId, organizationId, record) {
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -460,7 +460,7 @@ function lockUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	record.user_locked = 1;
 	record.user_locked_datetime = new Date();
@@ -474,7 +474,7 @@ function lockUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -487,7 +487,7 @@ function unlockUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	record.user_locked = null;
 	record.user_locked_datetime = null;
@@ -502,7 +502,7 @@ function unlockUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * @throws {scopes.svySecurityManager.PasswordRuleViolationException} - one of the security rules for the password is violated
  * 
  * @author patrick
@@ -516,12 +516,12 @@ function changePassword(newPassword, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	// check if there is an owner
 	if (!record.owner_id || !databaseManager.hasRecords(record.sec_user_to_sec_owner)) {
-		throw new scopes.svyExceptions.IllegalStateException("User has no owner");
+		throw new scopes.modUtils$exceptions.IllegalStateException("User has no owner");
 	}
 	
 	var ownerRecord = record.sec_user_to_sec_owner.getRecord(1);
@@ -608,7 +608,7 @@ function changePassword(newPassword, record)
  * 
  * @return {Boolean} isExpired
  * 
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  *
  * @author patrick
  * @since 2012-10-02
@@ -620,7 +620,7 @@ function isPasswordExpired(record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	/** @type {QBSelect<db:/svy_framework/sec_user_password>} */
@@ -645,7 +645,7 @@ function isPasswordExpired(record) {
  * 
  * @return {Boolean} isValid
  *
- * @throws {scopes.svyExceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 2012-10-11
@@ -657,7 +657,7 @@ function isPasswordValid(password, record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.svyExceptions.NoRecordException();
+		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
 	/** @type {QBSelect<db:/svy_framework/sec_user_password>} */

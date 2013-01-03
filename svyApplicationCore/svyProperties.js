@@ -53,14 +53,14 @@ function getLoadedProperties() {
  * 
  * @return {Property}
  * 
- * @throws {scopes.svyExceptions.ValueNotUniqueException} the name of the property has to be unique
- * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} the name of the property has to be unique
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"ADD262C0-596E-4356-875E-6DE4303070D1"}
  */
 function createProperty(name, propertySet, applicationId, sortOrder, adminLevel, header) {
 	if (!name || !propertySet) {
-		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+		throw scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
 	
 	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
@@ -75,14 +75,14 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
 		// the name of the property set
 		propertySetObject = getPropertySet(propertySet);
 		if (!propertySetObject) {
-			throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+			throw scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 		}
 		propertySetId = propertySetObject.propertySetId;
 	} else if (propertySet instanceof UUID) {
 		propertySetId = propertySet.toString();
 		propertySetObject = getPropertySetById(propertySetId);
 		if (!propertySetObject) {
-			throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+			throw scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 		}
 	} else if (propertySet instanceof PropertySet) {
 		/** @type {PropertySet} */
@@ -90,11 +90,11 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
 		propertySetId = tmpObject.propertySetId;
 		propertySetObject = propertySet;
 	} else {
-		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
+		throw scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
 	
 	if (!scopes.svyUtils.isValueUnique(fs, "property_name", name, ["svy_property_sets_id"], [propertySetId]))	{
-		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name");
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "property_name");
 	}
 	var propertyRecord = fs.getRecord(fs.newRecord());
 	propertyRecord.property_name = name;
@@ -129,19 +129,19 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
  * 
  * @return {PropertySet}
  * 
- * @throws {scopes.svyExceptions.ValueNotUniqueException} the name of the property set has to be unique
- * @throws {scopes.svyExceptions.IllegalArgumentException} 
+ * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} the name of the property set has to be unique
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException} 
  *
  * @properties={typeid:24,uuid:"DF2A8A29-EBBA-41C3-9652-2B2184F12421"}
  */
 function createPropertySet(name, applicationId, displayName, description, icon, formName, sortOrder) {
 	if (!name) {
-		throw scopes.svyExceptions.IllegalArgumentException("No name provided for createPropertySet");
+		throw scopes.modUtils$exceptions.IllegalArgumentException("No name provided for createPropertySet");
 	}
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_sets");		
 	if (!scopes.svyUtils.isValueUnique(fs, "name", name))	{
-		throw new scopes.svyExceptions.ValueNotUniqueException(null, "property_name \"" + name + "\"");
+		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "property_name \"" + name + "\"");
 	}
 	var record = fs.getRecord(fs.newRecord());
 	record.name = name;
@@ -344,7 +344,7 @@ function getRuntimeProperties(adminLevel, propertyNames) {
  * 
  * @return {Object} propertyValue
  * 
- * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  * 
  * @author patrick
  * @since 06.09.2012
@@ -353,7 +353,7 @@ function getRuntimeProperties(adminLevel, propertyNames) {
  */
 function getPropertyValue(propertyName) {
 	if (!propertyName) {
-		throw new scopes.svyExceptions.IllegalArgumentException("No property name given");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("No property name given");
 	}
 	var values = getPropertyValues(propertyName);
 	if (values && values.length > 0) {
@@ -370,7 +370,7 @@ function getPropertyValue(propertyName) {
  * 
  * @return {Boolean} result
  * 
- * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"333863A8-8BF8-486D-8A91-9241A6B9E596"}
  */
@@ -411,13 +411,13 @@ function getPropertyValueAsBoolean(propertyName) {
  * 
  * @return {Array} values
  * 
- * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"7D050615-B328-4430-B63B-C610D09A91DB"}
  */
 function getPropertyValues(propertyName) {
 	if (!propertyName) {
-		throw new scopes.svyExceptions.IllegalArgumentException("No property name given");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("No property name given");
 	}
 	var givenPropertyNames;
 	if (propertyName instanceof String) {
@@ -425,7 +425,7 @@ function getPropertyValues(propertyName) {
 	} else if (propertyName instanceof Array) {
 		givenPropertyNames = propertyName;
 	} else {
-		throw new scopes.svyExceptions.IllegalArgumentException("propertyName parameter has to be either String or String[]");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("propertyName parameter has to be either String or String[]");
 	}
 	
 	/** @type {Array<RuntimeProperty>} */
@@ -679,7 +679,7 @@ function Property(propertyRecord) {
 	 * 
 	 * @type {String}
 	 * 
-	 * @throws {scopes.svyExceptions.ValueNotUniqueException}
+	 * @throws {scopes.modUtils$exceptions.ValueNotUniqueException}
 	 */
 	this.name = record.property_name;
 	
@@ -702,7 +702,7 @@ function Property(propertyRecord) {
 	 * 
 	 * @see scopes.svySecurityManager.ADMIN_LEVEL for possible levels
 	 * 
-	 * @throws {scopes.svyExceptions.IllegalArgumentException}
+	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
 	 * 
 	 */
 	this.securityLevel = record.admin_level;
@@ -819,7 +819,7 @@ function Property(propertyRecord) {
 		set: function(x) {
 			if (x) {
 				if (!scopes.svyUtils.isValueUnique(record, "property_name", x)) {
-					throw new scopes.svyExceptions.ValueNotUniqueException(record, "property_name");
+					throw new scopes.modUtils$exceptions.ValueNotUniqueException(record, "property_name");
 				}
 				record.property_name = x;
 				databaseManager.saveData(record);
@@ -888,7 +888,7 @@ function Property(propertyRecord) {
 				record.admin_level = x;
 				databaseManager.saveData(record);
 			} else {
-				throw new scopes.svyExceptions.IllegalArgumentException("Property security level must be one of the constants defined in scopes.svySecurityManager.ADMIN_LEVEL");
+				throw new scopes.modUtils$exceptions.IllegalArgumentException("Property security level must be one of the constants defined in scopes.svySecurityManager.ADMIN_LEVEL");
 			}
 		}
 	})
@@ -1782,20 +1782,20 @@ function addProperty(propertyDescription) {
  * @param {Object} propertyValue	- the new value
  * @param {Number} [adminLevel]		- the admin level for which this property value is saved; if not given, the logged in user's level will be used
  * 
- * @throws {scopes.svyExceptions.SvyException}
+ * @throws {scopes.modUtils$exceptions.SvyException}
  *
  * @properties={typeid:24,uuid:"A43388B0-686B-40F2-AD5C-0A9B4724C5B7"}
  */
 function setPropertyValue(propertyName, propertyValue, adminLevel) {
 	
 	if (!propertyName) {
-		throw new scopes.svyExceptions.IllegalArgumentException("No property name given to setPropertyValue");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("No property name given to setPropertyValue");
 	}
 	
 	var runtimeProp = getRuntimeProperty(propertyName);
 	
 	if (!runtimeProp) {
-		throw new scopes.svyExceptions.IllegalArgumentException("Unknown property given to setPropertyValue or runtime properties not loaded");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Unknown property given to setPropertyValue or runtime properties not loaded");
 	}
 	
 	if (!adminLevel) {
@@ -2207,7 +2207,7 @@ function printRuntimeProperties(adminLevel) {
  */
 function setApplicationContext(applicationIdOrName) {
 	if (!applicationIdOrName) {
-		throw new scopes.svyExceptions.IllegalArgumentException("application name or id is required for setApplicationContext");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("application name or id is required for setApplicationContext");
 	}
 	var app;
 	if (applicationIdOrName instanceof UUID) {
@@ -2216,7 +2216,7 @@ function setApplicationContext(applicationIdOrName) {
 		app = scopes.svySecurityManager.getApplication(applicationIdOrName);
 	}
 	if (!app) {
-		throw new scopes.svyExceptions.IllegalArgumentException("application with name or id \"" + applicationIdOrName + "\" does not exist");
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("application with name or id \"" + applicationIdOrName + "\" does not exist");
 	}
 	
 	var currentFilters = databaseManager.getTableFilterParams(globals.nav_db_framework);
@@ -2232,7 +2232,7 @@ function setApplicationContext(applicationIdOrName) {
 			if (filterName) {
 				success = databaseManager.removeTableFilterParam(globals.nav_db_framework, filterName);
 				if (!success) {
-					throw new scopes.svyExceptions.IllegalStateException("Failed to remove table filter for table " + currentFilters[i][0]);
+					throw new scopes.modUtils$exceptions.IllegalStateException("Failed to remove table filter for table " + currentFilters[i][0]);
 				}
 			}
 		}
@@ -2241,15 +2241,15 @@ function setApplicationContext(applicationIdOrName) {
 	// create table filters
 	success = databaseManager.addTableFilterParam(globals.nav_db_framework, "svy_property_values", "application_id", "^||=", app.id, "solution_filter_svy_property_values");
 	if (!success) {
-		throw new scopes.svyExceptions.IllegalStateException("Failed to create table filter for table svy_property_values");
+		throw new scopes.modUtils$exceptions.IllegalStateException("Failed to create table filter for table svy_property_values");
 	}
 	success = databaseManager.addTableFilterParam(globals.nav_db_framework, "svy_properties", "application_id", "^||=", app.id, "solution_filter_svy_properties");
 	if (!success) {
-		throw new scopes.svyExceptions.IllegalStateException("Failed to create table filter for table svy_properties");
+		throw new scopes.modUtils$exceptions.IllegalStateException("Failed to create table filter for table svy_properties");
 	}
 	success = databaseManager.addTableFilterParam(globals.nav_db_framework, "svy_property_sets", "application_id", "^||=", app.id, "solution_filter_svy_property_sets");
 	if (!success) {
-		throw new scopes.svyExceptions.IllegalStateException("Failed to create table filter for table svy_property_sets");
+		throw new scopes.modUtils$exceptions.IllegalStateException("Failed to create table filter for table svy_property_sets");
 	}	
 	
 	APPLICATION_CONTEXT = app;	
