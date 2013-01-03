@@ -1867,7 +1867,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 	databaseManager.saveData(propertyRecord);
 	runtimeProperties = loadRuntimeProperties();
 	
-	scopes.svyEventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
+	scopes.modUtils$eventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
 	
 }
 
@@ -2176,7 +2176,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
  * @properties={typeid:24,uuid:"38CD589C-5D5D-4F4A-BB86-7AC6A8499BC2"}
  */
 function addPropertyChangeListener(action) {
-	scopes.svyEventManager.addListener(this, PROPERTY_CHANGED_EVENT_ACTION, action);
+	scopes.modUtils$eventManager.addListener(this, PROPERTY_CHANGED_EVENT_ACTION, action);
 }
 
 /**

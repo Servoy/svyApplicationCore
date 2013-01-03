@@ -45,7 +45,7 @@ function initModules(startupArguments) {
  * @properties={typeid:24,uuid:"FAA2B4E0-180C-4CDF-BE10-2D458AE6EC07"}
  */
 function fireDataBroadcastEvent(dataSource, action, pks, cached) {
-	scopes.svyEventManager.fireEvent(this,'databroadcast', Array.prototype.slice.call(arguments, 0))
+	scopes.modUtils$eventManager.fireEvent(this,'databroadcast', Array.prototype.slice.call(arguments, 0))
 }
 
 /**
@@ -85,7 +85,7 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 function addDataBroadcastListener(listener) {
 	//TODO: figure out how to filter and fire only for datasource/pk match
 	//TODO: add option to hold a reference to an empty foundset on the datasource, so the client gets the databroadcast for that entity
-	scopes.svyEventManager.addListener(this,'databroadcast', listener)
+	scopes.modUtils$eventManager.addListener(this,'databroadcast', listener)
 }
 
 ///**
@@ -97,7 +97,7 @@ function addDataBroadcastListener(listener) {
 // * @properties={typeid:24,uuid:"36335419-CFB4-40F3-990B-EF6E6355EB72"}
 // */
 //function fireException(exception) {
-//	scopes.svyEventManager.fireEvent(this,'error',arguments)
+//	scopes.modUtils$eventManager.fireEvent(this,'error',arguments)
 //}
 //
 ///**
@@ -105,5 +105,5 @@ function addDataBroadcastListener(listener) {
 // * @properties={typeid:24,uuid:"3FABF7E3-F0B7-423E-AD12-001705FF601B"}
 // */
 //function addExceptionListener(action) {
-//	scopes.svyEventManager.addListener(this,'error',action)
+//	scopes.modUtils$eventManager.addListener(this,'error',action)
 //}
