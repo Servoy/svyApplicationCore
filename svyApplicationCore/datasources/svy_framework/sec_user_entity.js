@@ -57,7 +57,7 @@ function setAdminLevel(level, record)
 		level = scopes.svySecurityManager.ADMIN_LEVEL.NONE;
 	}
 	
-	if (scopes.svyUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, level)) {
+	if (scopes.modUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, level)) {
 		record.admin_level = level;
 		return databaseManager.saveData(record);
 	} else {

@@ -489,7 +489,7 @@ function createApplication(name){
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, 'prov_application');
-	if (!scopes.svyUtils.isValueUnique(fs, 'application_name', name)) {
+	if (!scopes.modUtils.isValueUnique(fs, 'application_name', name)) {
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(fs, 'application_name');
 	}
 	if (!fs.newRecord()) {
@@ -550,7 +550,7 @@ function createModule(name){
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
 	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
-	if (!scopes.svyUtils.isValueUnique(fs, 'name', name)) {
+	if (!scopes.modUtils.isValueUnique(fs, 'name', name)) {
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(fs, 'name');
 	}
 	if (!fs.newRecord()) {
@@ -612,7 +612,7 @@ function createOwner(ownerName) {
 	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	
-	if (!scopes.svyUtils.isValueUnique(fs,"name",ownerName)) {
+	if (!scopes.modUtils.isValueUnique(fs,"name",ownerName)) {
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "ownername");
 	}
 	
@@ -649,7 +649,7 @@ function createUser(userName, password, owner, organization) {
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 	var userFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user");
-	if (!scopes.svyUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"],[owner.ownerId.toString()])) {
+	if (!scopes.modUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"],[owner.ownerId.toString()])) {
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "owner_id");
 	}
 		
@@ -1874,7 +1874,7 @@ function Organization(organizationRecord) {
 	
 	Object.defineProperty(this, "name", {
         set: function (x) {
-        	if (!scopes.svyUtils.isValueUnique(organizationRecord, "name", x, ["owner_id"], [organizationRecord.owner_id.toString()])) {
+        	if (!scopes.modUtils.isValueUnique(organizationRecord, "name", x, ["owner_id"], [organizationRecord.owner_id.toString()])) {
         		throw new scopes.modUtils$exceptions.ValueNotUniqueException(organizationRecord, "name");
         	}
             record.name = x;
@@ -2286,7 +2286,7 @@ function Module(moduleRecord){
 			if(!x){
 				throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 			}
-			if(!scopes.svyUtils.isValueUnique(record,'name',x)){
+			if(!scopes.modUtils.isValueUnique(record,'name',x)){
 				throw new scopes.modUtils$exceptions.ValueNotUniqueException(record,'name');
 			}
 			record.name = x;
@@ -2368,7 +2368,7 @@ function Application(applicationRecord){
 				if (!x) {
 					throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 				}
-				if (!scopes.svyUtils.isValueUnique(record, 'application_name', x)) {
+				if (!scopes.modUtils.isValueUnique(record, 'application_name', x)) {
 					throw new scopes.modUtils$exceptions.ValueNotUniqueException(record, 'application_name');
 				}
 				record.application_name = x;

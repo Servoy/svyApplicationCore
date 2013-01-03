@@ -79,7 +79,7 @@ function createOrganization(organizationName, record)
 		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
-	if (!scopes.svyUtils.isValueUnique(sec_owner_to_sec_organization, "name", organizationName, ["owner_id"], [record.owner_id.toString()])) {
+	if (!scopes.modUtils.isValueUnique(sec_owner_to_sec_organization, "name", organizationName, ["owner_id"], [record.owner_id.toString()])) {
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "name");
 	}
 	
