@@ -2929,8 +2929,6 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
  * @param {User} [user]
  * @param {Organization} [organization]
  * 
- * @private 
- * 
  * @properties={typeid:24,uuid:"321EDB6A-DD45-4990-B0FF-BF76D381C5D6"}
  */
 function loadSecurityKeys(user, organization) {
