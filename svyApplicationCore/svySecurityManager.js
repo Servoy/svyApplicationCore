@@ -68,6 +68,8 @@ var PERFORM_HASH_CHECKS = false;
 var securityKeys = null;
 
 /**
+ * Additional keys provided from elsewhere
+ * 
  * @type {Array<scopes.svySecurityManager.Key>}
  * 
  * @private 
@@ -75,6 +77,17 @@ var securityKeys = null;
  * @properties={typeid:35,uuid:"54104078-EB68-47C8-AA33-C224DD6F7583",variableType:-4}
  */
 var runtimeSecurityKeys = null;
+
+/**
+ * Keys that should be removed from the loaded keys
+ * 
+ * @type {Array<scopes.svySecurityManager.Key>}
+ * 
+ * @private
+ * 
+ * @properties={typeid:35,uuid:"ACF69F58-B611-4BB9-9A27-5A8FE7A64FE5",variableType:-4}
+ */
+var runtimeSecurityKeysRemoved = null;
 
 /**
  * Returns the Application with the given ID or null if not found
@@ -895,14 +908,14 @@ function User(userRecord) {
 	}
 	
 	/**
-	 * Returns an Array<Key> of all keys of this User
+	 * Returns an Array<Key> of all keys of this User in the given organization
+	 * 
+	 * @param {Organization} organization
 	 * 
 	 * @return {Array<scopes.svySecurityManager.Key>} keys
 	 */
-	this.getKeys = function() {
-		// TODO: this is wrong, it will only give the keys for the current user, not any user
-		// See todo in loadSecurityKeys to see what needs to be changed there
-		return getRuntimeSecurityKeys();
+	this.getKeys = function(organization) {
+		return loadSecurityKeys(this, organization);
 	}
 	
 	/**
@@ -1009,16 +1022,17 @@ function User(userRecord) {
 	}
 	
 	/**
-	 * Returns <code>true</code> if the user has the key with the given name
+	 * Returns <code>true</code> if the user has the key with the given name in the given organization
 	 * 
 	 * @param {String} keyName
+	 * @param {Organization} organization
 	 * 
 	 * @return {boolean} hasKey
 	 */
-	this.hasKeyName = function(keyName) {
+	this.hasKeyName = function(keyName, organization) {
 		/** @type {User} */
 		var that = this;
-		var keys = that.getKeys();
+		var keys = that.getKeys(organization);
 		for (var i = 0; i < keys.length; i++) {
 			/** @type {Key} */
 			var key = keys[i];
@@ -1030,16 +1044,17 @@ function User(userRecord) {
 	}
 	
 	/**
-	 * Returns <code>true</code> if the user has the key with the given ID
+	 * Returns <code>true</code> if the user has the key with the given ID in the given organization
 	 * 
 	 * @param {UUID|String} keyId
+	 * @param {Organization} organization
 	 * 
 	 * @return {boolean} hasKey
 	 */
-	this.hasKeyId = function(keyId) {
+	this.hasKeyId = function(keyId, organization) {
 		/** @type {User} */
 		var that = this;
-		var keys = that.getKeys();
+		var keys = that.getKeys(organization);
 		for (var i = 0; i < keys.length; i++) {
 			/** @type {Key} */
 			var key = keys[i];
@@ -2909,18 +2924,32 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
 /**
  * Gets all the security keys for the logged in user
  * 
+ * @return {Array<scopes.svySecurityManager.Key>}
+ * 
+ * @param {User} [user]
+ * @param {Organization} [organization]
+ * 
  * @private 
  * 
  * @properties={typeid:24,uuid:"321EDB6A-DD45-4990-B0FF-BF76D381C5D6"}
  */
-function loadSecurityKeys() {
-	// TODO: this method needs to be able to load the key for any user/userOrg to correctly handle User.getKeys()
-	// It should also be possible call the loading of keys from another scope (currently, this is private)
-	securityKeys = new Array();
+function loadSecurityKeys(user, organization) {
+	var ownerId, userOrgId;
 	
-	if (!globals.svy_sec_lgn_user_org_id || ! globals.svy_sec_lgn_owner_id || ! globals.svy_sec_lgn_user_org_id) {
-		return;
+	if (!user || !organization) {
+		ownerId = globals.svy_sec_lgn_owner_id;
+		userOrgId = globals.svy_sec_lgn_user_org_id;
+	} else {
+		ownerId = user.ownerId;
+		userOrgId = getUserOrgId(organization, user);
 	}
+	
+	if (!ownerId || !userOrgId) {
+		return null;
+	}
+	
+	ownerId = ownerId.toString();
+	userOrgId = userOrgId.toString();
 	
 	var serverName = globals.nav_db_framework;
 	var query = '\
@@ -2993,17 +3022,17 @@ function loadSecurityKeys() {
 					)';
 	
 	var queryArgs = new Array();
-	queryArgs[0] = globals.svy_sec_lgn_user_org_id.toString();
-	queryArgs[1] = globals.svy_sec_lgn_owner_id.toString();
+	queryArgs[0] = userOrgId;
+	queryArgs[1] = ownerId;
 	queryArgs[2] = application.getServerTimeStamp();
 	queryArgs[3] = application.getServerTimeStamp();
-	queryArgs[4] = globals.svy_sec_lgn_user_org_id.toString();
-	queryArgs[5] = globals.svy_sec_lgn_user_org_id.toString();
-	queryArgs[6] = globals.svy_sec_lgn_user_org_id.toString();
+	queryArgs[4] = userOrgId;
+	queryArgs[5] = userOrgId;
+	queryArgs[6] = userOrgId;
 	queryArgs[7] = application.getServerTimeStamp();
 	queryArgs[8] = application.getServerTimeStamp();
-	queryArgs[9] = globals.svy_sec_lgn_owner_id.toString();
-	queryArgs[10] = globals.svy_sec_lgn_user_org_id.toString();
+	queryArgs[9] = ownerId;
+	queryArgs[10] = userOrgId;
 	
 	var dataset = databaseManager.getDataSetByQuery(serverName, query, queryArgs, -1);
 	
@@ -3011,11 +3040,14 @@ function loadSecurityKeys() {
 	var keyFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
 	keyFs.loadRecords(dataset);
 	
+	var result = new Array();
 	for (var i = 1; i <= keyFs.getSize(); i++) {
 		var record = keyFs.getRecord(i);
 		var key = new scopes.svySecurityManager.Key(record.security_key_id, record.name, record.description, record.owner_id, record.module_id);
-		securityKeys.push(key);
+		result.push(key);
 	}
+	
+	return result;
 }
 
 /**
@@ -3062,6 +3094,36 @@ function getSecurityKeysIds() {
 }
 
 /**
+ * Returns the key with the given name or UUID or null if not found
+ * 
+ * @param {String|UUID} key
+ * 
+ * @return {scopes.svySecurityManager.Key} key
+ * 
+ * @author patrick
+ * @date 2012-12-12
+ *
+ * @properties={typeid:24,uuid:"06B4409B-3C62-4D22-8652-1C29F6E5FC82"}
+ */
+function getKey(key) {
+	var runtimeKeys = getRuntimeSecurityKeys();
+	
+	function filterByName(x) {
+		return x.name == key;
+	}
+	function filterByUuid(x) {
+		return x.keyId == key;
+	}
+	var filtered;
+	if (key instanceof UUID) {
+		filtered = runtimeKeys.filter(filterByUuid);
+	} else {
+		filtered = runtimeKeys.filter(filterByName);
+	}
+	return filtered.length > 0 ? filtered[0] : null;
+}
+
+/**
  * Returns <code>true</code> if the logged in user has 
  * the key with the given name or UUID
  * 
@@ -3103,12 +3165,26 @@ function hasKey(key) {
  */
 function getRuntimeSecurityKeys() {
 	if (securityKeys == null) {
-		loadSecurityKeys();
+		securityKeys = loadSecurityKeys();
 	}
+	
 	if (runtimeSecurityKeys == null) {
 		runtimeSecurityKeys = new Array();
 	}
-	return securityKeys.concat(runtimeSecurityKeys);
+	
+	/** @type {Array<scopes.svySecurityManager.Key>} */
+	var result = securityKeys.concat(runtimeSecurityKeys);
+	if (runtimeSecurityKeysRemoved) {
+		for (var i = 0; i < result.length; i++) {
+			for (var j = 0; j < runtimeSecurityKeysRemoved.length; j++) {
+				if (result[i].keyId == runtimeSecurityKeysRemoved[j].keyId) {
+					result.splice(i,1);
+				}
+			}
+		}
+	}	
+	
+	return result;
 }
 
 
@@ -3159,20 +3235,15 @@ function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) 
  * @properties={typeid:24,uuid:"5ABE723C-054F-4F82-A3E9-174286CB87EA"}
  */
 function removeRuntimeKey(keyId) {
-	// TODO: the keyId that is given here should also remove any key loaded from the DB
-	// I guess these need to be stored in an array as well and taken care of in getRuntimeSecurityKeys
-	if (runtimeSecurityKeys == null) {
-		return;
-	}
-	var id = keyId;
 	if (keyId instanceof String) {
-		id = application.getUUID(keyId);
-	} 
-	for (var i = 0; i < runtimeSecurityKeys.length; i++) {
-		var runtimeKey = runtimeSecurityKeys[i];
-		if (runtimeKey.keyId == id) {
-			runtimeSecurityKeys.splice(i, 1);
+		keyId = application.getUUID(keyId);
+	}
+	var key = getKey(keyId);
+	if (key) {
+		if (!runtimeSecurityKeysRemoved) {
+			runtimeSecurityKeysRemoved = new Array();
 		}
+		runtimeSecurityKeysRemoved.push(key);
 	}
 }
 
