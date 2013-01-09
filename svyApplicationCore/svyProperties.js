@@ -1113,6 +1113,8 @@ function PropertySet(propertySetRecord) {
  * @param {Object} value
  * @param {String} [valueListName]
  * @param {Array} [valueListValues]
+ * 
+ * @private 
  *
  * @properties={typeid:24,uuid:"10C602B8-B4BB-4ACB-97CE-D10E54714734"}
  */
@@ -1754,6 +1756,8 @@ function loadRuntimeProperties(adminLevel) {
 /**
  * Reloads the runtime properties
  * 
+ * @private 
+ * 
  * @properties={typeid:24,uuid:"6795B845-A902-49E8-804D-AC7D141845EB"}
  */
 function reloadRuntimeProperties() {
@@ -1889,7 +1893,6 @@ function getOwnerIdForAdminLevel(adminLevel) {
 		return globals.svy_sec_lgn_organization_id;
 	} else if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER || 
 			adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER) {
-		// TODO: is this what we use then?
 		return globals.zero_uuid.toString();
 	} else {
 		return globals.svy_sec_lgn_user_id;
