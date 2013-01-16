@@ -59,7 +59,7 @@ var ADMIN_LEVEL = {
 var PERFORM_HASH_CHECKS = false;
 
 /**
- * @type {Array<scopes.svySecurityManager.Key>}
+ * @type {Array<Key>}
  * 
  * @private 
  * 
@@ -70,7 +70,7 @@ var securityKeys = null;
 /**
  * Additional keys provided from elsewhere
  * 
- * @type {Array<scopes.svySecurityManager.Key>}
+ * @type {Array<Key>}
  * 
  * @private 
  * 
@@ -81,7 +81,7 @@ var runtimeSecurityKeys = null;
 /**
  * Keys that should be removed from the loaded keys
  * 
- * @type {Array<scopes.svySecurityManager.Key>}
+ * @type {Array<Key>}
  * 
  * @private
  * 
@@ -682,7 +682,7 @@ function createUser(userName, password, owner, organization) {
 
 /**
  * @param {JSRecord<db:/svy_framework/sec_user>} userRecord
- * 
+ *
  * @constructor 
  * 
  * @author patrick
@@ -691,7 +691,6 @@ function createUser(userName, password, owner, organization) {
  * @properties={typeid:24,uuid:"9D7D01BC-C223-4EA2-A4FA-EA2267BEDDC7"}
  */
 function User(userRecord) {
-	
 	/** @type {JSRecord<db:/svy_framework/sec_user>} */
 	var record = userRecord;
 
@@ -911,8 +910,8 @@ function User(userRecord) {
 	 * Returns an Array<Key> of all keys of this User in the given organization
 	 * 
 	 * @param {Organization} organization
-	 * 
-	 * @return {Array<scopes.svySecurityManager.Key>} keys
+	 * @this {User}
+	 * @return {Array<Key>} keys
 	 */
 	this.getKeys = function(organization) {
 		return loadSecurityKeys(this, organization);
@@ -1227,7 +1226,7 @@ function User(userRecord) {
  * @properties={typeid:24,uuid:"905BA6B0-C4E8-4083-B13D-E77F66A6F0AE"}
  */
 function Group(ownerRecord) {
-	
+
 	var record = ownerRecord;
 	
 	/**
@@ -1235,7 +1234,7 @@ function Group(ownerRecord) {
 	 * @type {String}
 	 */
 	this.name = ownerRecord.name;
-	
+
 	/**
 	 * Description of this Group
 	 * @type {String}
@@ -1244,7 +1243,7 @@ function Group(ownerRecord) {
 	
 	/**
 	 * Returns the users in this group for all or the given organization
-	 * 
+	 * @this {Group}
 	 * @param {Organization} [organization]
 	 * 
 	 * @return {Array<User>} users
@@ -2068,6 +2067,7 @@ function Owner(ownerRecord) {
 	 * @param {String} userName
 	 * @param {String} [password]
 	 * @param {Organization} [organization]
+	 * @this {Owner}
 	 */
 	this.createUser = function(userName, password, organization){
 		return createUser(userName,password,this,organization);
@@ -2924,7 +2924,7 @@ function PasswordRuleViolationException(record, message, i18nKey, i18nArguments)
 /**
  * Gets all the security keys for the logged in user
  * 
- * @return {Array<scopes.svySecurityManager.Key>}
+ * @return {Array<Key>}
  * 
  * @param {User} [user]
  * @param {Organization} [organization]
@@ -3096,7 +3096,7 @@ function getSecurityKeysIds() {
  * 
  * @param {String|UUID} key
  * 
- * @return {scopes.svySecurityManager.Key} key
+ * @return {Key} key
  * 
  * @author patrick
  * @date 2012-12-12
@@ -3170,7 +3170,7 @@ function getRuntimeSecurityKeys() {
 		runtimeSecurityKeys = new Array();
 	}
 	
-	/** @type {Array<scopes.svySecurityManager.Key>} */
+	/** @type {Array<Key>} */
 	var result = securityKeys.concat(runtimeSecurityKeys);
 	if (runtimeSecurityKeysRemoved) {
 		for (var i = 0; i < result.length; i++) {
@@ -3195,7 +3195,7 @@ function getRuntimeSecurityKeys() {
  * @param {UUID|String} [keyOwnerId]
  * @param {UUID|String} [keyModuleId]
  * 
- * @return {scopes.svySecurityManager.Key}
+ * @return {Key}
  * 
  * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  *
@@ -3217,7 +3217,7 @@ function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) 
 	if (keyModuleId instanceof String) {
 		moduleId = application.getUUID(keyModuleId);
 	}	
-	var newKey = new scopes.svySecurityManager.Key(id, keyName, keyDescription, ownerId, moduleId);
+	var newKey = new Key(id, keyName, keyDescription, ownerId, moduleId);
 	if (runtimeSecurityKeys == null) {
 		runtimeSecurityKeys = new Array();
 	}
