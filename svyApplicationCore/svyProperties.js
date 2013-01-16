@@ -338,7 +338,7 @@ function getRuntimeProperties(adminLevel, propertyNames) {
 /**
  * Returns the runtime value of the given property or null if not found<br><br>
  * 
- * This function should only be called if the property is known to have only one value; otherwise use scopes.svyProperties.getPropertyValues()
+ * This function should only be called if the property is known to have only one value; otherwise use {@link #getPropertyValues()}
  * 
  * @param {String} propertyName
  * 
@@ -1738,7 +1738,7 @@ function loadRuntimeProperties(adminLevel) {
 	if (userPropNames && userPropNames.length > 0) {
 		for (var up = 0; up < userPropNames.length; up++) {
 			var userPropValue = application.getUserProperty(userPropNames[up]);
-			runtimeProp = new scopes.svyProperties.RuntimeProperty(userPropNames[up], userPropValue);
+			runtimeProp = new RuntimeProperty(userPropNames[up], userPropValue);
 			if (result.indexOf(runtimeProp) == -1) {
 				result.push(runtimeProp);
 			} else {
