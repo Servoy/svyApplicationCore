@@ -504,7 +504,7 @@ function createApplication(name){
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(fs, 'application_name');
 	}
 	if (!fs.newRecord()) {
-		throw new scopes.modUtils$exceptions.NewRecordFailedException('Could not create Application', null, null, fs);
+		throw new scopes.modUtils$exceptions.NewRecordFailedException('Could not create Application', fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.application_name = name;
@@ -565,7 +565,7 @@ function createModule(name){
 		throw new scopes.modUtils$exceptions.ValueNotUniqueException(fs, 'name');
 	}
 	if (!fs.newRecord()) {
-		throw new scopes.modUtils$exceptions.NewRecordFailedException('Cound not create module record', null, null, fs);
+		throw new scopes.modUtils$exceptions.NewRecordFailedException('Cound not create module record', fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.name = name;
@@ -2438,7 +2438,7 @@ function Application(applicationRecord){
 			return false;
 		}
 		if (!record.prov_application_to_prov_application_modules.newRecord()) {
-			throw new scopes.modUtils$exceptions.NewRecordFailedException('Failed to create record', null, null, record.prov_application_to_prov_application_modules);
+			throw new scopes.modUtils$exceptions.NewRecordFailedException('Failed to create record', record.prov_application_to_prov_application_modules);
 		}
 		record.prov_application_to_prov_application_modules.module_id = moduleID;
 		save(record.prov_application_to_prov_application_modules);
@@ -2486,7 +2486,7 @@ function Application(applicationRecord){
 			var module = modules.getRecord(i);
 			if (module.module_id == moduleRecordOrID) {
 				if (!modules.deleteRecord(module)) {
-					throw new scopes.modUtils$exceptions.DeleteRecordFailedException('Failed to delete record', null, null, module);
+					throw new scopes.modUtils$exceptions.DeleteRecordFailedException('Failed to delete record', module);
 				}
 				return true;
 			}
@@ -2519,7 +2519,7 @@ function Application(applicationRecord){
  */
 function save(record){
 	if (!databaseManager.saveData(record)) {
-		throw new scopes.modUtils$exceptions.SaveDataFailedException('Save data failed:' + record.exception, null, null, record);
+		throw new scopes.modUtils$exceptions.SaveDataFailedException('Save data failed:' + record.exception, record);
 	}
 	return true;
 }
@@ -2904,19 +2904,17 @@ function removeDataForOrganization(organizationId) {
  * 
  * @param {JSRecord<db:/svy_framework/sec_user>} record
  * @param {String} message
- * @param {String} [i18nKey]
- * @param {Array} [i18nArguments]
  *
  * @properties={typeid:24,uuid:"BE06D0A6-A86F-426E-ABE6-610D46175DF6"}
  */
-function PasswordRuleViolationException(record, message, i18nKey, i18nArguments) {
+function PasswordRuleViolationException(record, message) {
 	/**
 	 * The record where the problem occured
 	 * @type {JSRecord<db:/svy_framework/sec_user>}
 	 */
 	this.record = record;
 	
-	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message, i18nKey, i18nArguments);
+	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message);
 }
 
 /**

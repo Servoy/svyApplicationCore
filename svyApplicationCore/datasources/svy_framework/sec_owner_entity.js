@@ -88,6 +88,6 @@ function createOrganization(organizationName, record)
 	if (databaseManager.saveData(organizationRecord)) {
 		return organizationRecord;
 	} else {
-		throw new scopes.modUtils$exceptions.SaveDataFailedException(organizationRecord.exception ? organizationRecord.exception.getMessage() : "", "", [], record.sec_owner_to_sec_organization);
+		throw new scopes.modUtils$exceptions.SaveDataFailedException(organizationRecord.exception ? organizationRecord.exception.getMessage() : "", record.sec_owner_to_sec_organization);
 	}
 }
