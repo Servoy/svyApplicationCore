@@ -313,8 +313,6 @@ function getOrganizations() {
  * 
  * @return {Array<Owner>} owners
  * 
- * @example 
- * 
  * @author patrick
  * @since 01.08.2012
  * 
@@ -342,7 +340,7 @@ function getOwners() {
  * 
  * @return {Owner} owner
  * 
- * @example var _currentOwner = scopes.svySecurityManager.getOwner();
+ * @example var currentOwner = scopes.svySecurityManager.getOwner();
  * 
  * @author patrick
  * @since 14.08.2012
@@ -606,8 +604,8 @@ function createOrganization(organizationName, owner) {
  * @param {String} ownerName - the name of the new owner
  * @return {Owner} newOwner
  * 
- * @example var _newOwner = scopes.svySecurityManager.createOwner("New owner");<br>
- * if (_newOwner) {<br>
+ * @example var newOwner = scopes.svySecurityManager.createOwner("New owner");<br>
+ * if (newOwner) {<br>
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// Everything OK<br>
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
  * }
@@ -712,7 +710,7 @@ function User(userRecord) {
 	 * 
 	 * @type {Number}
 	 * 
-	 * @see scopes.svySecurityManager.ADMIN_LEVEL for possible values
+	 * @see ADMIN_LEVEL for possible values
 	 */
 	this.adminLevel = userRecord.admin_level;
 	
@@ -2719,7 +2717,7 @@ function filterTables() {
 			value.map(function (x) { return utils.stringTrim(x); }); //remove exces spaces
 		} else if (/globals\./.test(record.filter_value)) {
 			var global = record.filter_value.match(/(globals\.\w*)/)[0];
-			value = record.filter_value.replace(/(globals\.\w*)/, eval(global));
+			value = record.filter_value.replace(/(globals\.\w*)/, global);
 		} else {
 			value = record.filter_value
 		}
@@ -3041,7 +3039,7 @@ function loadSecurityKeys(user, organization) {
 	var result = new Array();
 	for (var i = 1; i <= keyFs.getSize(); i++) {
 		var record = keyFs.getRecord(i);
-		var key = new scopes.svySecurityManager.Key(record.security_key_id, record.name, record.description, record.owner_id, record.module_id);
+		var key = new Key(record.security_key_id, record.name, record.description, record.owner_id, record.module_id);
 		result.push(key);
 	}
 	
