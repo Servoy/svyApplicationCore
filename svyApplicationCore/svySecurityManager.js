@@ -2716,8 +2716,9 @@ function filterTables() {
 			value = value.split(","); //value is now array containing all the values
 			value.map(function (x) { return utils.stringTrim(x); }); //remove exces spaces
 		} else if (/globals\./.test(record.filter_value)) {
+			/** @type {String} */
 			var global = record.filter_value.match(/(globals\.\w*)/)[0];
-			value = record.filter_value.replace(/(globals\.\w*)/, eval(global));
+			value = record.filter_value.replace(/(globals\.\w*)/, globals[global.split(".")[1]]);
 		} else {
 			value = record.filter_value
 		}
