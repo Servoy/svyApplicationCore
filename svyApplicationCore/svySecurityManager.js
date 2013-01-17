@@ -2733,6 +2733,14 @@ function filterTables() {
 		application.output("Created table filter for deleted users", LOGGINGLEVEL.DEBUG);
 	}
 	
+	// filter for records that have deletion_date set
+	success = databaseManager.addTableFilterParam(globals.nav_db_framework, null, "deletion_date", "=", null, "deleted_meta_data");
+	if (!success) {
+		application.output("Failed to add table filter for deleted metadata records", LOGGINGLEVEL.WARNING);
+	} else {
+		application.output("Created table filter for deleted metadata records", LOGGINGLEVEL.DEBUG);
+	}	
+	
 }
 	
 /**
@@ -3235,6 +3243,68 @@ function removeRuntimeKey(keyId) {
 		}
 		runtimeSecurityKeysRemoved.push(key);
 	}
+}
+
+/**
+ * @properties={typeid:35,uuid:"92CD54F8-2B67-4BCB-8D18-41A91A8F4297",variableType:-4}
+ */
+var EVENT_TYPES = {
+	ORGANIZATION_CHANGE: "organization_change"
+}
+
+/**
+ * Changes the organization of the logged in user<p>
+ * 
+ * Fires a ORGANIZATION_CHANGE event when successful
+ * 
+ * @param {String|UUID} oldOrganizationId
+ * @param {String|UUID} newOrganizationId
+ * 
+ * @return {Boolean} success
+ *
+ * @properties={typeid:24,uuid:"BFD5B7D2-B02A-4EBD-8845-42DB0A1B3C87"}
+ */
+function changeOrganization(oldOrganizationId, newOrganizationId) {
+	var user = getUser();
+	var org = getOrganizationById(newOrganizationId);
+	if (!user || !org) {
+		return false;
+	}
+	var userOrgId = getUserOrgId(org, user);
+	if (!userOrgId && user.adminLevel < ADMIN_LEVEL.APPLICATION_MANAGER) {
+		return false;
+	}
+	
+	globals.svy_sec_lgn_organization_id = newOrganizationId.toString();
+	globals.svy_sec_lgn_user_org_id = userOrgId;
+	
+	loadSecurityKeys();
+	filterOrganization();
+	// TODO: element rights
+	filterTables();
+	
+	scopes.modUtils$eventManager.fireEvent(this, EVENT_TYPES.ORGANIZATION_CHANGE, [oldOrganizationId, newOrganizationId]);
+	return true;
+}
+
+/**
+ * Adds a listener that will be notified whenever the organization changes<p>
+ * 
+ * The listener will fire the methodToCall and passes<p>
+ * <ul>
+ * <li>oldOrganizationId - the organizationId before the change</li>
+ * <li>newOrganizationId - the organizationId after the change</li> 
+ * </ul>
+ * as parameters
+ * 
+ * @param {Function} methodToCall
+ * 
+ * @return {Boolean} success
+ *
+ * @properties={typeid:24,uuid:"E8922DDB-B242-41F9-AB42-57A12F78E885"}
+ */
+function addOrganizationChangeListener(methodToCall) {
+	return scopes.modUtils$eventManager.addListener(this, EVENT_TYPES.ORGANIZATION_CHANGE, methodToCall);
 }
 
 /**
