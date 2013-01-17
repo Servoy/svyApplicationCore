@@ -1,12 +1,12 @@
 /**
  * Admin levels for users<p>
- * 
  * NONE 					= normal user with no special priviliges<br>
  * ORGANIZATION_MANAGER		= the manager of an organization, can make settings for organizations, create users<br>
- * OWNER_MANAGER			= the manager of an owner, can create organizations, users etc<br>
+ * OWNER_MANAGER			= the manager of an owner/tenant, can create organizations, users etc<br>
  * APPLICATION_MANAGER		= the manager of the application, can create owners<br>
  * DEVELOPER				= has no limitations
  * 
+ * @enum
  * @final
  * @properties={typeid:35,uuid:"D0A4C4A2-CCFC-45E8-86A3-8A5748045075",variableType:-4}
  */
@@ -14,31 +14,26 @@ var ADMIN_LEVEL = {
 	
 	/**
 	 * Normal user with no special privileges
-	 * @type {Number}
 	 */
 	NONE: 0,
 	
 	/**
 	 * The manager of an organization
-	 * @type {Number}
 	 */
 	ORGANIZATION_MANAGER: 1,
 	
 	/**
 	 * The manager of an owner/tenant
-	 * @type {Number}
 	 */
 	TENANT_MANAGER: 2,
 	
 	/**
 	 * The manager of the application
-	 * @type {Number}
 	 */
 	APPLICATION_MANAGER: 4,
 	
 	/**
 	 * The developer of the application
-	 * @type {Number}
 	 */
 	DEVELOPER: 8
 	
