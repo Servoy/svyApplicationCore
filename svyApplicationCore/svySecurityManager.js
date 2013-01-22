@@ -152,17 +152,17 @@ function getApplication(applicationName) {
  */
 function getGroups() {
 	/** @type {Array<Group>} */
-	var _result = new Array();
-	var _fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_group");
-	_fs.loadAllRecords();
-	if (utils.hasRecords(_fs)) {
-		/** @type {JSFoundset<db://>} */
-		for (var i = 1; i <= _fs.getSize(); i++) {
-			var _groupRecord = _fs.getRecord(i);
-			_result.push(new Group(_groupRecord));
+	var result = new Array();
+	/** @type {JSFoundset<db:/svy_framework/sec_group>} */	
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_group");
+	fs.loadAllRecords();
+	if (utils.hasRecords(fs)) {
+		for (var i = 1; i <= fs.getSize(); i++) {
+			var _groupRecord = fs.getRecord(i);
+			result.push(new Group(_groupRecord));
 		}
 	}
-	return _result;
+	return result;
 }
 
 /**
@@ -178,12 +178,13 @@ function getGroups() {
  */
 function getGroup(groupname) {
 	/** @type {QBSelect<db:/svy_framework/sec_group>} */
-	var _query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_group");
-	_query.result.addPk();
-	_query.where.add(_query.columns.name.lower.eq(groupname.toLowerCase()));
-	var _fs = databaseManager.getFoundSet(_query);
-	if (utils.hasRecords(_fs)) {
-		return new Group(_fs.getRecord(1));
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_group");
+	query.result.addPk();
+	query.where.add(query.columns.name.lower.eq(groupname.toLowerCase()));
+	/** @type {JSFoundset<db:/svy_framework/sec_group>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
+		return new Group(fs.getRecord(1));
 	} else {
 		return null;
 	}
@@ -260,18 +261,19 @@ function getOrganizationById(organizationId) {
  */
 function getOrganization(organization) {
 	/** @type {QBSelect<db:/svy_framework/sec_organization>} */	
-	var _query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
-	_query.result.addPk();
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
+	query.result.addPk();
 	if (organization) {
-		_query.where.add(_query.columns.name.eq(organization));
+		query.where.add(query.columns.name.eq(organization));
 	} else {
-		_query.where.add(_query.columns.organization_id.eq(globals["svy_sec_lgn_organization_id"]));
+		query.where.add(query.columns.organization_id.eq(globals["svy_sec_lgn_organization_id"]));
 	}
-	var _fs = databaseManager.getFoundSet(_query);
-	if (!utils.hasRecords(_fs)) {
+	/** @type {JSFoundSet<db:/svy_framework/sec_organization>} */	
+	var fs = databaseManager.getFoundSet(query);
+	if (!utils.hasRecords(fs)) {
 		return null;
 	} else {
-		return new Organization(_fs.getRecord(1));
+		return new Organization(fs.getRecord(1));
 	}
 }
 
@@ -287,20 +289,20 @@ function getOrganization(organization) {
  */
 function getOrganizations() {
 	/** @type {QBSelect<db:/svy_framework/sec_organization>} */	
-	var _query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
-	_query.result.addPk();
-	var _foundset = databaseManager.getFoundSet(_query);
-	if (!utils.hasRecords(_foundset)) {
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
+	query.result.addPk();
+	var foundset = databaseManager.getFoundSet(query);
+	if (!utils.hasRecords(foundset)) {
 		return null;
 	}
 	/** @type {Array<Organization>} */
-	var _result = new Array();
-	/** @type {JSFoundset<db://>} */
-	for (var i = 1; i <= _foundset.getSize(); i++) {
-		var _userRecord = _foundset.getRecord(i);
-		_result.push(new Organization(_userRecord));
+	var result = new Array();
+	/** @type {JSFoundset<db:/svy_framework/sec_organization>} */
+	for (var i = 1; i <= foundset.getSize(); i++) {
+		var userRecord = foundset.getRecord(i);
+		result.push(new Organization(userRecord));
 	}
-	return _result;
+	return result;
 }
 
 /**
@@ -318,7 +320,7 @@ function getOwners() {
 	var result = new Array();
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	fs.loadAllRecords();
-	/** @type {JSFoundset<db://>} */
+	/** @type {JSFoundset<db:/svy_framework/sec_owner>} */
 	for (var i = 1; i <= fs.getSize(); i++) {
 		var ownerRecord = fs.getRecord(i);
 		result.push(new Owner(ownerRecord));
@@ -350,6 +352,7 @@ function getOwner(owner) {
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_owner");
 	query.result.addPk()
 	query.where.add(query.columns.name.eq(owner));
+	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */	
 	var fs = databaseManager.getFoundSet(query);
 	if (fs.getSize() == 1) {
 		return new Owner(fs.getRecord(1));
@@ -433,13 +436,13 @@ function getUsers() {
 	/** @type {QBSelect<db:/svy_framework/sec_user>} */
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user");
 	query.result.addPk();
+	/** @type {JSFoundset<db:/svy_framework/sec_user>} */
 	var foundset = databaseManager.getFoundSet(query);
 	if (!utils.hasRecords(foundset)) {
 		return null;
 	}
 	/** @type {Array<User>} */
 	var result = new Array();
-	/** @type {JSFoundset<db://>} */
 	for (var i = 1; i <= foundset.getSize(); i++) {
 		var userRecord = foundset.getRecord(i);
 		result.push(new User(userRecord));
@@ -887,9 +890,9 @@ function User(userRecord) {
 		query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId));
 		query.where.add(joinUserOrg.columns.user_id.eq(_this.userId));
 		
+		/** @type {JSFoundset<db:/svy_framework/sec_group>} */
 		var groupFs = databaseManager.getFoundSet(query);
 		if (utils.hasRecords(groupFs)) {
-			/** @type {JSFoundset<db:/svy_framework/sec_group>} */
 			for (var i = 1; i <= groupFs.getSize(); i++) {
 				var groupRecord = groupFs.getRecord(i);
 				result.push(new Group(groupRecord));
@@ -981,6 +984,7 @@ function User(userRecord) {
 		query.where.add(query.columns.attempt_datetime.le(end));
 		query.sort.add(query.columns.attempt_datetime.desc);
 		
+		/** @type {JSFoundSet<db:/svy_framework/sec_user_login_attempt>} */
 		var fs = databaseManager.getFoundSet(query);
 		/** @type {Array<UserLogin>} */
 		var result = new Array();
@@ -1267,6 +1271,7 @@ function Group(ownerRecord) {
 		if (organization) {
 			query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId.toString()));
 		}
+		/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 		var foundset = databaseManager.getFoundSet(query);
 		if (utils.hasRecords(foundset)) {
 			for (var i = 1; i <= foundset.getSize(); i++) {
@@ -1822,7 +1827,7 @@ function Organization(organizationRecord) {
 	 */
 	this.getOwner = function() {
 		if (utils.hasRecords(record.sec_organization_to_sec_owner)) {
-			return new Owner(record.sec_organization_to_sec_owner);
+			return new Owner(record.sec_organization_to_sec_owner.getRecord(1));
 		} else {
 			return null;
 		}
@@ -1843,6 +1848,7 @@ function Organization(organizationRecord) {
 		var userOrgJoin = userQuery.joins.add("db:/" + globals.nav_db_framework + "/sec_user_org", JSRelation.INNER_JOIN);
 		userOrgJoin.on.add(userQuery.columns.user_id.eq(userOrgJoin.columns.user_id));
 		userQuery.where.add(userOrgJoin.columns.organization_id.eq(this.orgId));
+		/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 		var userFs = databaseManager.getFoundSet(userQuery);
 		if (utils.hasRecords(userFs)) {
 			for (var i = 1; i <= userFs.getSize(); i++) {
@@ -2326,9 +2332,9 @@ function Module(moduleRecord){
 		var result = new Array();
 		var fs = record.sec_module_to_sec_owner_in_module;
 		for (var i = 1; i <= fs.getSize(); i++) {
-			var ownerRecord = fs.getRecord(i);
-			if (utils.hasRecords(ownerRecord.sec_owner_in_module_to_sec_owner)) {
-				result.push(new Owner(ownerRecord));
+			var ownerInModuleRecord = fs.getRecord(i);
+			if (utils.hasRecords(ownerInModuleRecord.sec_owner_in_module_to_sec_owner)) {
+				result.push(new Owner(ownerInModuleRecord.sec_owner_in_module_to_sec_owner.getRecord(1)));
 			}
 		}
 		return result;
@@ -2496,8 +2502,8 @@ function Application(applicationRecord){
 	this.getModules = function(){
 		var modules = [];
 		for(var i = 1; i <= record.prov_application_to_prov_application_modules.getSize(); i++){
-			var id = record.prov_application_to_prov_application_modules.getRecord(i).module_id;
-			modules.push(new Module(id));
+			var moduleRecord = record.prov_application_to_prov_application_modules.getRecord(i);
+			modules.push(new Module(moduleRecord));
 		}
 		return modules;
 	}
