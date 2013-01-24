@@ -303,13 +303,13 @@ function getOrganizations() {
 	/** @type {QBSelect<db:/svy_framework/sec_organization>} */	
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
 	query.result.addPk();
+	/** @type {JSFoundset<db:/svy_framework/sec_organization>} */	
 	var foundset = databaseManager.getFoundSet(query);
 	if (!utils.hasRecords(foundset)) {
 		return null;
 	}
 	/** @type {Array<Organization>} */
 	var result = new Array();
-	/** @type {JSFoundset<db:/svy_framework/sec_organization>} */
 	for (var i = 1; i <= foundset.getSize(); i++) {
 		var userRecord = foundset.getRecord(i);
 		result.push(new Organization(userRecord));
@@ -330,9 +330,9 @@ function getOrganizations() {
 function getOwners() {
 	/** @type {Array<Owner>} */
 	var result = new Array();
+	/** @type {JSFoundset<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	fs.loadAllRecords();
-	/** @type {JSFoundset<db:/svy_framework/sec_owner>} */
 	for (var i = 1; i <= fs.getSize(); i++) {
 		var ownerRecord = fs.getRecord(i);
 		result.push(new Owner(ownerRecord));
@@ -2528,7 +2528,9 @@ function Application(applicationRecord){
 		var modules = [];
 		for(var i = 1; i <= record.prov_application_to_prov_application_modules.getSize(); i++){
 			var moduleRecord = record.prov_application_to_prov_application_modules.getRecord(i);
-			modules.push(new Module(moduleRecord));
+			if (utils.hasRecords(moduleRecord.prov_application_modules_to_sec_module)) {
+				modules.push(new Module(moduleRecord.prov_application_modules_to_sec_module.getRecord(1)));
+			}
 		}
 		return modules;
 	}

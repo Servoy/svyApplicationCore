@@ -187,7 +187,7 @@ function getProperty(name) {
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
 	query.result.addPk();
 	query.where.add(query.columns.property_name.lower.eq(name.toLowerCase()));
-	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		return new Property(fs.getRecord(1));
@@ -308,7 +308,7 @@ function getRuntimeProperty(propertyName) {
  * @param {Number} [adminLevel]
  * @param {Array<String>} [propertyNames]
  * 
- * @return {Array<scopes.svyProperties.RuntimeProperty>} properties
+ * @return {Array<RuntimeProperty>} properties
  * 
  * @author patrick
  * @since 11.09.2012
@@ -316,7 +316,7 @@ function getRuntimeProperty(propertyName) {
  * @properties={typeid:24,uuid:"2DD6C79F-0E99-4F9B-A534-53EBECC5096E"}
  */
 function getRuntimeProperties(adminLevel, propertyNames) {
-	/** @type {Array<scopes.svyProperties.RuntimeProperty>} */
+	/** @type {Array<RuntimeProperty>} */
 	var result = loadRuntimeProperties(adminLevel);
 	if (!propertyNames) {
 		return result;
@@ -1830,25 +1830,25 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 		propertyValue = propertyValue.toString();
 	}
 	
-	var propertyRecord;
+	var propertyValueRecord;
 	if (!utils.hasRecords(fs)) {
-		propertyRecord = fs.getRecord(fs.newRecord());
-		propertyRecord.svy_properties_id = runtimePropId;
-		propertyRecord.property_name = runtimeProp.propertyName;
-		propertyRecord.application_id = APPLICATION_CONTEXT ? APPLICATION_CONTEXT.id : null;
+		propertyValueRecord = fs.getRecord(fs.newRecord());
+		propertyValueRecord.svy_properties_id = runtimePropId;
+		propertyValueRecord.property_name = runtimeProp.propertyName;
+		propertyValueRecord.application_id = APPLICATION_CONTEXT ? APPLICATION_CONTEXT.id : null;
 		if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER || adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER) {
-			propertyRecord.owner_id = globals.zero_uuid;
-			propertyRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
+			propertyValueRecord.owner_id = globals.zero_uuid;
+			propertyValueRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
 		} else {
-			propertyRecord.owner_id = globals.svy_sec_lgn_owner_id;
-			propertyRecord.admin_level = adminLevel;			
+			propertyValueRecord.owner_id = globals.svy_sec_lgn_owner_id;
+			propertyValueRecord.admin_level = adminLevel;			
 		}
-		propertyRecord.property_owner_id = propertyOwnerId;
-		propertyRecord.property_value = [{name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort}];
+		propertyValueRecord.property_owner_id = propertyOwnerId;
+		propertyValueRecord.property_value = [{name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort}];
 	} else {
-		propertyRecord = fs.getRecord(1);
+		propertyValueRecord = fs.getRecord(1);
 		/** @type {Array<{name: String, value: Object}>} */
-		var currentValues = propertyRecord.property_value;
+		var currentValues = propertyValueRecord.property_value;
 		var newValues = new Array();
 		if (currentValues && currentValues.length > 0) {
 			var found = false;			
@@ -1862,13 +1862,19 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 			if (!found) {
 				newValues.push({name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort});
 			}
-			propertyRecord.property_value = newValues;
+			propertyValueRecord.property_value = newValues;
 		} else {
-			propertyRecord.property_value = [{name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort}];
+			propertyValueRecord.property_value = [{name: runtimeProp.propertyValueName, value: propertyValue, sort: runtimeProp.sort}];
 		}
 	}
 	
-	databaseManager.saveData(propertyRecord);
+	databaseManager.saveData(propertyValueRecord);
+	
+	var propertyRecord = null;
+	if (utils.hasRecords(propertyValueRecord.svy_property_values_to_svy_properties)) {
+		propertyRecord = propertyValueRecord.svy_property_values_to_svy_properties;
+	}
+	
 	runtimeProperties = loadRuntimeProperties();
 	
 	scopes.modUtils$eventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
