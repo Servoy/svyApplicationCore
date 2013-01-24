@@ -40,6 +40,18 @@ var ADMIN_LEVEL = {
 };
 
 /**
+ * Type of events that are fired from the SecurityManager
+ * 
+ * @enum
+ * @final
+ * 
+ * @properties={typeid:35,uuid:"92CD54F8-2B67-4BCB-8D18-41A91A8F4297",variableType:-4}
+ */
+var EVENT_TYPES = {
+	ORGANIZATION_CHANGE: "organization_change"
+}
+
+/**
  * If <code>true</code>, the framework will create a hash of the data <br>
  * in the security tables and save that in sec_owner.hash. <br>
  * The hash will be checked at login. <br>
@@ -406,8 +418,8 @@ function getUser(userName) {
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user");
 	query.result.addPk();
 	
-	if (!userName && globals["svy_sec_user_id"]) {
-		query.where.add(query.columns.user_id.eq(globals["svy_sec_user_id"]));
+	if (!userName && globals.svy_sec_lgn_user_id) {
+		query.where.add(query.columns.user_id.eq(globals.svy_sec_lgn_user_id.toString()));
 	} else {
 		query.where.add(query.columns.user_name.eq(userName));
 	}
@@ -680,6 +692,8 @@ function createUser(userName, password, owner, organization) {
  * @param {JSRecord<db:/svy_framework/sec_user>} userRecord
  *
  * @constructor 
+ * 
+ * @private
  * 
  * @author patrick
  * @since 01.08.2012 
@@ -1216,6 +1230,7 @@ function User(userRecord) {
  * @param {JSRecord<db:/svy_framework/sec_group>} ownerRecord
  * 
  * @constructor 
+ * @private 
  * 
  * @author patrick
  * @since 01.08.2012
@@ -1383,6 +1398,7 @@ function Group(ownerRecord) {
  * @param {UUID} [keyModuleId]
  * 
  * @constructor 
+ * @private
  * 
  * @author patrick
  * @since 01.08.2012 
@@ -1722,6 +1738,7 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
  * @param {JSRecord<db:/svy_framework/sec_user_login_attempt>} userLoginAttempt
  * 
  * @constructor 
+ * @private
  * 
  * @author patrick
  * @since 2012-10-23
@@ -1789,6 +1806,8 @@ function UserLogin(userLoginAttempt) {
  * @param {JSRecord<db:/svy_framework/sec_organization>} organizationRecord
  * 
  * @constructor 
+ * 
+ * @private
  * 
  * @author patrick
  * @since 01.08.2012 
@@ -1929,6 +1948,8 @@ function Organization(organizationRecord) {
  * 
  * @author patrick
  * @since 01.08.2012
+ * 
+ * @private 
  *
  * @properties={typeid:24,uuid:"23E6F372-7564-4F60-A4F1-AFFC10763CDB"}
  */
@@ -2272,7 +2293,10 @@ function Owner(ownerRecord) {
  * Wrapper class for db:/svy_framework/sec_module record
  * 
  * @param {JSRecord<db:/svy_framework/sec_module>} moduleRecord
+ * 
  * @constructor 
+ * @private
+ * 
  * @properties={typeid:24,uuid:"C1138192-FBC2-4F1D-A7BF-8D4B13F3379B"}
  */
 function Module(moduleRecord){
@@ -2350,6 +2374,7 @@ function Module(moduleRecord){
  * @param {JSRecord<db:/svy_framework/prov_application>} applicationRecord
  * 
  * @constructor 
+ * @private
  * 
  * @author Sean
  * 
@@ -2747,6 +2772,132 @@ function filterTables() {
 		application.output("Created table filter for deleted metadata records", LOGGINGLEVEL.DEBUG);
 	}	
 	
+}
+	
+/**
+ * Sets the security settings on servoy elements and 
+ * table read, insert, update, delete and tracking rights
+ * from the keys of the logged in user 
+ * by using security.setSecuritySettings()
+ * 
+ * @properties={typeid:24,uuid:"FBDE84EE-E1A2-48B3-ABFC-EFC216A2A77B"}
+ */
+function setSecuritySettings() {
+	var keyIds = getSecurityKeysForInQuery();
+	
+	// query all the element right from the sec_tables
+	var query = ' SELECT \
+						se.servoy_element_id, \
+						(SELECT sum(se_fe.flag_editable) \
+						FROM 		sec_element se_fe \
+						WHERE 		se_fe.security_key_id IN (' + keyIds + ') and \
+									se.servoy_element_id =  se_fe.servoy_element_id \
+						GROUP BY 	se_fe.servoy_element_id), \
+						(SELECT 	sum(se_se.flag_visible) \
+						FROM 		sec_element se_se \
+						WHERE 		se_se.security_key_id IN (' + keyIds + ') and \
+									se.servoy_element_id =  se_se.servoy_element_id \
+						GROUP BY	se_se.servoy_element_id) \
+						FROM 		sec_element se\
+   						GROUP BY 	se.servoy_element_id'
+
+	var dataset = databaseManager.getDataSetByQuery(globals.nav_db_framework, query, null, -1);
+	
+	// Create dataset to be used for security.setSecuritySettings(dataset)
+	var securitySettingsDataset = databaseManager.createEmptyDataSet(0, ["id", "flags"]);
+	var rowData;
+
+	// convert the rights to the form required by security.setSecuritySettings
+	for (var i = 1; i <= dataset.getMaxRowIndex(); i++) {
+		rowData = new Array();
+		rowData[0] = dataset.getValue(i, 1);
+		if (dataset.getValue(i, 2) > 0 && dataset.getValue(i, 3) > 0) {
+			rowData[1] = JSSecurity.VIEWABLE | JSSecurity.ACCESSIBLE;
+		} else if (dataset.getValue(i, 2) > 0) {
+			rowData[1] = JSSecurity.ACCESSIBLE;
+		} else if (dataset.getValue(i, 3) > 0) {
+			rowData[1] = JSSecurity.VIEWABLE;
+		} else {
+			rowData[1] = 0;
+		}
+		securitySettingsDataset.addRow(rowData);
+	}
+
+	// get the table security  // 1 = READ / 2 = INSERT / 4 = UPDATE / 8 = DELETE / 16 = TRACKING;
+	query = ' SELECT \
+									st.server_name, \
+									st.table_name, \
+									(max(st.flag_read) * 1) ,\
+									(max(st.flag_insert) * 2) , \
+									(max(st.flag_update) * 4),\
+									(max(st.flag_delete) * 8) , \
+									(max(st.flag_tracking) * 16)\
+						FROM 		sec_table st \
+						WHERE 		st.security_key_id IN (' + keyIds + ') \
+						GROUP BY	st.server_name, st.table_name\
+						ORDER BY	st.table_name desc '
+
+	dataset = databaseManager.getDataSetByQuery(globals.nav_db_framework, query, null, -1);
+
+	// convert the rights to the form required by security.setSecuritySettings
+	var tableSecurityObject = new Object()
+	var tableName
+	for (var j = 1; j <= dataset.getMaxRowIndex(); j++) {
+		if (dataset.getValue(j, 2) != "-1") // not all tables
+		{
+			tableName = dataset.getValue(j, 1) + '.' + dataset.getValue(j, 2);
+			tableSecurityObject[tableName] = new Object();
+			tableSecurityObject[tableName].fRead = dataset.getValue(j, 3);
+			tableSecurityObject[tableName].fInsert = dataset.getValue(j, 4);
+			tableSecurityObject[tableName].fUpdate = dataset.getValue(j, 5);
+			tableSecurityObject[tableName].fDelete = dataset.getValue(j, 6);
+			tableSecurityObject[tableName].fTracking = dataset.getValue(j, 7);
+
+		} else // all tables of the server
+		{
+			/** @type {String} */
+			var serverName = dataset.getValue(j, 1);
+			var tableNames = databaseManager.getTableNames(serverName);
+			for (var k = 0; k < tableNames.length; k++) {
+				tableName = dataset.getValue(j, 1) + '.' + tableNames[k];
+				if (tableSecurityObject[tableName]) // Object allready exists, synchronise properties
+				{
+					if (dataset.getValue(j, 3) > 0 && tableSecurityObject[tableName].fRead < 0) {
+						tableSecurityObject[tableName].fRead = dataset.getValue(j, 3);
+					}
+					if (dataset.getValue(j, 4) > 0 && tableSecurityObject[tableName].fInsert < 0) {
+						tableSecurityObject[tableName].fInsert = dataset.getValue(j, 4);
+					}
+					if (dataset.getValue(j, 5) > 0 && tableSecurityObject[tableName].fUpdate < 0) {
+						tableSecurityObject[tableName].fUpdate = dataset.getValue(j, 5);
+					}
+					if (dataset.getValue(j, 6) > 0 && tableSecurityObject[tableName].fDelete < 0) {
+						tableSecurityObject[tableName].fDelete = dataset.getValue(j, 6);
+					}
+					if (dataset.getValue(j, 7) > 0 && tableSecurityObject[tableName].fTracking < 0) {
+						tableSecurityObject[tableName].fTracking = dataset.getValue(j, 7);
+					}
+				} else // Object doesn't exist jet
+				{
+					tableSecurityObject[tableName] = new Object();
+					tableSecurityObject[tableName].fRead = dataset.getValue(j, 3);
+					tableSecurityObject[tableName].fInsert = dataset.getValue(j, 4);
+					tableSecurityObject[tableName].fUpdate = dataset.getValue(j, 5);
+					tableSecurityObject[tableName].fDelete = dataset.getValue(j, 6);
+					tableSecurityObject[tableName].fTracking = dataset.getValue(j, 7);
+				}
+			}
+		}
+	}
+	
+	for (m in tableSecurityObject) {
+		rowData = new Array();
+		rowData[0] = m;
+		rowData[1] = Math.abs(tableSecurityObject[m].fRead) + Math.abs(tableSecurityObject[m].fInsert) + Math.abs(tableSecurityObject[m].fUpdate) + Math.abs(tableSecurityObject[m].fDelete) + Math.abs(tableSecurityObject[m].fTracking);
+		securitySettingsDataset.addRow(rowData)
+	}
+	
+	security.setSecuritySettings(securitySettingsDataset);
 }
 	
 /**
@@ -3252,13 +3403,6 @@ function removeRuntimeKey(keyId) {
 }
 
 /**
- * @properties={typeid:35,uuid:"92CD54F8-2B67-4BCB-8D18-41A91A8F4297",variableType:-4}
- */
-var EVENT_TYPES = {
-	ORGANIZATION_CHANGE: "organization_change"
-}
-
-/**
  * Changes the organization of the logged in user<p>
  * 
  * Fires a ORGANIZATION_CHANGE event when successful
@@ -3284,9 +3428,10 @@ function changeOrganization(oldOrganizationId, newOrganizationId) {
 	globals.svy_sec_lgn_organization_id = newOrganizationId.toString();
 	globals.svy_sec_lgn_user_org_id = userOrgId;
 	
+	// re-apply the security settings
 	loadSecurityKeys();
 	filterOrganization();
-	// TODO: element rights
+	setSecuritySettings();
 	filterTables();
 	
 	scopes.modUtils$eventManager.fireEvent(this, EVENT_TYPES.ORGANIZATION_CHANGE, [oldOrganizationId, newOrganizationId]);
