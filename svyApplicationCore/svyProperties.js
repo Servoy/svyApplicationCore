@@ -308,7 +308,7 @@ function getRuntimeProperty(propertyName) {
  * @param {Number} [adminLevel]
  * @param {Array<String>} [propertyNames]
  * 
- * @return {Array<RuntimeProperty>} properties
+ * @return {Array<scopes.svyProperties.RuntimeProperty>} properties
  * 
  * @author patrick
  * @since 11.09.2012
@@ -316,7 +316,7 @@ function getRuntimeProperty(propertyName) {
  * @properties={typeid:24,uuid:"2DD6C79F-0E99-4F9B-A534-53EBECC5096E"}
  */
 function getRuntimeProperties(adminLevel, propertyNames) {
-	/** @type {Array<RuntimeProperty>} */
+	/** @type {Array<scopes.svyProperties.RuntimeProperty>} */
 	var result = loadRuntimeProperties(adminLevel);
 	if (!propertyNames) {
 		return result;
