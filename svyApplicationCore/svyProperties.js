@@ -1738,11 +1738,14 @@ function loadRuntimeProperties(adminLevel) {
 	if (userPropNames && userPropNames.length > 0) {
 		for (var up = 0; up < userPropNames.length; up++) {
 			var userPropValue = application.getUserProperty(userPropNames[up]);
-			runtimeProp = new RuntimeProperty(userPropNames[up], userPropValue);
-			if (result.indexOf(runtimeProp) == -1) {
+			function runtimeFilter(element) {
+				return (element.propertyName == userPropNames[up]);
+			}
+			if (result.filter(runtimeFilter).length == 0) {
+				runtimeProp = new RuntimeProperty(userPropNames[up], userPropValue);	
 				result.push(runtimeProp);
 			} else {
-				application.output("Property " + userPropNames[up] + " already loaded from DB")
+				application.output("Property " + userPropNames[up] + " already loaded from DB", LOGGINGLEVEL.DEBUG);
 			}
 		}
 	}
