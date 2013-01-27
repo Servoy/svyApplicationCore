@@ -1625,7 +1625,6 @@ function updateDefaultProperties(props) {
 				
 				if (!itemFound) {
 					// TODO
-					propValues.push(new PropertyValue());
 				} else if (itemChanged) {
 					record.value_description = propValues;
 					databaseManager.saveData(record);
