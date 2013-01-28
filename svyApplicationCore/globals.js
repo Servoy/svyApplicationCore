@@ -87,8 +87,6 @@ var one = 1;
 
 /**
  * @type {String}
- * 
- * @deprecated not used anywhere
  *
  * @properties={typeid:35,uuid:"98B7C95A-F176-4B7B-8596-17E9A0B12128"}
  */
