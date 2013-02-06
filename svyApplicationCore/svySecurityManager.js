@@ -2892,7 +2892,7 @@ function setSecuritySettings() {
 		}
 	}
 	
-	for (m in tableSecurityObject) {
+	for (var m in tableSecurityObject) {
 		rowData = new Array();
 		rowData[0] = m;
 		rowData[1] = Math.abs(tableSecurityObject[m].fRead) + Math.abs(tableSecurityObject[m].fInsert) + Math.abs(tableSecurityObject[m].fUpdate) + Math.abs(tableSecurityObject[m].fDelete) + Math.abs(tableSecurityObject[m].fTracking);
