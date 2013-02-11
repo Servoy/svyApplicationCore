@@ -303,10 +303,13 @@ function getRuntimeProperty(propertyName) {
 /**
  * Returns all runtime properties as an array<p>
  * 
- * If the adminLevel is provided, the values in the properties returned apply to the given level
+ * If the adminLevel is provided, the values in the properties returned apply to the given level<p>
+ * 
+ * If an ownerId is given and data is not filtered on ownerId, the properties returned apply to the given owner
  * 
  * @param {Number} [adminLevel]
  * @param {Array<String>} [propertyNames]
+ * @param {String|UUID} [ownerId]
  * 
  * @return {Array<RuntimeProperty>} properties
  * 
@@ -315,9 +318,9 @@ function getRuntimeProperty(propertyName) {
  *
  * @properties={typeid:24,uuid:"2DD6C79F-0E99-4F9B-A534-53EBECC5096E"}
  */
-function getRuntimeProperties(adminLevel, propertyNames) {
+function getRuntimeProperties(adminLevel, propertyNames, ownerId) {
 	/** @type {Array<RuntimeProperty>} */
-	var result = loadRuntimeProperties(adminLevel);
+	var result = loadRuntimeProperties(adminLevel, ownerId);
 	if (!propertyNames) {
 		return result;
 	}
@@ -658,9 +661,10 @@ function createRuntimeProperty(propertyValueRecord, propertyValue) {
 /**
  * Description of a single property
  * 
- * @constructor 
- * 
  * @param {JSRecord<db:/svy_framework/svy_properties>} propertyRecord
+ * 
+ * @constructor 
+ * @private 
  * 
  * @author patrick
  * 
@@ -913,13 +917,13 @@ function Property(propertyRecord) {
 }
 
 /**
- * 
  * Property set<br>
  * holds name, description and icon for a set of properties
  * 
  * @param {JSRecord<db:/svy_framework/svy_property_sets>} propertySetRecord
  * 
- * @constructor 
+ * @constructor
+ * @private 
  *
  * @properties={typeid:24,uuid:"99A097CF-1AE3-4412-B9C3-A7EB7EC9F88A"}
  */
@@ -1114,6 +1118,7 @@ function PropertySet(propertySetRecord) {
  * @param {String} [valueListName]
  * @param {Array} [valueListValues]
  * 
+ * @constructor 
  * @private 
  *
  * @properties={typeid:24,uuid:"10C602B8-B4BB-4ACB-97CE-D10E54714734"}
@@ -1464,7 +1469,7 @@ function getValueArray(_values) {
 /**
  * Updates the given properties<p>
  * 
- * This is usually called when modules are intialized
+ * This is usually called when modules are initialized
  * 
  * @param {{propertySet: Object, properties: Array<Object>}} props
  *
@@ -1604,10 +1609,6 @@ function updateDefaultProperties(props) {
 							propValues[p].securityLevel = valueItem.securityLevel;
 							itemChanged = true;
 						}
-//						if ("sort" in valueItem && propValues[p].sortOrder !== valueItem.sort) {
-//							propValues[p].sortOrder = valueItem.sort;
-//							itemChanged = true;
-//						}
 						if ("value" in valueItem && propValues[p].value !== valueItem.value) {
 							propValues[p].value = valueItem.value;
 							itemChanged = true;
@@ -1624,7 +1625,7 @@ function updateDefaultProperties(props) {
 				}
 				
 				if (!itemFound) {
-					// TODO
+					application.output("Could not update default property value for property " + valueItem.name + " because the property could not be found", LOGGINGLEVEL.WARNING);
 				} else if (itemChanged) {
 					record.value_description = propValues;
 					databaseManager.saveData(record);
@@ -1660,17 +1661,20 @@ function updateDefaultProperties(props) {
  * </ul>
  * 
  * @param {Number} [adminLevel]
+ * @param {String|UUID} [ownerId]
  * 
  * @return {Array<RuntimeProperty>} runtime properties for either the current user or the given admin level
  * 
  * @private 
  * @properties={typeid:24,uuid:"45FFC645-B941-42E6-A2A1-63AA5F16D0B8"}
  */
-function loadRuntimeProperties(adminLevel) {
+function loadRuntimeProperties(adminLevel, ownerId) {
 	
 	var start = new Date();
 	
-	var ownerId = globals.svy_sec_lgn_owner_id;
+	if (!ownerId) {
+		ownerId = globals.svy_sec_lgn_owner_id;
+	}
 	if (ownerId) {
 		ownerId = ownerId.toString();
 	} else {
@@ -1784,15 +1788,16 @@ function addProperty(propertyDescription) {
 /**
  * Saves the given value to the property with the given name
  * 
- * @param {String} propertyName		- the name of the property
- * @param {Object} propertyValue	- the new value
- * @param {Number} [adminLevel]		- the admin level for which this property value is saved; if not given, the logged in user's level will be used
- * 
+ * @param {String} propertyName			- the name of the property
+ * @param {Object} propertyValue		- the new value
+ * @param {Number} [adminLevel]			- the admin level for which this property value is saved; if not given, the logged in user's level will be used
+ * @param {String|UUID} [ownerId]		- the owner ID of this property value; if not given, the owner of the logged in user will be used
+ * @param {String|UUID} [propertyOwner] - the owner or organization ID for which this property is set; if not given, the owner will depend on the logged in user and given admin level
  * @throws {scopes.modUtils$exceptions.SvyException}
  *
  * @properties={typeid:24,uuid:"A43388B0-686B-40F2-AD5C-0A9B4724C5B7"}
  */
-function setPropertyValue(propertyName, propertyValue, adminLevel) {
+function setPropertyValue(propertyName, propertyValue, adminLevel, ownerId, propertyOwner) {
 	
 	if (!propertyName) {
 		throw new scopes.modUtils$exceptions.IllegalArgumentException("No property name given to setPropertyValue");
@@ -1814,9 +1819,15 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
 	query.result.addPk();
 	
-	var propertyOwnerId = getOwnerIdForAdminLevel(adminLevel);
+	// ID of the owner of this property value
+	var propertyOwnerId;
+	if (propertyOwner) {
+		propertyOwnerId = propertyOwner.toString();
+	} else {
+		propertyOwnerId = getOwnerIdForAdminLevel(adminLevel);
+	}
 	
-	// TODO: store for each or treat them equal?
+	// Application manager and developer are treated equally
 	if (adminLevel == scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER) {
 		adminLevel = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
 	}
@@ -1842,7 +1853,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel) {
 			propertyValueRecord.owner_id = globals.zero_uuid;
 			propertyValueRecord.admin_level = scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER;
 		} else {
-			propertyValueRecord.owner_id = globals.svy_sec_lgn_owner_id;
+			propertyValueRecord.owner_id = ownerId ? ownerId : globals.svy_sec_lgn_owner_id;
 			propertyValueRecord.admin_level = adminLevel;			
 		}
 		propertyValueRecord.property_owner_id = propertyOwnerId;

@@ -532,23 +532,27 @@ function changePassword(newPassword, record)
 	}
 	
 	// password can not have same begin as username
-	if (ownerRecord.password_same_letters && newPassword.substr(0, 3) == record.user_name.substr(0, 3)) {
+	var passwordRule = scopes.svyProperties.getPropertyValue("password_must_not_start_with_user_name");
+	if (passwordRule && newPassword.substr(0, 3) == record.user_name.substr(0, 3)) {
 		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_same_begin')||"The password cannot begin with the same letters as the username.");
 	}
 	
 	// password has to contain letters and numbers
-	if (ownerRecord.password_num_let && !(/[0-9]/.test(newPassword) && /[a-zA-Z]/.test(newPassword))) {
+	passwordRule = scopes.svyProperties.getPropertyValue("password_numbers_and_letters");
+	if (passwordRule && !(/[0-9]/.test(newPassword) && /[a-zA-Z]/.test(newPassword))) {
 		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_contain_letters_numbers')||'The password must contain letters and numbers.');
 	}
 	
 	// password is too short
-	if (ownerRecord.password_min_lenght && newPassword.length < ownerRecord.password_min_lenght) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_min_length', [ownerRecord.password_min_lenght])||"The password is too short.");
+	passwordRule = scopes.svyProperties.getPropertyValue("password_minimum_length");
+	if (passwordRule && newPassword.length < passwordRule) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_min_length', [passwordRule])||"The password is too short.");
 	}
 	
 	// password is too long
-	if (ownerRecord.password_max_length && newPassword.length > ownerRecord.password_max_length) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_max_length', [ownerRecord.password_max_length])||"The password is too long.");
+	passwordRule = scopes.svyProperties.getPropertyValue("password_maximum_length");
+	if (passwordRule && newPassword.length > passwordRule) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_max_length', [passwordRule])||"The password is too long.");
 	}
 	
 	var md5Hash = utils.stringMD5HashBase64(newPassword);
@@ -556,17 +560,18 @@ function changePassword(newPassword, record)
 	var oldPasswordRecord;
 	
 	// password has to be unique for a certain number of previous passwords
-	if (ownerRecord.password_unique_before_reuse) {
+	passwordRule = scopes.svyProperties.getPropertyValue("password_number_unique_before_reuse");
+	if (passwordRule) {
 		/** @type {JSFoundSet<db:/svy_framework/sec_user_password>} */
 		var previousPasswordFs = record.sec_user_to_sec_user_password;
 		previousPasswordFs.sort("start_date desc");
 		
-		var endLoopAt = previousPasswordFs.getSize() < ownerRecord.password_unique_before_reuse ? previousPasswordFs.getSize() : ownerRecord.password_unique_before_reuse;
+		var endLoopAt = previousPasswordFs.getSize() < passwordRule ? previousPasswordFs.getSize() : passwordRule;
 		
 		for (var pp = 1; pp <= endLoopAt; pp ++) {
 			oldPasswordRecord = previousPasswordFs.getRecord(pp);
 			if (oldPasswordRecord.password_value == md5Hash) {
-				throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [ownerRecord.password_unique_before_reuse])||"The password may not be the same as a previous password.");
+				throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule])||"The password may not be the same as a previous password.");
 			}
 		}
 	}
