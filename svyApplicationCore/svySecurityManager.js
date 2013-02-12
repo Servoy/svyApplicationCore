@@ -2702,13 +2702,34 @@ function filterOrganization() {
 	}
 	
 	// filter navigation tables
-	var navDatabase = globals.nav_db_framework
-	databaseManager.removeTableFilterParam(navDatabase, "frameworkdb_organization_filter");
-	success = databaseManager.addTableFilterParam(navDatabase, "nav_user_required_field", "organization_id", "IN", [organizationId, globals.zero_uuid], "frameworkdb_organization_filter");
-	if (!success) {
-		application.output("Failed to add required field filter for database \"" + navDatabase + "\"", LOGGINGLEVEL.ERROR);
-	} else {
-		application.output("Created required field filter for database \"" + navDatabase + "\"", LOGGINGLEVEL.DEBUG);
+	var navDatabase = globals.nav_db_framework;
+	
+	var user = getUser();
+	var tablesToFilter = databaseManager.getTableNames(navDatabase);
+	
+	function findTablesToFilter(x) {
+		if (user.adminLevel >= ADMIN_LEVEL.TENANT_MANAGER && (x == "sec_organization" || x == "sec_user_org")) {
+			// a tenant manager needs to be able to manage users 
+			// for the organizations of the tenant he manages
+			return false;
+		}
+		var jsTable = databaseManager.getTable(navDatabase, x);
+		if (jsTable.getColumnNames().indexOf("organization_id") != -1) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
+	tablesToFilter = tablesToFilter.filter(findTablesToFilter);
+	
+	for (var i = 0; i < tablesToFilter.length; i++) {
+		var filterName = "frameworkdb_organization_filter_" + tablesToFilter[i];
+		databaseManager.removeTableFilterParam(navDatabase, filterName);
+		success = databaseManager.addTableFilterParam(navDatabase, tablesToFilter[i], "organization_id", "IN", [organizationId, globals.zero_uuid], filterName);
+		if (!success) {
+			application.output("Failed to organization filter for table \"" + tablesToFilter[i] + "\" in database \"" + navDatabase + "\"", LOGGINGLEVEL.ERROR);
+		}
 	}
 	
 	// filter i18n
