@@ -1919,10 +1919,17 @@ function getOwnerIdForAdminLevel(adminLevel) {
 }
 
 /**
+ * Initializes the runtime properties
+ * 
+ * @param {Boolean} [forceReload]
+ * 
  * @properties={typeid:24,uuid:"E0C41D84-7632-490D-82CD-D0C0F8706D92"}
  */
-function initProperties() {
+function initProperties(forceReload) {
 	updateDefaultPropertyValues();
+	if (forceReload) {
+		runtimeProperties = null;
+	}
 	getLoadedProperties();
 }
 

@@ -15,7 +15,7 @@
  */
 function initModules(startupArguments) {
 	//Init self
-	scopes.svyProperties.initProperties();
+	scopes.svyProperties.initProperties(true);
 	
 	//Init modules
 	var mods = scopes.modUtils$UI.getJSFormInstances(solutionModel.getForm('AbstractModuleDef')) 
