@@ -2707,6 +2707,7 @@ function filterOrganization() {
 	var user = getUser();
 	var tablesToFilter = databaseManager.getTableNames(navDatabase);
 	
+	// filter all tables that have an organization_id column
 	function findTablesToFilter(x) {
 		if (user.adminLevel >= ADMIN_LEVEL.TENANT_MANAGER && (x == "sec_organization" || x == "sec_user_org")) {
 			// a tenant manager needs to be able to manage users 
