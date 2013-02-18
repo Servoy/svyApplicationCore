@@ -3152,6 +3152,8 @@ function loadSecurityKeys(user, organization) {
 	 * 2: All te security Keys with module IN 'sec_org_module': 
 	 *    ( ssk.module_id IS NOT NULL AND ssk.module_id IN.. ) replace ( ssk.module_id IS NULL OR ssk.module_id IN.. )
 	 *  
+	 * 3: check NULL end_date for modules 
+	 *    sec_owner_in_module.endDate is NULL OR >= ?
 	 *  */
 	var query = '\
 					SELECT DISTINCT	surd.security_key_id \
@@ -3171,7 +3173,7 @@ function loadSecurityKeys(user, organization) {
 									FROM	sec_owner_in_module som \
 									WHERE	som.owner_id = ? \
 									AND		som.start_date <= ? \
-									AND		som.end_date >= ? \
+									AND		( som.end_date IS NULL OR som.end_date >= ? ) \
 								)\
 							)\
 						)\
@@ -3189,11 +3191,11 @@ function loadSecurityKeys(user, organization) {
 							AND		surd2.is_denied = 1 \
 						) \
 					)\
-					OR	surd.user_org_id = ? \
-					AND	(\
-						surd.is_denied IS NULL \
-						OR	surd.is_denied = 0 \
-					)\
+					OR	(surd.user_org_id = ? \
+						AND	(\
+							surd.is_denied IS NULL \
+							OR	surd.is_denied = 0 \
+						))\
 					UNION\
 					(\
 						SELECT	ssk2.security_key_id  \
