@@ -3131,6 +3131,28 @@ function loadSecurityKeys(user, organization) {
 	userOrgId = userOrgId.toString();
 	
 	var serverName = globals.nav_db_framework;
+	
+	/* 
+	 * Retrieve all the keys owned by the logged user or are owned by the user-groups
+	 * OR(*) the keys assigned to the valid modules related to the user-owner
+	 * AND not denied to the logged user !
+	 * 
+	 * UNION
+	 * 
+	 * All the keys related to the modules contained into the packages related to the user-owner, not denied for the logged user !
+	 * 
+	 * (*) The operator was changed from AND to OR ( sec_owner_module keys UNION sec_user_rights keys instead of INTERSECT )
+	 * 
+	 * */
+	
+	/* Query fixes:
+	 * 
+	 * 1: sec_owner_module keys UNION sec_user_rights keys instead of INTERSECT
+	 * 
+	 * 2: All te security Keys with module IN 'sec_org_module': 
+	 *    ( ssk.module_id IS NOT NULL AND ssk.module_id IN.. ) replace ( ssk.module_id IS NULL OR ssk.module_id IN.. )
+	 *  
+	 *  */
 	var query = '\
 					SELECT DISTINCT	surd.security_key_id \
 					FROM sec_user_right surd \
@@ -3143,8 +3165,8 @@ function loadSecurityKeys(user, organization) {
 							WHERE	ssk.security_key_id = sur.security_key_id \
 							AND		sur.group_id = sug.group_id \
 							AND		sug.user_org_id = ? \
-							AND		(\
-								ssk.module_id IS NULL OR ssk.module_id IN (\
+							OR		(\
+								ssk.module_id IS NOT NULL AND ssk.module_id IN (\
 									SELECT	som.module_id \
 									FROM	sec_owner_in_module som \
 									WHERE	som.owner_id = ? \
