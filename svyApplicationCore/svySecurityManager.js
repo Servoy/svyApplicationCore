@@ -241,13 +241,16 @@ function getModuleByID(moduleID){
  * @properties={typeid:24,uuid:"4D12E185-AE62-4092-BE4A-F2F92A3446B9"}
  */
 function getOrganizationById(organizationId) {
+	if (!organizationId) {
+		return null;
+	}
 	/** @type {JSRecord<db:/svy_framework/sec_organization>} */
 	var orgRecord = null;
 	
 	/** @type {QBSelect<db:/svy_framework/sec_organization>} */
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
 	query.result.addPk()
-	query.where.add(query.columns.organization_id.eq(organizationId));
+	query.where.add(query.columns.organization_id.eq(organizationId.toString()));
 	var foundset = databaseManager.getFoundSet(query);
 	
 	if (foundset.getSize() == 1) {
@@ -713,7 +716,7 @@ function User(userRecord) {
 	
 	/**
 	 * Returns the ID of this user
-	 * @return {Object} userId
+	 * @return {UUID} userId
 	 */
 	this.userId = userRecord.user_id;
 	
@@ -865,7 +868,7 @@ function User(userRecord) {
 		/** @type {QBJoin<db:/svy_framework/sec_user_org>} */
 		var userOrgJoin = orgQuery.joins.add("db:/" + globals.nav_db_framework + "/sec_user_org", JSRelation.INNER_JOIN);
 		userOrgJoin.on.add(orgQuery.columns.organization_id.eq(userOrgJoin.columns.organization_id));
-		orgQuery.where.add(userOrgJoin.columns.user_id.eq(_this.userId));
+		orgQuery.where.add(userOrgJoin.columns.user_id.eq(_this.userId.toString()));
 		
 		/** @type {JSFoundSet<db:/svy_framework/sec_organization>} */
 		var orgFs = databaseManager.getFoundSet(orgQuery);
@@ -901,8 +904,8 @@ function User(userRecord) {
 		/** @type {QBJoin<db:/svy_framework/sec_user_org>} */		
 		var joinUserOrg = query.joins.add("db:/" + globals.nav_db_framework + "/sec_user_org");
 		joinUserOrg.on.add(joinUserInGroup.columns.user_org_id.eq(joinUserOrg.columns.user_org_id));
-		query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId));
-		query.where.add(joinUserOrg.columns.user_id.eq(_this.userId));
+		query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId.toString()));
+		query.where.add(joinUserOrg.columns.user_id.eq(_this.userId.toString()));
 		
 		/** @type {JSFoundset<db:/svy_framework/sec_group>} */
 		var groupFs = databaseManager.getFoundSet(query);
@@ -1161,6 +1164,7 @@ function User(userRecord) {
 			}
 		}
     });	
+	
 	
 	Object.defineProperties(this, {
 		"changePassword": {
@@ -3006,8 +3010,8 @@ function getUserOrgId(organization, user) {
 	/** @type {QBSelect<db:/svy_framework/sec_user_org>} */
 	var userQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user_org");
 	userQuery.result.addPk();
-	userQuery.where.add(userQuery.columns.organization_id.eq(orgId));
-	userQuery.where.add(userQuery.columns.user_id.eq(userId));
+	userQuery.where.add(userQuery.columns.organization_id.eq(orgId.toString()));
+	userQuery.where.add(userQuery.columns.user_id.eq(userId.toString()));
 	var dataset = databaseManager.getDataSetByQuery(userQuery, -1);
 	if (dataset && dataset.getMaxRowIndex() == 1) {
 		return dataset.getValue(1, 1);
