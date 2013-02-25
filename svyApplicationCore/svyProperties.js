@@ -1888,7 +1888,10 @@ function setPropertyValue(propertyName, propertyValue, adminLevel, ownerId, prop
 		propertyRecord = propertyValueRecord.svy_property_values_to_svy_properties;
 	}
 	
-	runtimeProperties = loadRuntimeProperties();
+	if (propertyOwner.toString() == globals.svy_sec_lgn_owner_id.toString()) {
+		// Reload runtime properties if a property of the logged in owner has been changed
+		runtimeProperties = loadRuntimeProperties();
+	}
 	
 	scopes.modUtils$eventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
 	
