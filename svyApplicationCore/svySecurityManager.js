@@ -3182,16 +3182,21 @@ function loadSecurityKeys(user, organization) {
 	var serverName = globals.nav_db_framework;
 	
 	/* 
-	 * Retrieve all the keys owned by the logged user or are owned by the user-groups
-	 * OR(*) the keys assigned to the valid modules related to the user-owner
-	 * AND not denied to the logged user !
 	 * 
-	 * UNION
+	 * 	Loads the keys (* the query does not follow this order but has the same logic)
+	 *  - directly assigned to user and not denied for the user
+	 *  - contained by the groups assigned to the user, excluding the keys denied for any of the user-groups, or directly denied for the user.
+	 *  - keys related to the modules directly assigned to the owner, excluding the keys denied for any of the user-groups, or directly denied for the user
+	 *  - keys related to the modules included in the packages assigned to the owner , excluding the keys denied for any of the user-groups, or directly denied for the user 
 	 * 
-	 * All the keys related to the modules contained into the packages related to the user-owner, not denied for the logged user !
 	 * 
-	 * (*) The operator was changed from AND to OR ( sec_owner_module keys UNION sec_user_rights keys instead of INTERSECT )
+	 * Query logic: Retrieve 
+	 *      ( keys owned by the logged user-groups in the organization OR the keys assigned to the valid modules related to the user-owner ) AND not denied to the logged user !
+	 *      OR all the keys directly assigned to the user
+	 *   UNION
+	 *      keys related to the modules contained into the packages owned by the user-owner, not denied for the logged user !
 	 * 
+	 *    
 	 * */
 	
 	/* Query fixes:
