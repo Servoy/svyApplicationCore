@@ -66,6 +66,47 @@ var EVENT_TYPES = {
 var PERFORM_HASH_CHECKS = false;
 
 /**
+ * Password pepper added before the password
+ * 
+ * @type {String}
+ * 
+ * @private 
+ *
+ * @properties={typeid:35,uuid:"0EFB97F1-7EDD-4C26-9E7B-F769BCED9E60"}
+ */
+var PBKDF2_PEPPER = "Uv9<42,3yN6rDw;FL{8i+T}dsQEC=3Gj67xk:cRzn]MhaJ8[Wg+t38rDvV}823X*nWYK4h;Uu$Po2#7@k]m=9qwMGgjpi<HL6dENL9kUs)}xPbc/2AK9oCD+Nh6Bp73^]&2@8eZy8MmvWiFJ4>zg=V";
+
+/**
+ * PBKDF2 password iterations stored in sec_user.password_version
+ * 
+ * @enum
+ * @final 
+ *
+ * @properties={typeid:35,uuid:"2F866789-C952-45BC-91EC-E08001728A1D",variableType:-4}
+ */
+var PBKDF2_ITERATIONS = {
+	VERSION_1: 5000
+}
+
+/**
+ * The version number of the current PBKDF2_ITERATIONS used
+ * 
+ * @type {Number}
+ *
+ * @properties={typeid:35,uuid:"243CCB52-56AF-44AC-99F1-9AEF89577813",variableType:4}
+ */
+var PBKDF2_CURRENT_ITERATION_VERSION = 1;
+
+/**
+ * The current PBKDF2 iteration used
+ * 
+ * @type {Number}
+ * 
+ * @properties={typeid:35,uuid:"DEC7A0C1-54F6-43DF-9206-305258E8E703",variableType:8}
+ */
+var PBKDF2_CURRENT_ITERATION = PBKDF2_ITERATIONS["VERSION_" + PBKDF2_CURRENT_ITERATION_VERSION];
+
+/**
  * @type {Array<Key>}
  * 
  * @private 
@@ -699,6 +740,36 @@ function createUser(userName, password, owner, organization) {
 		organization.addUser(user);
 	}
 	return user;
+}
+
+/**
+ * Creates a user login
+ * 
+ * @param {String|UUID} userId
+ * @param {Boolean} attemptSuccessful
+ * @param {String} reasonUnsuccessful
+ * @param {Boolean} reasonIncludeTimespan
+ * @param {String} frameworkDB
+ *
+ * @properties={typeid:24,uuid:"A195364D-B164-4948-8476-16D4D42C68E4"}
+ */
+function createUserLogin(userId, attemptSuccessful, reasonUnsuccessful, reasonIncludeTimespan, frameworkDB) {
+	if (!userId || !attemptSuccessful || !frameworkDB) {
+		return null;
+	}
+	/** @type {JSFoundSet<db:/svy_framework/sec_user_login_attempt>} */
+	var fsUserLoginAttempt = databaseManager.getFoundSet(frameworkDB, "sec_user_login_attempt");
+	var recUserLoginAttempt = fsUserLoginAttempt.getRecord(fsUserLoginAttempt.newRecord());
+	recUserLoginAttempt.user_id = userId;
+	recUserLoginAttempt.attempt_datetime = new Date();
+	recUserLoginAttempt.is_successful = attemptSuccessful;
+	recUserLoginAttempt.reason_unsuccessful = reasonUnsuccessful;
+	recUserLoginAttempt.reason_include_timespan = reasonIncludeTimespan;
+	if (databaseManager.saveData(fsUserLoginAttempt)) {
+		return new UserLogin(recUserLoginAttempt);
+	} else {
+		return null;
+	}
 }
 
 /**
@@ -3508,6 +3579,48 @@ function removeRuntimeKey(keyId) {
 		}
 		runtimeSecurityKeysRemoved.push(key);
 	}
+}
+
+/**
+ * Generates a PBKDF2 hash from the given password and 
+ * returns an object containing the salt and the password hash<br>
+ * 
+ * Note that the method uses a pepper defined in PBKDF2_PEPPER
+ * 
+ * @param password
+ * 
+ * @return {{salt: String, hash: String, iterations: Number, iterationVersion: Number}} saltAndHash
+ *
+ * @properties={typeid:24,uuid:"7DACBD38-2AE6-4B3D-A397-85F5C990B75A"}
+ */
+function calculatePBKDF2Hash(password) {
+	var hash = utils.stringPBKDF2Hash(PBKDF2_PEPPER + password, PBKDF2_CURRENT_ITERATION);
+	var hashParts = hash.split(":");
+	/** @type {Number} */
+	var iterations = hashParts[1];
+	return {salt: hashParts[0], hash: hashParts[2], iterations: iterations, iterationVersion: PBKDF2_CURRENT_ITERATION_VERSION};
+}
+
+/**
+ * Validates the given password using the given salt and hash<br>
+ * 
+ * Note that the method uses a pepper defined in PBKDF2_PEPPER
+ * 
+ * @param {String} password 					- the password to validate
+ * @param {String} salt 						- the salt used when the hash was calculated
+ * @param {String} hash 						- the password hash
+ * @param {Number} [pbkdf2IterationVersion] 	- one of the iteration versions in PBKDF2_ITERATIONS
+ * 
+ * @return {Boolean}
+ *
+ * @properties={typeid:24,uuid:"9AEBFDA3-5294-4241-AB02-764EC249717F"}
+ */
+function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
+	var iterations = PBKDF2_CURRENT_ITERATION;
+	if (pbkdf2IterationVersion && PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion]) {
+		iterations = PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion];
+	}
+	return utils.validatePBKDF2Hash(PBKDF2_PEPPER + password, salt + ":" + iterations + ":" + hash);
 }
 
 /**
