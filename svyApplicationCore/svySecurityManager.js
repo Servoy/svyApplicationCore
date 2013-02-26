@@ -559,7 +559,7 @@ function getUserById(userId) {
  */
 function createApplication(name){
 	if (!name) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
+		return null;
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, 'prov_application');
@@ -620,7 +620,7 @@ function createKey(name, description, owner) {
  */
 function createModule(name){
 	if (!name) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
+		return null;
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
 	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
@@ -682,7 +682,7 @@ function createOrganization(organizationName, owner) {
  */
 function createOwner(ownerName) {
 	if (!ownerName) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException('Owner Name cannot be null');
+		return null;
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
@@ -716,7 +716,7 @@ function createOwner(ownerName) {
  */
 function createUser(userName, password, owner, organization) {
 	if (!userName) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("User name is required");
+		return null;
 	}
 	if (!owner) {
 		owner = getOwner();
@@ -2721,7 +2721,7 @@ function updateSecurityHash(record, serverName, ownerName) {
  * If <code>PERFORM_HASH_CHECKS</code> is false, this method always returns <code>true</code>
  * 
  * @param {String} ownerName
- * @param {String} serverName
+ * @param {String} [serverName]
  * 
  * @return {Boolean} result
  * 
@@ -2733,6 +2733,9 @@ function updateSecurityHash(record, serverName, ownerName) {
 function verifySecurityHash(ownerName, serverName) {
 	if (!PERFORM_HASH_CHECKS) {
 		return true;
+	}
+	if (!ownerName) {
+		return false;
 	}
 	if (!serverName) {
 		serverName = globals.nav_db_framework;
@@ -3120,6 +3123,9 @@ function createHash(serverName) {
  * @properties={typeid:24,uuid:"00C34352-CBA1-4D9A-A0BB-3A74789FAF6E"}
  */
 function getUserOrgId(organization, user) {
+	if (!organization || !user) {
+		return null;
+	}
 	var orgId = organization.orgId;
 	var userId = user.userId;
 	
@@ -3146,6 +3152,9 @@ function getUserOrgId(organization, user) {
  * @properties={typeid:24,uuid:"6FE90E4F-BBB8-4DE6-8081-417B84475017"}
  */
 function removeDataForOrganization(organizationId) {
+	if (!organizationId) {
+		return null;
+	}
 	var organization = getOrganizationById(organizationId);
 	if (!organization) {
 		return null;
@@ -3539,7 +3548,7 @@ function getRuntimeSecurityKeys() {
  */
 function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) {
 	if (!keyId && !keyName) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException('Key ID and name cannot be null');
+		return null;
 	}
 	var id = keyId;
 	if (keyId instanceof String) {
@@ -3569,6 +3578,9 @@ function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) 
  * @properties={typeid:24,uuid:"5ABE723C-054F-4F82-A3E9-174286CB87EA"}
  */
 function removeRuntimeKey(keyId) {
+	if (!keyId) {
+		return;
+	}
 	if (keyId instanceof String) {
 		keyId = application.getUUID(keyId);
 	}
@@ -3616,6 +3628,9 @@ function calculatePBKDF2Hash(password) {
  * @properties={typeid:24,uuid:"9AEBFDA3-5294-4241-AB02-764EC249717F"}
  */
 function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
+	if (!password || !salt || !hash) {
+		return false;
+	}
 	var iterations = PBKDF2_CURRENT_ITERATION;
 	if (pbkdf2IterationVersion && PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion]) {
 		iterations = PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion];
@@ -3637,7 +3652,7 @@ function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
  */
 function changeOrganization(oldOrganizationId, newOrganizationId) {
 	if (!newOrganizationId) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("New organization is required");
+		return false;
 	}
 	var user = getUser();
 	var org = getOrganizationById(newOrganizationId);
