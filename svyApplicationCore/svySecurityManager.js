@@ -70,6 +70,8 @@ var PERFORM_HASH_CHECKS = false;
  * 
  * @type {String}
  * 
+ * @final
+ * 
  * @private 
  *
  * @properties={typeid:35,uuid:"0EFB97F1-7EDD-4C26-9E7B-F769BCED9E60"}
@@ -81,6 +83,8 @@ var PBKDF2_PEPPER = "Uv9<42,3yN6rDw;FL{8i+T}dsQEC=3Gj67xk:cRzn]MhaJ8[Wg+t38rDvV}
  * 
  * @enum
  * @final 
+ * 
+ * @private 
  *
  * @properties={typeid:35,uuid:"2F866789-C952-45BC-91EC-E08001728A1D",variableType:-4}
  */
@@ -785,8 +789,8 @@ function createUserLogin(userId, attemptSuccessful, reasonUnsuccessful, reasonIn
  * @properties={typeid:24,uuid:"9D7D01BC-C223-4EA2-A4FA-EA2267BEDDC7"}
  */
 function User(userRecord) {
-	if (!userRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("sec_owner record is required");
+	if (!userRecord || !(userRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(userRecord.getDataSource()).toLowerCase() != "sec_user") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("User constructor requires a sec_user record");
 	}
 
 	/**
@@ -935,12 +939,11 @@ function User(userRecord) {
 	/**
 	 * Returns all organizations of this user as an array
 	 * 
+	 * @this {User}
+	 * 
 	 * @return {Array<Organization>}
 	 */
 	this.getOrganizations = function() {
-		/** @type {User} */
-		var that = this;
-		
 		/** @type {Array<Organization>} */
 		var result = new Array();
 		
@@ -950,7 +953,7 @@ function User(userRecord) {
 		/** @type {QBJoin<db:/svy_framework/sec_user_org>} */
 		var userOrgJoin = orgQuery.joins.add("db:/" + globals.nav_db_framework + "/sec_user_org", JSRelation.INNER_JOIN);
 		userOrgJoin.on.add(orgQuery.columns.organization_id.eq(userOrgJoin.columns.organization_id));
-		orgQuery.where.add(userOrgJoin.columns.user_id.eq(that.userId.toString()));
+		orgQuery.where.add(userOrgJoin.columns.user_id.eq(this.userId.toString()));
 		
 		/** @type {JSFoundSet<db:/svy_framework/sec_organization>} */
 		var orgFs = databaseManager.getFoundSet(orgQuery);
@@ -968,12 +971,11 @@ function User(userRecord) {
 	 * 
 	 * @param {Organization} organization
 	 * 
+	 * @this {User}
+	 * 
 	 * @return {Array<Group>}
 	 */
 	this.getGroups = function(organization) {
-		/** @type {User} */
-		var that = this;
-		
 		/** @type {Array<Group>} */
 		var result = new Array();
 		
@@ -987,7 +989,7 @@ function User(userRecord) {
 		var joinUserOrg = query.joins.add("db:/" + globals.nav_db_framework + "/sec_user_org");
 		joinUserOrg.on.add(joinUserInGroup.columns.user_org_id.eq(joinUserOrg.columns.user_org_id));
 		query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId.toString()));
-		query.where.add(joinUserOrg.columns.user_id.eq(that.userId.toString()));
+		query.where.add(joinUserOrg.columns.user_id.eq(this.userId.toString()));
 		
 		/** @type {JSFoundset<db:/svy_framework/sec_group>} */
 		var groupFs = databaseManager.getFoundSet(query);
@@ -1122,12 +1124,12 @@ function User(userRecord) {
 	 * @param {String} keyName
 	 * @param {Organization} organization
 	 * 
+	 * @this {User}
+	 * 
 	 * @return {boolean} hasKey
 	 */
 	this.hasKeyName = function(keyName, organization) {
-		/** @type {User} */
-		var that = this;
-		var keys = that.getKeys(organization);
+		var keys = this.getKeys(organization);
 		for (var i = 0; i < keys.length; i++) {
 			/** @type {Key} */
 			var key = keys[i];
@@ -1144,12 +1146,12 @@ function User(userRecord) {
 	 * @param {UUID|String} keyId
 	 * @param {Organization} organization
 	 * 
+	 * @this {User}
+	 * 
 	 * @return {boolean} hasKey
 	 */
 	this.hasKeyId = function(keyId, organization) {
-		/** @type {User} */
-		var that = this;
-		var keys = that.getKeys(organization);
+		var keys = this.getKeys(organization);
 		for (var i = 0; i < keys.length; i++) {
 			/** @type {Key} */
 			var key = keys[i];
@@ -1313,7 +1315,7 @@ function User(userRecord) {
 
 
 /**
- * @param {JSRecord<db:/svy_framework/sec_group>} ownerRecord
+ * @param {JSRecord<db:/svy_framework/sec_group>} groupRecord
  * 
  * @constructor 
  * @private 
@@ -1323,34 +1325,33 @@ function User(userRecord) {
  * 
  * @properties={typeid:24,uuid:"905BA6B0-C4E8-4083-B13D-E77F66A6F0AE"}
  */
-function Group(ownerRecord) {
-	if (!ownerRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("sec_group record is required");
+function Group(groupRecord) {
+	if (!groupRecord || !(groupRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(groupRecord.getDataSource()).toLowerCase() != "sec_group") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Group constructor requires a sec_group record");
 	}
 	
 	/**
 	 * The name of this group
 	 * @type {String}
 	 */
-	this.name = ownerRecord.name;
+	this.name = groupRecord.name;
 
 	/**
 	 * Description of this Group
 	 * @type {String}
 	 */
-	this.description = ownerRecord.description;
+	this.description = groupRecord.description;
 	
 	/**
 	 * Returns the users in this group for all or the given organization
+	 * 
 	 * @this {Group}
+	 * 
 	 * @param {Organization} [organization]
 	 * 
 	 * @return {Array<User>} users
 	 */
 	this.getUsers = function(organization) {
-		/** @type {Group} */
-		var that = this;
-
 		/** @type {Array<User>} */
 		var result = new Array();
 		
@@ -1369,7 +1370,7 @@ function Group(ownerRecord) {
 		var joinGroup = query.joins.add("db:/" + globals.nav_db_framework + "/sec_group");
 		joinGroup.on.add(joinUserInGroup.columns.group_id.eq(joinGroup.columns.group_id));
 		
-		query.where.add(joinGroup.columns.group_id.eq(that.groupId.toString()));
+		query.where.add(joinGroup.columns.group_id.eq(this.groupId.toString()));
 		if (organization) {
 			query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId.toString()));
 		}
@@ -1389,7 +1390,7 @@ function Group(ownerRecord) {
 	 * 
 	 * @type {UUID}
 	 */
-	this.groupId = ownerRecord.group_id;
+	this.groupId = groupRecord.group_id;
 	
 	/**
 	 * Adds the given User to the group<br>
@@ -1400,11 +1401,11 @@ function Group(ownerRecord) {
 	 * @param {User} userToAdd
 	 * @param {Organization} organization
 	 * 
+	 * @this {Group}
+	 * 
 	 * @return {boolean} success
 	 */
 	this.addUser = function(userToAdd, organization) {
-		/** @type {Group} */
-		var that = this;
 		if (!userToAdd || !(userToAdd instanceof User) || !organization || !(organization instanceof Organization)) {
 			return false;
 		}
@@ -1417,7 +1418,7 @@ function Group(ownerRecord) {
 			return false;
 		}
 		
-		var groupId = that.groupId;
+		var groupId = this.groupId;
 		/** @type {JSFoundset<db:/svy_framework/sec_user_in_group>} */	
 		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user_in_group");
 		var userInGroupRec = fs.getRecord(fs.newRecord());
@@ -1430,12 +1431,13 @@ function Group(ownerRecord) {
 	 * Adds the given key to this group's rights
 	 * 
 	 * @param {Key} keyToAdd
+	 * 
+	 * @this {Group}
+	 * 
 	 * @return {Boolean} success
 	 * 
 	 */
 	this.addKey = function(keyToAdd) {
-		/** @type {Group} */
-		var that = this;
 		if (!keyToAdd || !(keyToAdd instanceof Key)) {
 			return false;
 		}
@@ -1443,34 +1445,34 @@ function Group(ownerRecord) {
 		/** @type {JSFoundSet<db:/svy_framework/sec_user_right>} */
 		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user_right");
 		var newUserRightRec = fs.getRecord(fs.newRecord());
-		newUserRightRec.group_id = that.groupId;
+		newUserRightRec.group_id = this.groupId;
 		newUserRightRec.security_key_id = keyToAdd.keyId;
 		return save(newUserRightRec);
 	}
 	
 	Object.defineProperty(this, "name", {
         set: function (x) {
-        	ownerRecord.name = x;
-            save(ownerRecord);
+        	groupRecord.name = x;
+            save(groupRecord);
         },
         get: function () {
-            return ownerRecord.name;
+            return groupRecord.name;
         }
     });
 	
 	Object.defineProperty(this, "description", {
         set: function (x) {
-        	ownerRecord.description = x;
-            save(ownerRecord);
+        	groupRecord.description = x;
+            save(groupRecord);
         },
         get: function () {
-            return ownerRecord.description;
+            return groupRecord.description;
         }
     });	
 	
 	Object.defineProperty(this, "groupId", {
         get: function () {
-            return ownerRecord.group_id;
+            return groupRecord.group_id;
         }
     });	
 	
@@ -1547,12 +1549,12 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 	
 	/**
 	 * Returns all groups with this key
+	 * 
+	 * @this {Key}
+	 * 
 	 * @return {Array<Group>} groups
 	 */
 	this.getGroups = function() {
-		/** @type {Key} */
-		var that = this;
-		
 		/** @type {Array<Group>} */
 		var result = new Array();
 		
@@ -1563,7 +1565,7 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 		var userRightJoin = query.joins.add("db:/" + globals.nav_db_framework + "/sec_user_right");
 		userRightJoin.on.add(query.columns.group_id.eq(userRightJoin.columns.group_id));
 		query.where.add(query.columns.group_id.not.isNull);
-		query.where.add(userRightJoin.columns.security_key_id.eq(that.keyId.toString()));
+		query.where.add(userRightJoin.columns.security_key_id.eq(this.keyId.toString()));
 		
 		/** @type {JSFoundset<db:/svy_framework/sec_group>} */		
 		var fs = databaseManager.getFoundSet(query);
@@ -1590,19 +1592,18 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 	 * @param {Boolean} canDelete
 	 * @param {Boolean} tracking
 	 * 
+	 * @this {Key}
+	 * 
 	 * @return {Boolean} success
 	 * 
 	 */
 	this.addTableSecurity = function(serverName, tableName, canRead, canInsert, canUpdate, canDelete, tracking) {
-		/** @type {Key} */
-		var that = this;
-		
 		/** @type {QBSelect<db:/svy_framework/sec_table>} */
 		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_table");
 		query.result.addPk();
 		query.where.add(query.columns.server_name.eq(serverName));
 		query.where.add(query.columns.table_name.eq(tableName));
-		query.where.add(query.columns.security_key_id.eq(that.keyId.toString()));
+		query.where.add(query.columns.security_key_id.eq(this.keyId.toString()));
 		
 		var fs = databaseManager.getFoundSet(query);
 		
@@ -1612,7 +1613,7 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 			secTableRecord = fs.getRecord(fs.newRecord());
 			secTableRecord.server_name = serverName;
 			secTableRecord.table_name = tableName;
-			secTableRecord.security_key_id = that.keyId;
+			secTableRecord.security_key_id = this.keyId;
 		} else {
 			secTableRecord = fs.getRecord(1);
 		}
@@ -1633,6 +1634,8 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 	 * @param {String} elementName
 	 * @param {Boolean} editable
 	 * @param {Boolean} visible
+	 * 
+	 * @this {Key}
 	 * 
 	 * @return {Boolean} success
 	 * 
@@ -1659,15 +1662,12 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 			return false;
 		}
 		
-		/** @type {Key} */
-		var that = this;
-		
 		/** @type {QBSelect<db:/svy_framework/sec_element>} */
 		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_element");
 		query.result.addPk();
 		query.where.add(query.columns.form_name.eq(formName));
 		query.where.add(query.columns.element_name.eq(elementName));
-		query.where.add(query.columns.security_key_id.eq(that.keyId.toString()));
+		query.where.add(query.columns.security_key_id.eq(this.keyId.toString()));
 		
 		var fs = databaseManager.getFoundSet(query);
 		
@@ -1675,7 +1675,7 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 		var secElementRecord;
 		if (!utils.hasRecords(fs)) {
 			secElementRecord = fs.getRecord(fs.newRecord());
-			secElementRecord.security_key_id = that.keyId;
+			secElementRecord.security_key_id = this.keyId;
 			secElementRecord.form_name = formName;
 			secElementRecord.servoy_form_id = formName;			
 			secElementRecord.element_name = elementName;
@@ -1833,8 +1833,8 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
  * @properties={typeid:24,uuid:"126E7F79-9F86-486F-8CDD-6B07012B305A"}
  */
 function UserLogin(userLoginAttempt) {
-	if (!userLoginAttempt) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("sec_user_login_attempt record is required");
+	if (!userLoginAttempt || !(userLoginAttempt instanceof JSRecord) || databaseManager.getDataSourceTableName(userLoginAttempt.getDataSource()).toLowerCase() != "sec_user_login_attempt") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("UserLogin requires a sec_user_login_attempt record");
 	}
 	
 	/**
@@ -1905,8 +1905,8 @@ function UserLogin(userLoginAttempt) {
  * @properties={typeid:24,uuid:"5CCED2CB-57D4-4BA4-9839-794C404BA9C1"}
  */
 function Organization(organizationRecord) {
-	if (!organizationRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("sec_organization record is required");
+	if (!organizationRecord || !(organizationRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(organizationRecord.getDataSource()).toLowerCase() != "sec_organization") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Organization constructor requires a sec_organization record");
 	}
 	
 	/**
@@ -2040,8 +2040,8 @@ function Organization(organizationRecord) {
  * @properties={typeid:24,uuid:"23E6F372-7564-4F60-A4F1-AFFC10763CDB"}
  */
 function Owner(ownerRecord) {
-	if (!ownerRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("sec_owner record is required");
+	if (!ownerRecord || !(ownerRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(ownerRecord.getDataSource()).toLowerCase() != "sec_owner") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Owner constructor requires a sec_owner record");
 	}
 	
 	/**
@@ -2092,6 +2092,12 @@ function Owner(ownerRecord) {
 	this.passwordMinimumLength = 0;
 	
 	/**
+	 * The maximum password length for this owner
+	 * @type {Number}
+	 */
+	this.passwordMaximumLength = null;
+	
+	/**
 	 * The number of days a password is valid before it has to be changed
 	 * @type {Number}
 	 */
@@ -2104,10 +2110,22 @@ function Owner(ownerRecord) {
 	this.passwordMustContainNumbersAndLetters = false;
 	
 	/**
+	 * If true, the password may not start with the same 3 letters as the user name
+	 * @type {Boolean}
+	 */
+	this.passwordMustNotStartWithUserName = false;
+	
+	/**
 	 * Number of maximum login attempts before a user is locked
 	 * @type {Number}
 	 */
 	this.maximumNumberOfLoginAttempts = 0;
+	
+	/**
+	 * Number of unique passwords before the same password can be reused
+	 * @type {Number}
+	 */
+	this.passwordNumberUniqueBeforeReuse = 0;
 	
 	/**
 	 * The date the account was registered
@@ -2297,6 +2315,15 @@ function Owner(ownerRecord) {
 		}
     });		
 	
+	Object.defineProperty(this, "passwordMaximumLength", {
+        get: function () {
+            return getPasswordProperty("password_maxmimum_length");
+        },
+		set: function(length) {
+			setPasswordPropertyValue("password_maxmimum_length", length);
+		}
+    });		
+	
 	Object.defineProperty(this, "passwordValidity", {
         get: function () {
         	return getPasswordProperty("password_renewal_interval");
@@ -2306,24 +2333,32 @@ function Owner(ownerRecord) {
 		}
     });			
 	
+	Object.defineProperty(this, "passwordNumberUniqueBeforeReuse", {
+        get: function () {
+        	return getPasswordProperty("password_number_unique_before_reuse");
+        },
+		set: function(times) {
+			setPasswordPropertyValue("password_number_unique_before_reuse", times);
+		}
+    });			
+	
 	Object.defineProperty(this, "passwordMustContainNumbersAndLetters", {
         get: function () {
-        	return getPasswordProperty("password_numbers_and_letters");
+        	return getPasswordProperty("password_numbers_and_letters") ? true : false;
         },
 		set: function(value) {
-			setPasswordPropertyValue("password_numbers_and_letters", value);
+			setPasswordPropertyValue("password_numbers_and_letters", value ? 1 :0);
 		}
-    });	
+    });				
 	
-	Object.defineProperty(this, "companyName", {
+	Object.defineProperty(this, "passwordMustNotStartWithUserName", {
         get: function () {
-            return ownerRecord.company_name;
+        	return getPasswordProperty("password_must_not_start_with_user_name") ? true : false;
         },
 		set: function(value) {
-			ownerRecord.company_name = value;
-			save(ownerRecord);
+			setPasswordPropertyValue("password_must_not_start_with_user_name", value ? 1 :0);
 		}
-    });	
+    });
 	
 	Object.defineProperty(this, "maximumNumberOfLoginAttempts", {
         get: function () {
@@ -2333,6 +2368,16 @@ function Owner(ownerRecord) {
 			if (value >= 0) {
 				setPasswordPropertyValue("password_lock_user_after_number_of_attempts", value);
 			}
+		}
+    });		
+	
+	Object.defineProperty(this, "companyName", {
+        get: function () {
+            return ownerRecord.company_name;
+        },
+		set: function(value) {
+			ownerRecord.company_name = value;
+			save(ownerRecord);
 		}
     });	
 	
@@ -2416,8 +2461,8 @@ function Owner(ownerRecord) {
  * @properties={typeid:24,uuid:"C1138192-FBC2-4F1D-A7BF-8D4B13F3379B"}
  */
 function Module(moduleRecord){
-	if (!moduleRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("sec_module record is required");
+	if (!moduleRecord || !(moduleRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(moduleRecord.getDataSource()).toLowerCase() != "sec_module") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Module constructor requires a sec_module record");
 	}
 	
 	/**
@@ -3609,7 +3654,7 @@ function calculatePBKDF2Hash(password) {
 	var hash = utils.stringPBKDF2Hash(PBKDF2_PEPPER + password, PBKDF2_CURRENT_ITERATION);
 	var hashParts = hash.split(":");
 	/** @type {Number} */
-	var iterations = hashParts[1];
+	var iterations = parseInt(hashParts[1]);
 	return {salt: hashParts[0], hash: hashParts[2], iterations: iterations, iterationVersion: PBKDF2_CURRENT_ITERATION_VERSION};
 }
 
