@@ -3335,73 +3335,68 @@ function loadSecurityKeys(user, organization) {
 	 *    sec_owner_in_module.endDate is NULL OR >= ?
 	 *  */
 	var query = '\
-					SELECT DISTINCT	surd.security_key_id \
-					FROM sec_user_right surd \
-					WHERE (\
-						surd.security_key_id IN (\
-							SELECT	ssk.security_key_id  \
-							FROM	sec_security_key ssk, \
-									sec_user_right sur, \
-									sec_user_in_group sug \
-							WHERE	ssk.security_key_id = sur.security_key_id \
-							AND		sur.group_id = sug.group_id \
-							AND		sug.user_org_id = ? \
-							OR		(\
-								ssk.module_id IS NOT NULL AND ssk.module_id IN (\
-									SELECT	som.module_id \
-									FROM	sec_owner_in_module som \
-									WHERE	som.owner_id = ? \
-									AND		som.start_date <= ? \
-									AND		( som.end_date IS NULL OR som.end_date >= ? ) \
-								)\
-							)\
-						)\
-						AND NOT EXISTS (\
-							SELECT	* \
-							FROM	sec_user_right surd2, sec_user_in_group sug2 \
-							WHERE	surd.security_key_id = surd2.security_key_id \
-							AND		(\
-								surd2.user_org_id = ? \
-								OR (\
-									surd2.group_id = sug2.group_id\
-									AND sug2.user_org_id = ?\
-								)\
-							)\
-							AND		surd2.is_denied = 1 \
-						) \
+		SELECT DISTINCT	surd.security_key_id \
+		FROM sec_user_right surd \
+		WHERE (\
+			surd.security_key_id IN (\
+				SELECT	ssk.security_key_id  \
+				FROM	sec_security_key ssk \
+						JOIN sec_user_right sur ON ssk.security_key_id = sur.security_key_id \
+						JOIN sec_user_in_group sug ON sur.group_id = sug.group_id\
+				WHERE	sug.user_org_id = ? \
+				OR		(\
+					ssk.module_id IS NOT NULL AND ssk.module_id IN (\
+						SELECT	som.module_id \
+						FROM	sec_owner_in_module som \
+						WHERE	som.owner_id = ? \
+						AND		som.start_date <= ? \
+						AND		( som.end_date IS NULL OR som.end_date >= ? ) \
 					)\
-					OR	(surd.user_org_id = ? \
-						AND	(\
-							surd.is_denied IS NULL \
-							OR	surd.is_denied = 0 \
-						))\
-					UNION\
-					(\
-						SELECT	ssk2.security_key_id  \
-						FROM	sec_security_key ssk2, \
-								prov_package_modules ppm,\
-								prov_owner_packages pop \
-						WHERE	ssk2.module_id = ppm.module_id \
-						AND		ppm.package_id = pop.package_id \
-						AND 	pop.start_date <= ? \
-						AND   ( pop.end_date >= ? OR pop.end_date is null) \
-						AND		pop.owner_id = ? \
-						AND	 ssk2.security_key_id NOT IN \
-						( \
-							( 	SELECT 	sur4.security_key_id \
-								FROM 	sec_user_right sur4 \
-								WHERE 	sur4.user_org_id = ? \
-								AND 	sur4.is_denied = 1 \
-							)\
-							UNION \
-							(	SELECT	sur5.security_key_id \
-								FROM 	sec_user_right sur5, \
-										sec_user_in_group uig5 \
-								WHERE 	sur5.group_id = uig5.group_id \
-								AND 	sur5.is_denied = 1 \
-							)\
-						)\
-					)';
+				)\
+			)\
+			AND NOT EXISTS (\
+				SELECT	* \
+				FROM	sec_user_right surd2 JOIN sec_user_in_group sug2 \
+				ON	surd.security_key_id = surd2.security_key_id \
+				WHERE	(\
+					surd2.user_org_id = ? \
+					OR (\
+						surd2.group_id = sug2.group_id\
+						AND sug2.user_org_id = ?\
+					)\
+				)\
+				AND		surd2.is_denied = 1 \
+			) \
+		)\
+		OR	(surd.user_org_id = ? \
+			AND	(\
+				surd.is_denied IS NULL \
+				OR	surd.is_denied = 0 \
+			))\
+		UNION\
+		(\
+			SELECT	ssk2.security_key_id  \
+			FROM	sec_security_key ssk2  \
+					JOIN prov_package_modules ppm ON ssk2.module_id = ppm.module_id \
+					JOIN prov_owner_packages pop ON  ppm.package_id = pop.package_id \
+			WHERE	pop.start_date <= ? \
+			AND   ( pop.end_date >= ? OR pop.end_date is null) \
+			AND		pop.owner_id = ? \
+			AND	 ssk2.security_key_id NOT IN \
+			( \
+				( 	SELECT 	sur4.security_key_id \
+					FROM 	sec_user_right sur4 \
+					WHERE 	sur4.user_org_id = ? \
+					AND 	sur4.is_denied = 1 \
+				)\
+				UNION \
+				(	SELECT	sur5.security_key_id \
+					FROM 	sec_user_right sur5 \
+							JOIN sec_user_in_group uig5 ON sur5.group_id = uig5.group_id\
+					WHERE 	sur5.is_denied = 1 \
+				)\
+			)\
+		)';
 	
 	var queryArgs = new Array();
 	queryArgs[0] = userOrgId;
