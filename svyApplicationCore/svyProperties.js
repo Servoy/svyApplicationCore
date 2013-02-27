@@ -759,33 +759,33 @@ function Property(propertyRecord) {
 	 * @param {String} [valueListName]
 	 * @param {Array} [valueListValues]
 	 * 
+	 * @this {Property}
+	 * 
 	 * @return {PropertyValue}
 	 */
 	this.addValueDescription = function(sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues) {
-		/** @type {Property} */
-		var _this = this;
-		var propDescription = new PropertyValue(_this, sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues);
+		var propDescription = new PropertyValue(this, sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues);
 		var values = new Array();
-		for (var i = 0; i < _this.valueDescriptions.length; i++) {
-			values.push(_this.valueDescriptions[i]);
+		for (var i = 0; i < this.valueDescriptions.length; i++) {
+			values.push(this.valueDescriptions[i]);
 		}
 		values.push(propDescription);
 		record.value_description = values;
 		databaseManager.saveData(record);
-		_this.valueDescriptions = values;
+		this.valueDescriptions = values;
 		return propDescription;
 	}
 	
 	/**
 	 * Returns the property value with the given name
 	 * 
+	 * @this {Property}
+	 * 
 	 * @return {PropertyValue}
 	 */
 	this.getPropertyValue = function(propertyValueName) {
-		/** @type {Property} */
-		var _this = this;
 		/** @type {Array<PropertyValue>} */		
-		var values = _this.valueDescriptions;
+		var values = this.valueDescriptions;
 		for (var i = 0; i < values.length; i++) {
 			var value = values[i];
 			if (value.name == propertyValueName) {
@@ -808,11 +808,11 @@ function Property(propertyRecord) {
 	
 	/**
 	 * Saves the value description
+	 * 
+	 * @this {Property}
 	 */
 	this.saveValueDescription = function() {
-		/** @type {Property} */
-		var _this = this;
-		record.value_description = _this.valueDescriptions;
+		record.value_description = this.valueDescriptions;
 		databaseManager.saveData(record);
 	}
 	
@@ -1299,15 +1299,15 @@ function PropertyValue(propertyDescription, sortOrder, name, dataType, displayTy
 	/**
 	 * Returns an object to be stored in nav_property
 	 * 
+	 * @this {PropertyValue}
+	 * 
 	 * @return {{name: String, value: Object}}
 	 */
 	this.getValueObject = function() {
-		/** @type {PropertyValue} */
-		var _this = this;
 		var result = new Object();
-		result.name = _this.name;
-		result.value = _this.value;
-		result.sort = _this.sortOrder;
+		result.name = this.name;
+		result.value = this.value;
+		result.sort = this.sortOrder;
 		return result;
 	}
 	
