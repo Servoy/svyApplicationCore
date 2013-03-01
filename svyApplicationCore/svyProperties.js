@@ -1888,7 +1888,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel, ownerId, prop
 		propertyRecord = propertyValueRecord.svy_property_values_to_svy_properties;
 	}
 	
-	if (propertyOwner.toString() == globals.svy_sec_lgn_owner_id.toString()) {
+	if (propertyOwnerId == globals.svy_sec_lgn_owner_id.toString()) {
 		// Reload runtime properties if a property of the logged in owner has been changed
 		runtimeProperties = loadRuntimeProperties();
 	}
