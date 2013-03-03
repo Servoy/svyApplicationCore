@@ -5,8 +5,6 @@
  * 
  * @return {Date} lastLogin
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
- * 
  * @author patrick
  * @since 28.09.2012
  * 
@@ -34,8 +32,6 @@ function getLastLogin(record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} success
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @see scopes.svySecurityManager.ADMIN_LEVEL for possible values
  * 
@@ -74,8 +70,6 @@ function setAdminLevel(level, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
- * 
  * @author patrick
  * @since 28.09.2012
  *
@@ -103,8 +97,6 @@ function activateUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
- * 
  * @author patrick
  * @since 28.09.2012
  * 
@@ -130,8 +122,6 @@ function deactivateUser(record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} success
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -164,9 +154,6 @@ function deleteUser(record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} success
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
- * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  * 
  * @author patrick
  * @since 19.09.2012
@@ -229,8 +216,6 @@ function assignKey(keyId, organizationId, record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} success
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -303,8 +288,6 @@ function addToGroup(groupId, organizationId, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
- * 
  * @author patrick
  * @since 19.09.2012
  *
@@ -347,8 +330,6 @@ function addToOrganization(organizationId, record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} success
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 28.09.2012
@@ -447,8 +428,6 @@ function removeFromGroup(groupId, organizationId, record) {
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
- * 
  * @author patrick
  * @since 19.09.2012
  *
@@ -473,8 +452,6 @@ function lockUser(record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} success
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -502,7 +479,6 @@ function unlockUser(record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * @throws {scopes.svySecurityManager.PasswordRuleViolationException} - one of the security rules for the password is violated
  * 
  * @author patrick
@@ -523,8 +499,6 @@ function changePassword(newPassword, record)
 	if (!record.owner_id || !databaseManager.hasRecords(record.sec_user_to_sec_owner)) {
 		throw new scopes.modUtils$exceptions.IllegalStateException("User has no owner");
 	}
-	
-	var ownerRecord = record.sec_user_to_sec_owner.getRecord(1);
 	
 	var propValues = scopes.svyProperties.getRuntimeProperties(scopes.svySecurityManager.ADMIN_LEVEL.TENANT_MANAGER, ["password_must_not_start_with_user_name", "password_numbers_and_letters", "password_minimum_length", "password_maximum_length", "password_number_unique_before_reuse"], owner_id);
 	function findPasswordRule(givenValue) {
@@ -607,8 +581,10 @@ function changePassword(newPassword, record)
 	var newPasswordRecord = record.sec_user_to_sec_user_password.getRecord(record.sec_user_to_sec_user_password.newRecord());
 	newPasswordRecord.start_date = new Date(now.getTime() + 1);
 	
-	if (ownerRecord.password_renew) {
-		newPasswordRecord.end_date = scopes.modUtils$date.addDays(newPasswordRecord.start_date, ownerRecord.password_renew);
+	/** @type {Number} */
+	var renewInterval = findPasswordRule("password_renewal_interval");
+	if (renewInterval) {
+		newPasswordRecord.end_date = scopes.modUtils$date.addDays(newPasswordRecord.start_date, renewInterval);
 	} else {
 		newPasswordRecord.end_date = new Date(newPasswordRecord.start_date.getFullYear() + maxPasswordValidity, 
 			newPasswordRecord.start_date.getMonth(), 
@@ -632,8 +608,6 @@ function changePassword(newPassword, record)
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} isExpired
- * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  *
  * @author patrick
  * @since 2012-10-02
@@ -648,17 +622,33 @@ function isPasswordExpired(record) {
 		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
-	/** @type {QBSelect<db:/svy_framework/sec_user_password>} */
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user_password");
-	query.result.add(query.columns.user_password_id.count);
-	query.where.add(query.columns.user_id.eq(record.user_id.toString())).
-		add(query.or.add(query.columns.end_date.gt(new Date())).
-			add(query.columns.end_date.isNull));
-	var dataset = databaseManager.getDataSetByQuery(query, 1);
-	if (dataset.getValue(1, 1) == 0) {
-		return true;
+	var currentPasswordRecord = getCurrentPasswordRecord(record);
+	if (currentPasswordRecord) {
+		return (currentPasswordRecord.end_date < new Date());
 	} else {
-		return false;
+		return true;
+	}
+}
+
+/**
+ * Sets the end_date of the password to the current date, making it expired
+ * 
+ * @param {JSRecord<db:/svy_framework/sec_user>} [record]
+ *
+ * @properties={typeid:24,uuid:"64615A43-D150-4F7B-8254-D180D4FDA3A8"}
+ */
+function setPasswordExpired(record) {
+	if (!record) {
+		record = getSelectedRecord();
+	}
+	if (!record) {
+		throw new scopes.modUtils$exceptions.NoRecordException();
+	}
+	
+	var currentPasswordRecord = getCurrentPasswordRecord(record);
+	if (currentPasswordRecord) {
+		currentPasswordRecord.end_date = new Date();
+		databaseManager.saveData(currentPasswordRecord);
 	}
 }
 
@@ -669,8 +659,6 @@ function isPasswordExpired(record) {
  * @param {JSRecord<db:/svy_framework/sec_user>} [record]
  * 
  * @return {Boolean} isValid
- *
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 2012-10-11
@@ -685,20 +673,43 @@ function isPasswordValid(password, record) {
 		throw new scopes.modUtils$exceptions.NoRecordException();
 	}
 	
-	/** @type {QBSelect<db:/svy_framework/sec_user_password>} */
-	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user_password");
-	query.result.add(query.columns.password_value);
-	query.result.add(query.columns.password_hash);
-	query.result.add(query.columns.password_salt);
-	query.where.add(query.columns.user_id.eq(record.user_id.toString())).
-		add(query.or.add(query.columns.end_date.gt(new Date())).
-			add(query.columns.end_date.isNull));
-	var dataset = databaseManager.getDataSetByQuery(query, 1);
-	if (dataset.getValue(1, 1) && dataset.getValue(1, 1) == utils.stringMD5HashBase64(password)) {
+	var currentPasswordRecord = getCurrentPasswordRecord(record);
+	var md5Hash = currentPasswordRecord.password_value;
+	var salt = currentPasswordRecord.password_salt;
+	var hash = currentPasswordRecord.password_hash;
+	var version = currentPasswordRecord.password_version;
+	
+	if (md5Hash && md5Hash == utils.stringMD5HashBase64(password)) {
 		return true;
-	} else if (dataset.getValue(1, 2) && dataset.getValue(1, 3) && scopes.svySecurityManager.validatePBKDF2Hash(password, dataset.getValue(1, 3), dataset.getValue(1, 2))) {
+	} else if (salt && hash && scopes.svySecurityManager.validatePBKDF2Hash(password, salt, hash, version)) {
 		return true;
 	} else {
 		return false;
+	}
+}
+
+/**
+ * Returns the last/current sec_user_password record
+ * 
+ * @return {JSRecord<db:/svy_framework/sec_user_password>}
+ * 
+ * @private
+ * 
+ * @properties={typeid:24,uuid:"A64D9638-7487-467A-8865-C61ED583957B"}
+ */
+function getCurrentPasswordRecord(record) {
+	if (!record) {
+		record = getSelectedRecord();
+	}
+	if (!record) {
+		throw new scopes.modUtils$exceptions.NoRecordException();
+	}
+	
+	/** @type {JSFoundSet<db:/svy_framework/sec_user_password>} */
+	var fs = record.sec_user_to_sec_user_password$current;
+	if (utils.hasRecords(fs)) {
+		return fs.getRecord(1);
+	} else {
+		return null;
 	}
 }

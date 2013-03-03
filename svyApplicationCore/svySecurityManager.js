@@ -834,6 +834,13 @@ function User(userRecord) {
 	this.ownerId = userRecord.owner_id;
 	
 	/**
+	 * If true the user has to change his password when he logs in the next time
+	 * 
+	 * @type {Boolean}
+	 */
+	this.requireNewPassword = false;
+	
+	/**
 	 * Changes the password for this user
 	 * 
 	 * @param {String} newPassword
@@ -1245,6 +1252,21 @@ function User(userRecord) {
 				save(userRecord);
 			} else {
 				throw new scopes.modUtils$exceptions.IllegalArgumentException("Invalid email address: " + x);
+			}
+		}
+    });	
+
+	Object.defineProperty(this, "requireNewPassword", {
+       get: function () {
+    	   /** @type {JSFoundSet<db:/svy_framework/sec_user>} */
+    	   var fs = userRecord.foundset;
+    	   return !fs.isPasswordExpired(userRecord);
+        },
+		set: function(x) {
+			if (x) {
+	    	   /** @type {JSFoundSet<db:/svy_framework/sec_user>} */			
+				var fs = userRecord.foundset;
+		    	fs.setPasswordExpired(userRecord);
 			}
 		}
     });	
