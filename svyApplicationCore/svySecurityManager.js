@@ -3415,7 +3415,8 @@ function loadSecurityKeys(user, organization) {
 				(	SELECT	sur5.security_key_id \
 					FROM 	sec_user_right sur5 \
 							JOIN sec_user_in_group uig5 ON sur5.group_id = uig5.group_id\
-					WHERE 	sur5.is_denied = 1 \
+					WHERE 	uig5.user_org_id = ?\
+					AND		sur5.is_denied = 1 \
 				)\
 			)\
 		)';
@@ -3432,6 +3433,7 @@ function loadSecurityKeys(user, organization) {
 	queryArgs[8] = application.getServerTimeStamp();
 	queryArgs[9] = ownerId;
 	queryArgs[10] = userOrgId;
+	queryArgs[11] = userOrgId;
 	
 	var dataset = databaseManager.getDataSetByQuery(serverName, query, queryArgs, -1);
 	
