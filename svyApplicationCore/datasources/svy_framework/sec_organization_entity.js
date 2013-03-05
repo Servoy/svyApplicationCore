@@ -6,7 +6,7 @@
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$data.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 2012-10-12
@@ -19,7 +19,7 @@ function removeUser(userId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	if (userId instanceof UUID) {
@@ -48,7 +48,7 @@ function removeUser(userId, record)
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$exceptions.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.modUtils$data.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 2012-09-19
@@ -61,7 +61,7 @@ function addUser(userId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	if (userId instanceof UUID) {

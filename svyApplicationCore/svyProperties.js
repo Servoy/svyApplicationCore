@@ -53,7 +53,7 @@ function getLoadedProperties() {
  * 
  * @return {Property}
  * 
- * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} the name of the property has to be unique
+ * @throws {scopes.modUtils$data.ValueNotUniqueException} the name of the property has to be unique
  * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"ADD262C0-596E-4356-875E-6DE4303070D1"}
@@ -94,7 +94,7 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
 	}
 	
 	if (!scopes.modUtils.isValueUnique(fs, "property_name", name, ["svy_property_sets_id"], [propertySetId]))	{
-		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "property_name");
+		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, "property_name", name);
 	}
 	var propertyRecord = fs.getRecord(fs.newRecord());
 	propertyRecord.property_name = name;
@@ -129,7 +129,7 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
  * 
  * @return {PropertySet}
  * 
- * @throws {scopes.modUtils$exceptions.ValueNotUniqueException} the name of the property set has to be unique
+ * @throws {scopes.modUtils$data.ValueNotUniqueException} the name of the property set has to be unique
  * @throws {scopes.modUtils$exceptions.IllegalArgumentException} 
  *
  * @properties={typeid:24,uuid:"DF2A8A29-EBBA-41C3-9652-2B2184F12421"}
@@ -141,7 +141,7 @@ function createPropertySet(name, applicationId, displayName, description, icon, 
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_sets");		
 	if (!scopes.modUtils.isValueUnique(fs, "name", name))	{
-		throw new scopes.modUtils$exceptions.ValueNotUniqueException(null, "property_name \"" + name + "\"");
+		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, "property_name", name);
 	}
 	var record = fs.getRecord(fs.newRecord());
 	record.name = name;
@@ -683,7 +683,7 @@ function Property(propertyRecord) {
 	 * 
 	 * @type {String}
 	 * 
-	 * @throws {scopes.modUtils$exceptions.ValueNotUniqueException}
+	 * @throws {scopes.modUtils$data.ValueNotUniqueException}
 	 */
 	this.name = record.property_name;
 	
@@ -823,7 +823,7 @@ function Property(propertyRecord) {
 		set: function(x) {
 			if (x) {
 				if (!scopes.modUtils.isValueUnique(record, "property_name", x)) {
-					throw new scopes.modUtils$exceptions.ValueNotUniqueException(record, "property_name");
+					throw new scopes.modUtils$data.ValueNotUniqueException(null, record, "property_name", x);
 				}
 				record.property_name = x;
 				databaseManager.saveData(record);

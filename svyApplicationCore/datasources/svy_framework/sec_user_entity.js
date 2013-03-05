@@ -16,7 +16,7 @@ function getLastLogin(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	if (utils.hasRecords(record.sec_user_to_sec_user_login_attempt)) {
 		return record.sec_user_to_sec_user_login_attempt.max_attempt_datetime;
@@ -46,7 +46,7 @@ function setAdminLevel(level, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	if (level == null) {
@@ -81,7 +81,7 @@ function activateUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	record.flag_inactive = 0;
@@ -108,7 +108,7 @@ function deactivateUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	record.flag_inactive = 1;
@@ -134,7 +134,7 @@ function deleteUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	// remove related records
@@ -166,7 +166,7 @@ function assignKey(keyId, organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	if (keyId instanceof UUID) {
@@ -228,7 +228,7 @@ function addToGroup(groupId, organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	try {
@@ -299,7 +299,7 @@ function addToOrganization(organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	var orgId = organizationId;
@@ -342,7 +342,7 @@ function removeFromOrganization(organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	var orgId = organizationId;
@@ -379,7 +379,7 @@ function removeFromGroup(groupId, organizationId, record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	if (groupId instanceof UUID) {
@@ -439,7 +439,7 @@ function lockUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	record.user_locked = 1;
 	record.user_locked_datetime = new Date();
@@ -464,7 +464,7 @@ function unlockUser(record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	record.user_locked = null;
 	record.user_locked_datetime = null;
@@ -492,7 +492,7 @@ function changePassword(newPassword, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	// check if there is an owner
@@ -619,7 +619,7 @@ function isPasswordExpired(record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	var currentPasswordRecord = getCurrentPasswordRecord(record);
@@ -642,7 +642,7 @@ function setPasswordExpired(record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	var currentPasswordRecord = getCurrentPasswordRecord(record);
@@ -670,7 +670,7 @@ function isPasswordValid(password, record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	var currentPasswordRecord = getCurrentPasswordRecord(record);
@@ -702,7 +702,7 @@ function getCurrentPasswordRecord(record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$exceptions.NoRecordException();
+		throw new scopes.modUtils$data.NoRecordException();
 	}
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_user_password>} */
