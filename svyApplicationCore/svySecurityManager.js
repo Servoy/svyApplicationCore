@@ -3663,18 +3663,57 @@ function removeRuntimeKey(keyId) {
  * 
  * Note that the method uses a pepper defined in PBKDF2_PEPPER
  * 
- * @param password
+ * @param {String} password
  * 
  * @return {{salt: String, hash: String, iterations: Number, iterationVersion: Number}} saltAndHash
  *
  * @properties={typeid:24,uuid:"7DACBD38-2AE6-4B3D-A397-85F5C990B75A"}
  */
 function calculatePBKDF2Hash(password) {
-	var hash = utils.stringPBKDF2Hash(PBKDF2_PEPPER + password, PBKDF2_CURRENT_ITERATION);
+	var hash;
+	
+	// in Servoy 6.1.4 and lower the library used to calculate the PBKDF2 hash
+	// is not sent to the Smart client and cannot be used
+	// TODO: Remove this silly workaround when 6.1.5 is released
+	var versionNum = getServoyVersionNumber();
+	if (versionNum > 6104) {
+		hash = utils.stringPBKDF2Hash(PBKDF2_PEPPER + password, PBKDF2_CURRENT_ITERATION);
+	} else {
+		PBKDF2_CURRENT_ITERATION_VERSION = 0;
+		var someSalt = utils.stringLeft(utils.stringMD5HashBase64(application.getUUID().toString()) , 20);
+		hash = utils.stringMD5HashBase64(someSalt + password + PBKDF2_PEPPER);
+		hash = someSalt + ":0:" + hash;
+	}
 	var hashParts = hash.split(":");
 	/** @type {Number} */
 	var iterations = parseInt(hashParts[1]);
 	return {salt: hashParts[0], hash: hashParts[2], iterations: iterations, iterationVersion: PBKDF2_CURRENT_ITERATION_VERSION};
+}
+
+
+/**
+ * Returns the Servoy version as a number<p>
+ * 
+ * The number returned is calculated as these examples:<p>
+ * 
+ * 5.1.4 is returned as 5104<br>
+ * 7.0.0 is returned as 7000<br>
+ * 5.1.12i1 is returned as 5112<br>
+ * 
+ * @return {Number}
+ * 
+ * @private
+ * 
+ * @properties={typeid:24,uuid:"C1897D3C-1BF3-4DAB-8457-237EBDC5E0E6"}
+ */
+function getServoyVersionNumber() {
+	var version = application.getVersion();
+	var versionParts = version.split(".");
+	var majorVersion = versionParts[0];
+	var middleVersion = versionParts[1];
+	var minorVersion = versionParts[2];
+	minorVersion = minorVersion.split(/\D/);
+	return parseInt(majorVersion + middleVersion + (utils.stringRight("0" + minorVersion[0],2)));
 }
 
 /**
@@ -3695,11 +3734,21 @@ function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
 	if (!password || !salt || !hash) {
 		return false;
 	}
-	var iterations = PBKDF2_CURRENT_ITERATION;
-	if (pbkdf2IterationVersion && PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion]) {
-		iterations = PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion];
+	
+	// in Servoy 6.1.4 and lower the library used to calculate the PBKDF2 hash
+	// is not sent to the Smart client and cannot be used
+	// TODO: Remove this silly workaround when 6.1.5 is released
+	var versionNum = getServoyVersionNumber();
+	if (versionNum > 6104 || pbkdf2IterationVersion > 0) {
+		var iterations = PBKDF2_CURRENT_ITERATION;
+		if (pbkdf2IterationVersion && PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion]) {
+			iterations = PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion];
+		}
+		return utils.validatePBKDF2Hash(PBKDF2_PEPPER + password, salt + ":" + iterations + ":" + hash);
+	} else {
+		var calculatedHash = utils.stringMD5HashBase64(salt + password + PBKDF2_PEPPER);
+		return calculatedHash == hash;
 	}
-	return utils.validatePBKDF2Hash(PBKDF2_PEPPER + password, salt + ":" + iterations + ":" + hash);
 }
 
 /**
