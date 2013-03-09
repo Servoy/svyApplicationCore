@@ -2162,7 +2162,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs;
 	var record;
-	if (runtimeProperty && (!runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db"))) {
+	if (runtimeProperty && (runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db"))) {
 		runtimeProperty.value = propertyValue;
 	} else if (runtimeProperty && runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")) {
 		runtimeProperties.splice(runtimeProperties.indexOf(runtimeProperty),1);
