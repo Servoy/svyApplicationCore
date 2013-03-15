@@ -1670,8 +1670,6 @@ function updateDefaultProperties(props) {
  */
 function loadRuntimeProperties(adminLevel, ownerId) {
 	
-	var start = new Date();
-	
 	if (!ownerId) {
 		ownerId = globals.svy_sec_lgn_owner_id;
 	}
@@ -1742,20 +1740,17 @@ function loadRuntimeProperties(adminLevel, ownerId) {
 		for (var up = 0; up < userPropNames.length; up++) {
 			var userPropValue = application.getUserProperty(userPropNames[up]);
 			function runtimeFilter(element) {
-				return (element.propertyName == userPropNames[up]);
+				return (element.propertyValueName == userPropNames[up]);
 			}
 			if (result.filter(runtimeFilter).length == 0) {
 				runtimeProp = new RuntimeProperty(userPropNames[up], userPropValue);	
-				result.push(runtimeProp);
+				result.push(runtimeProp);			
 			} else {
 				application.output("Property " + userPropNames[up] + " already loaded from DB", LOGGINGLEVEL.DEBUG);
 			}
 		}
 	}
-	
-	var end = new Date();
-	application.output("[svyProperties] Loading runtime properties took " + (end.valueOf() - start.valueOf()) + " ms", LOGGINGLEVEL.INFO);
-	
+		
 	return result;
 }
 
@@ -1929,11 +1924,14 @@ function getOwnerIdForAdminLevel(adminLevel) {
  * @properties={typeid:24,uuid:"E0C41D84-7632-490D-82CD-D0C0F8706D92"}
  */
 function initProperties(forceReload) {
+	var start = new Date();
 	updateDefaultPropertyValues();
 	if (forceReload) {
 		runtimeProperties = null;
 	}
 	getLoadedProperties();
+	var end = new Date();
+	application.output("[svyProperties] Initializing runtime properties took " + (end.valueOf() - start.valueOf()) + " ms", LOGGINGLEVEL.DEBUG);
 }
 
 /**
@@ -1942,8 +1940,6 @@ function initProperties(forceReload) {
  * @properties={typeid:24,uuid:"50B0F774-D8A7-4370-917C-29AE32D71578"}
  */
 function updateDefaultPropertyValues() {
-	var start = new Date();
-	
 	var ownerId = globals.zero_uuid;
 	
 	var filterOnSolutionName = getPropertyValueAsBoolean("filter_on_solution_name");
@@ -2109,9 +2105,6 @@ function updateDefaultPropertyValues() {
 		propValueRecord.property_value = propValuesToSave;
 		databaseManager.saveData(propValueRecord);
 	}
-	
-	var end = new Date();
-	application.output("[svyProperties] Updating default properties took " + (end.valueOf() - start.valueOf()) + " ms", LOGGINGLEVEL.INFO);
 }
 
 /**
