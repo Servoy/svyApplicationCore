@@ -52,6 +52,37 @@ var EVENT_TYPES = {
 }
 
 /**
+ * Error codes used by PasswordRuleViolationException<p>
+ * 
+ * These codes can be used to figure out why a password change failed
+ * 
+ * @enum
+ * @final
+ * 
+ * @example <pre>try {
+ *    user.changePassword(newPassword);
+ * } catch ( &#47;** @type {scopes.svySecurityManager.PasswordRuleViolationException} *&#47; e) {
+ *    if (e.errorCode == scopes.svySecurityManager.ERROR_CODE.PASSWORD_TOO_SHORT) {
+ *       &#47;&#47; Password too short
+ *    } else if (e.errorCode == scopes.svySecurityManager.ERROR_CODE.PASSWORD_NOT_UNIQUE) {
+ *       &#47;&#47; Password used before
+ *    } 
+ *    &#47;&#47; ...
+ * }
+ * </pre>
+ * 
+ * @properties={typeid:35,uuid:"129CE0C9-E269-4CE3-98FD-40780FEAF730",variableType:-4}
+ */
+var ERROR_CODE = {
+	EMPTY_PASSWORD: 1000,
+	PASSWORD_MUST_NOT_START_WITH_USER_NAME: 2000,
+	PASSWORD_MUST_CONTAIN_NUMBERS_AND_LETTERS: 3000,
+	PASSWORD_TOO_SHORT: 4000,
+	PASSWORD_TOO_LONG: 5000,
+	PASSWORD_NOT_UNIQUE: 6000
+};
+
+/**
  * If <code>true</code>, the framework will create a hash of the data <br>
  * in the security tables and save that in sec_owner.hash. <br>
  * The hash will be checked at login. <br>
@@ -2894,14 +2925,11 @@ function filterOrganization() {
 	// filter navigation tables
 	var navDatabase = globals.nav_db_framework;
 	
-	var user = getUser();
 	var tablesToFilter = databaseManager.getTableNames(navDatabase);
 	
 	// filter all tables that have an organization_id column
 	function findTablesToFilter(x) {
-		if (user.adminLevel >= ADMIN_LEVEL.TENANT_MANAGER && (x == "sec_organization" || x == "sec_user_org")) {
-			// a tenant manager needs to be able to manage users 
-			// for the organizations of the tenant he manages
+		if (x == "sec_organization" || x == "sec_user_org") {
 			return false;
 		}
 		var jsTable = databaseManager.getTable(navDatabase, x);
@@ -2920,6 +2948,8 @@ function filterOrganization() {
 		success = databaseManager.addTableFilterParam(navDatabase, tablesToFilter[i], "organization_id", "IN", [organizationId, globals.zero_uuid], filterName);
 		if (!success) {
 			application.output("Failed to organization filter for table \"" + tablesToFilter[i] + "\" in database \"" + navDatabase + "\"", LOGGINGLEVEL.ERROR);
+		} else {
+			application.output("Created organization filter for table \"" + tablesToFilter[i] + "\" in database \"" + navDatabase + "\"", LOGGINGLEVEL.DEBUG);
 		}
 	}
 	
@@ -3285,15 +3315,27 @@ function removeDataForOrganization(organizationId) {
  * 
  * @param {JSRecord<db:/svy_framework/sec_user>} record
  * @param {String} message
+ * @param {Number} errorCode
+ * 
+ * @constructor 
+ * 
+ * @extends {scopes.modUtils$exceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"BE06D0A6-A86F-426E-ABE6-610D46175DF6"}
  */
-function PasswordRuleViolationException(record, message) {
+function PasswordRuleViolationException(record, message, errorCode) {
+	
 	/**
 	 * The record where the problem occured
 	 * @type {JSRecord<db:/svy_framework/sec_user>}
 	 */
 	this.record = record;
+	
+	/**
+	 * One of the ERROR_CODE enum values
+	 * @type {Number}
+	 */
+	this.errorCode = errorCode;
 	
 	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message);
 }
@@ -3821,5 +3863,5 @@ function addOrganizationChangeListener(methodToCall) {
  * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
  */
 var init = function() {
-	PasswordRuleViolationException.prototype = 	new scopes.modUtils$exceptions.IllegalArgumentException("Password rule violated");
+	PasswordRuleViolationException.prototype = new scopes.modUtils$exceptions.IllegalArgumentException("Password rule violated");
 }()

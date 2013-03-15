@@ -515,31 +515,31 @@ function changePassword(newPassword, record)
 	
 	// no password given
 	if (!newPassword) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_empty')||"The password cannot be empty.");
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_empty')||"The password cannot be empty.", scopes.svySecurityManager.ERROR_CODE.EMPTY_PASSWORD);
 	}
 	
 	// password can not have same begin as username
 	var passwordRule = findPasswordRule("password_must_not_start_with_user_name");
 	if (passwordRule && newPassword.substr(0, 3) == record.user_name.substr(0, 3)) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_same_begin')||"The password cannot begin with the same letters as the username.");
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_same_begin')||"The password cannot begin with the same letters as the username.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_MUST_NOT_START_WITH_USER_NAME);
 	}
 	
 	// password has to contain letters and numbers
 	passwordRule = findPasswordRule("password_numbers_and_letters");
 	if (passwordRule && !(/[0-9]/.test(newPassword) && /[a-zA-Z]/.test(newPassword))) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_contain_letters_numbers')||'The password must contain letters and numbers.');
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_contain_letters_numbers')||'The password must contain letters and numbers.', scopes.svySecurityManager.ERROR_CODE.PASSWORD_MUST_CONTAIN_NUMBERS_AND_LETTERS);
 	}
 	
 	// password is too short
 	passwordRule = findPasswordRule("password_minimum_length");
 	if (passwordRule && newPassword.length < passwordRule) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_min_length', [passwordRule])||"The password is too short.");
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_min_length', [passwordRule])||"The password is too short.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_TOO_SHORT);
 	}
 	
 	// password is too long
 	passwordRule = findPasswordRule("password_maximum_length");
 	if (passwordRule && newPassword.length > passwordRule) {
-		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_max_length', [passwordRule])||"The password is too long.");
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_max_length', [passwordRule])||"The password is too long.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_TOO_LONG);
 	}
 	
 	var md5Hash = utils.stringMD5HashBase64(newPassword);
@@ -559,10 +559,10 @@ function changePassword(newPassword, record)
 		for (var pp = 1; pp <= endLoopAt; pp ++) {
 			oldPasswordRecord = previousPasswordFs.getRecord(pp);
 			if (oldPasswordRecord.password_value && oldPasswordRecord.password_value == md5Hash) {
-				throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule])||"The password may not be the same as a previous password.");
+				throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule])||"The password may not be the same as a previous password.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_NOT_UNIQUE);
 			} else if (oldPasswordRecord.password_hash && oldPasswordRecord.password_salt && oldPasswordRecord.password_version) {
 				if (scopes.svySecurityManager.validatePBKDF2Hash(newPassword, oldPasswordRecord.password_salt, oldPasswordRecord.password_hash, oldPasswordRecord.password_version)) {
-					throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule])||"The password may not be the same as a previous password.");
+					throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule])||"The password may not be the same as a previous password.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_NOT_UNIQUE);
 				}
 			}
 		}
