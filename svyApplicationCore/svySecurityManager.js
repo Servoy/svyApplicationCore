@@ -241,7 +241,7 @@ function getApplication(applicationName) {
 function getGroups() {
 	/** @type {Array<Group>} */
 	var result = new Array();
-	/** @type {JSFoundset<db:/svy_framework/sec_group>} */	
+	/** @type {JSFoundSet<db:/svy_framework/sec_group>} */	
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_group");
 	fs.loadAllRecords();
 	if (utils.hasRecords(fs)) {
@@ -272,7 +272,7 @@ function getGroup(groupname) {
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_group");
 	query.result.addPk();
 	query.where.add(query.columns.name.lower.eq(groupname.toLowerCase()));
-	/** @type {JSFoundset<db:/svy_framework/sec_group>} */
+	/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		return new Group(fs.getRecord(1));
@@ -385,7 +385,7 @@ function getOrganizations() {
 	/** @type {QBSelect<db:/svy_framework/sec_organization>} */	
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_organization");
 	query.result.addPk();
-	/** @type {JSFoundset<db:/svy_framework/sec_organization>} */	
+	/** @type {JSFoundSet<db:/svy_framework/sec_organization>} */	
 	var foundset = databaseManager.getFoundSet(query);
 	if (!utils.hasRecords(foundset)) {
 		return null;
@@ -412,7 +412,7 @@ function getOrganizations() {
 function getOwners() {
 	/** @type {Array<Owner>} */
 	var result = new Array();
-	/** @type {JSFoundset<db:/svy_framework/sec_owner>} */
+	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	fs.loadAllRecords();
 	for (var i = 1; i <= fs.getSize(); i++) {
@@ -533,7 +533,7 @@ function getUsers() {
 	/** @type {QBSelect<db:/svy_framework/sec_user>} */
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user");
 	query.result.addPk();
-	/** @type {JSFoundset<db:/svy_framework/sec_user>} */
+	/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 	var foundset = databaseManager.getFoundSet(query);
 	if (!utils.hasRecords(foundset)) {
 		return null;
@@ -1029,7 +1029,7 @@ function User(userRecord) {
 		query.where.add(joinUserOrg.columns.organization_id.eq(organization.orgId.toString()));
 		query.where.add(joinUserOrg.columns.user_id.eq(this.userId.toString()));
 		
-		/** @type {JSFoundset<db:/svy_framework/sec_group>} */
+		/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
 		var groupFs = databaseManager.getFoundSet(query);
 		if (utils.hasRecords(groupFs)) {
 			for (var i = 1; i <= groupFs.getSize(); i++) {
@@ -1472,7 +1472,7 @@ function Group(groupRecord) {
 		}
 		
 		var groupId = this.groupId;
-		/** @type {JSFoundset<db:/svy_framework/sec_user_in_group>} */	
+		/** @type {JSFoundSet<db:/svy_framework/sec_user_in_group>} */	
 		var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user_in_group");
 		var userInGroupRec = fs.getRecord(fs.newRecord());
 		userInGroupRec.group_id = groupId;
@@ -1620,7 +1620,7 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
 		query.where.add(query.columns.group_id.not.isNull);
 		query.where.add(userRightJoin.columns.security_key_id.eq(this.keyId.toString()));
 		
-		/** @type {JSFoundset<db:/svy_framework/sec_group>} */		
+		/** @type {JSFoundSet<db:/svy_framework/sec_group>} */		
 		var fs = databaseManager.getFoundSet(query);
 		if (utils.hasRecords(fs)) {
 			for (var i = 1; i <= fs.getSize(); i++) {
@@ -2201,7 +2201,7 @@ function Owner(ownerRecord) {
 		/** @type {Array<Organization>} */
 		var result = new Array();
 		if (utils.hasRecords(ownerRecord.sec_owner_to_sec_organization)) {
-			/** @type {JSFoundset<db://>} */
+			/** @type {JSFoundSet<db://>} */
 			for (var i = 1; i <= ownerRecord.sec_owner_to_sec_organization.getSize(); i++) {
 				var organizationRecord = ownerRecord.sec_owner_to_sec_organization.getRecord(i);
 				result.push(new Organization(organizationRecord));
@@ -2802,7 +2802,7 @@ function updateSecurityHash(record, serverName, ownerName) {
 		query.where.add(query.columns.owner_id.eq(globals.svy_sec_lgn_owner_id.toString()));
 	}
 	
-	/** @type {JSFoundset<db:/svy_framework/sec_owner>} */
+	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet(query);
 	
 	if (utils.hasRecords(fs)) {
@@ -2844,7 +2844,7 @@ function verifySecurityHash(ownerName, serverName) {
 	query.result.addPk();
 	query.where.add(query.columns.name.eq(ownerName));
 	
-	/** @type {JSFoundset<db:/svy_framework/sec_owner>} */
+	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet(query);
 	if (utils.hasRecords(fs)) {
 		var ownerRecord = fs.getRecord(1);
@@ -2975,7 +2975,7 @@ function filterTables() {
 	query.result.addPk();
 	query.where.add(query.columns.security_key_id.isin(keyIdList));
 	
-	/** @type {JSFoundset<db:/svy_framework/sec_table_filter>} */
+	/** @type {JSFoundSet<db:/svy_framework/sec_table_filter>} */
 	var foundset = databaseManager.getFoundSet(query);
 	var record, value;
 	for (var i = 1; i <= foundset.getSize(); i++) {
