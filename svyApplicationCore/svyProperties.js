@@ -648,7 +648,7 @@ function RuntimeProperty(name, value, propertyOwner, valueName, securityLevel, s
 function createRuntimeProperty(propertyValueRecord, propertyValue) {
 	var name = propertyValueRecord.property_name;
 	var value = propertyValue.value;
-	var propertyOwner = propertyValueRecord.owner_id;
+	var propertyOwner = propertyValueRecord.property_owner_id;
 	var valueName = propertyValue.name;
 	var securityLevel = propertyValueRecord.security_level;
 	var sortOrder = propertyValue.sort;
@@ -1679,10 +1679,50 @@ function loadRuntimeProperties(adminLevel, ownerId) {
 		ownerId = null;
 	}
 	
+	var userId = globals.svy_sec_lgn_user_id;
+	
 	/** @type {QBSelect<db:/svy_framework/svy_property_values>} */	
 	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
-	query.result.addPk();	
-	query.where.add(query.columns.owner_id.isin([null, ownerId, globals.zero_uuid.toString()]));
+	
+	if (userId) {
+		/**
+		 * Loads properties
+		 * 
+		 * - that are configured in the property system (not user properties)
+		 * - either of the current owner or the "default owner"
+		 * 
+		 * OR
+		 * 
+		 * properties
+		 * 
+		 * - that are not configured in the property system (user properties)
+		 * - and are owned by the logged in user
+		 * 
+		 */
+		query.where.add(
+		  query.or
+		    .add(
+		      query.and
+			    .add(query.columns.svy_properties_id.not.isNull)
+			    .add(query.columns.owner_id.isin([null, ownerId, globals.zero_uuid.toString()]))
+			 )
+		    .add(
+		      query.and
+		        .add(query.columns.svy_properties_id.isNull)
+		        .add(query.columns.owner_id.eq(ownerId))
+		        .add(query.columns.property_owner_id.eq(userId.toString()))
+		     )
+		);
+	} else {
+		/**
+		 * Loads the properties of the current owner that are configured in the property system (not user properties)
+		 */
+		query.where.add(
+		      query.and
+			    .add(query.columns.svy_properties_id.not.isNull)
+			    .add(query.columns.owner_id.isin([null, ownerId, globals.zero_uuid.toString()]))
+		);
+	}
 	
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs = databaseManager.getFoundSet(query);
@@ -2155,7 +2195,9 @@ function setUserProperty(propertyName, propertyValue, userId) {
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
 	var fs;
 	var record;
-	if (runtimeProperty && ((runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db")) || (!runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")))) {
+	if (runtimeProperty && (runtimeProperty.loadedFromFile && !getPropertyValue("save_user_properties_in_db"))) {
+		runtimeProperty.value = propertyValue;
+	} else if (runtimeProperty && (!runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")) && runtimeProperty.propertyOwnerId == user.userId) {
 		runtimeProperty.value = propertyValue;
 	} else if (runtimeProperty && runtimeProperty.loadedFromFile && getPropertyValue("save_user_properties_in_db")) {
 		runtimeProperties.splice(runtimeProperties.indexOf(runtimeProperty),1);
