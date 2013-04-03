@@ -759,8 +759,8 @@ function createUser(userName, password, owner, organization) {
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 	var userFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user");
-	if (!scopes.modUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"],[owner.ownerId.toString()])) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, "owner_id");
+	if (!scopes.modUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"], [owner.ownerId.toString()])) {
+		throw new scopes.modUtils$data.ValueNotUniqueException(null, "user_name");
 	}
 		
 	var userRecord = userFs.getRecord(userFs.newRecord());
@@ -1245,8 +1245,16 @@ function User(userRecord) {
 	
 	Object.defineProperty(this, "userName", {
         set: function (x) {
-        	userRecord.user_name = x;
-            save(userRecord);
+        	if (!x || !(x instanceof String)) {
+        		return;
+        	}
+        	if (userRecord.user_name != x) {
+	        	if (!scopes.modUtils.isValueUnique(userRecord, "user_name", x, ["owner_id"],[userRecord.owner_id.toString()])) {
+	        		throw new scopes.modUtils$data.ValueNotUniqueException(null, "user_name");
+	        	}
+	        	userRecord.user_name = x;
+	            save(userRecord);
+        	}
         },
         get: function () {
             return userRecord.user_name;
@@ -1291,7 +1299,7 @@ function User(userRecord) {
        get: function () {
     	   /** @type {JSFoundSet<db:/svy_framework/sec_user>} */
     	   var fs = userRecord.foundset;
-    	   return !fs.isPasswordExpired(userRecord);
+    	   return fs.isPasswordExpired(userRecord);
         },
 		set: function(x) {
 			if (x) {
