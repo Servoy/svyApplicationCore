@@ -49,7 +49,7 @@ var ADMIN_LEVEL = {
  */
 var EVENT_TYPES = {
 	ORGANIZATION_CHANGE: "organization_change"
-}
+};
 
 /**
  * Error codes used by PasswordRuleViolationException<p>
@@ -121,7 +121,7 @@ var PBKDF2_PEPPER = "Uv9<42,3yN6rDw;FL{8i+T}dsQEC=3Gj67xk:cRzn]MhaJ8[Wg+t38rDvV}
  */
 var PBKDF2_ITERATIONS = {
 	VERSION_1: 5000
-}
+};
 
 /**
  * The version number of the current PBKDF2_ITERATIONS used
@@ -1374,7 +1374,6 @@ function User(userRecord) {
 	Object.seal(this);
 }
 
-
 /**
  * @param {JSRecord<db:/svy_framework/sec_group>} groupRecord
  * 
@@ -2359,7 +2358,11 @@ function Owner(ownerRecord) {
 	
 	Object.defineProperty(this, "filterFieldName", {
         get: function () {
-            return ownerRecord.filter_field_organization;
+        	if (!ownerRecord.filter_field_organization) {
+        		return "organization_id";
+        	} else {
+        		return ownerRecord.filter_field_organization;
+        	}
         },
 		set: function(fieldName) {
 			ownerRecord.filter_field_organization = fieldName;
@@ -3025,7 +3028,7 @@ function filterTables() {
 	}	
 	
 }
-	
+
 /**
  * Sets the security settings on servoy elements and 
  * table read, insert, update, delete and tracking rights
@@ -3151,7 +3154,7 @@ function setSecuritySettings() {
 	
 	security.setSecuritySettings(securitySettingsDataset);
 }
-	
+
 /**
  * Toggles the PERFORM_HASH_CHECKS property that controls whether
  * security hashes are calculated to prevent unauthorized manipulation
@@ -3213,7 +3216,7 @@ function createHash(serverName) {
 	application.output("Calculating hash took " + ms + "ms", LOGGINGLEVEL.DEBUG);
 	
 	return hash;
-}	
+}
 
 /**
  * @param {Organization} organization
@@ -3545,7 +3548,7 @@ function getSecurityKeysIds() {
 }
 
 /**
- * Returns the key with the given name or UUID or null if not found
+ * Returns the runtime key with the given name or UUID or null if not found
  * 
  * @param {String|UUID} key
  * 
@@ -3556,7 +3559,7 @@ function getSecurityKeysIds() {
  *
  * @properties={typeid:24,uuid:"06B4409B-3C62-4D22-8652-1C29F6E5FC82"}
  */
-function getKey(key) {
+function getRuntimeKey(key) {
 	if (!key) {
 		return null;
 	}
@@ -3575,6 +3578,40 @@ function getKey(key) {
 		filtered = runtimeKeys.filter(filterByName);
 	}
 	return filtered.length > 0 ? filtered[0] : null;
+}
+
+/**
+ * Returns the key with the given name or UUID or null if not found
+ * 
+ * @param {String|UUID} key
+ * 
+ * @return {Key} key
+ * 
+ * @author patrick
+ * @date 2012-12-12
+ *
+ * @properties={typeid:24,uuid:"5AC2CA33-649E-406A-A637-1E95C70E6823"}
+ */
+function getKey(key) {
+	if (!key) {
+		return null;
+	}
+	/** @type {QBSelect<db:/svy_framework/sec_security_key>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_security_key");
+	query.result.addPk();
+	if (key instanceof UUID) {
+		query.where.add(query.columns.security_key_id.eq(key.toString()));
+	} else {
+		query.where.add(query.columns.name.eq(key));
+	}
+	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
+	var foundset = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(foundset)) {
+		var keyRecord = foundset.getRecord(1);
+		return new Key(keyRecord.security_key_id, keyRecord.name, keyRecord.description, keyRecord.owner_id);
+	} else {
+		return null;
+	}
 }
 
 /**
@@ -3643,7 +3680,6 @@ function getRuntimeSecurityKeys() {
 	
 	return result;
 }
-
 
 /**
  * Adds the given key to the list of loaded security keys
@@ -3739,7 +3775,6 @@ function calculatePBKDF2Hash(password) {
 	var iterations = parseInt(hashParts[1]);
 	return {salt: hashParts[0], hash: hashParts[2], iterations: iterations, iterationVersion: PBKDF2_CURRENT_ITERATION_VERSION};
 }
-
 
 /**
  * Returns the Servoy version as a number<p>
@@ -3872,4 +3907,4 @@ function addOrganizationChangeListener(methodToCall) {
  */
 var init = function() {
 	PasswordRuleViolationException.prototype = new scopes.modUtils$exceptions.IllegalArgumentException("Password rule violated");
-}()
+}();
