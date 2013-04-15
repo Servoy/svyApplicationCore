@@ -1,7 +1,7 @@
 allowCreationRelatedRecords:true,
 foreignDataSource:"db:/svy_framework/sec_user",
 items:[
-{foreignColumnName:"user_id",primaryDataProviderID:"globals.user_id",typeid:23,uuid:"788A235C-8FF1-48DF-9376-090E94A84EC4"}
+{foreignColumnName:"user_id",primaryDataProviderID:"scopes.globals.svy_sec_lgn_user_id",typeid:23,uuid:"788A235C-8FF1-48DF-9376-090E94A84EC4"}
 ],
 name:"_to_sec_user$user_id",
 primaryDataSource:"db:/svy_framework/sec_user",
