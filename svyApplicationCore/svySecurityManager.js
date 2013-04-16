@@ -1239,7 +1239,11 @@ function User(userRecord) {
         	fs.setAdminLevel(level, userRecord);
         },
         get: function () {
-            return userRecord.admin_level;
+        	if (!userRecord.admin_level) {
+        		return ADMIN_LEVEL.NONE;
+        	} else {
+        		return userRecord.admin_level;
+        	}
         }
     });	
 	
