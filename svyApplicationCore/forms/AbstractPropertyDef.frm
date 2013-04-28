@@ -10,5 +10,6 @@ name:"AbstractPropertyDef",
 navigatorID:"-1",
 showInMenu:true,
 size:"400,100",
+styleName:"svyPropertyEditor",
 typeid:3,
 uuid:"7AA6A0C7-10DF-47F4-88DD-590A4D6837A3"

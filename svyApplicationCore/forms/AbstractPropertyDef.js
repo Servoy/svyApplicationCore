@@ -44,8 +44,8 @@ var propertyNames;
 function onDataChangeValue(oldValue, newValue, event, propertyName) {
 	if (!propertyName) {
 		var runtimeElement = forms[event.getFormName()].elements[event.getElementName()];
-		if ("dataProviderID" in runtimeElement) {
-			propertyName = runtimeElement["dataProviderID"];
+		if ("getDataProviderID" in runtimeElement) {
+			propertyName = runtimeElement["getDataProviderID"]();
 		}
 	}
 	if (!propertyName) {
@@ -91,7 +91,10 @@ function getPropertyNames() {
  * 
  * Typically, in this method the adminLevel and the property names should be set
  * 
+ * @param {Number} propertyEditorAdminLevel the admin level of the editor calling this form
+ * @param {String} styleClass the style name used by the propertyEditor that called this form
+ * 
  * @abstract
  * @properties={typeid:24,uuid:"CC35C781-AC7F-463B-83C3-B3B8FB6E4239"}
  */
-function initPropertyForm() {}
+function initPropertyForm(propertyEditorAdminLevel, styleClass) {}
