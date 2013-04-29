@@ -1,6 +1,7 @@
 allowCreationRelatedRecords:true,
 deleteRelatedRecords:true,
 foreignDataSource:"db:/svy_framework/sec_user_login_attempt",
+initialSort:"attempt_datetime desc",
 items:[
 {foreignColumnName:"user_id",primaryDataProviderID:"user_id",typeid:23,uuid:"0CC8C127-1D8A-4A7A-AFE3-FCF7CFEE49EF"}
 ],
