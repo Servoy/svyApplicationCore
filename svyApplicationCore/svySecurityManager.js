@@ -308,6 +308,61 @@ function getModuleByID(moduleID){
 }
 
 /**
+ * Returns the Module with the given name or null if not found
+ * 
+ * @param {String} moduleName
+ * 
+ * @return {Module} module
+ * 
+ * @author patrick
+ * @since 17.04.2013
+ *
+ * @properties={typeid:24,uuid:"E5197BB9-9AEF-490F-AE29-1D6342387ED7"}
+ */
+function getModule(moduleName) {
+	if (!moduleName) {
+		return null;
+	}
+	/** @type {QBSelect<db:/svy_framework/sec_module>} */
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_module");
+	query.result.addPk();
+	query.where.add(query.columns.name.eq(moduleName));
+	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
+	var fs = databaseManager.getFoundSet(query);
+	if (utils.hasRecords(fs)) {
+		return new Module(fs.getSelectedRecord());
+	}
+	return null;
+}
+
+
+
+/**
+ * Returns an array with all modules
+ * 
+ * @return {Array<Module>} modules
+ * 
+ * @author patrick
+ * @since 17.04.2013
+ * 
+ * @properties={typeid:24,uuid:"58E81012-52E2-42F3-A906-A96877854770"}
+ */
+function getModules() {
+	/** @type {Array<Module>} */
+	var result = new Array();
+	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */	
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_module");
+	fs.loadAllRecords();
+	if (utils.hasRecords(fs)) {
+		for (var i = 1; i <= fs.getSize(); i++) {
+			var moduleRecord = fs.getRecord(i);
+			result.push(new Module(moduleRecord));
+		}
+	}
+	return result;
+}
+
+/**
  * Returns the organization with the given UUID
  * 
  * @param {UUID|String} organizationId
@@ -789,7 +844,7 @@ function createUser(userName, password, owner, organization) {
  * @properties={typeid:24,uuid:"A195364D-B164-4948-8476-16D4D42C68E4"}
  */
 function createUserLogin(userId, attemptSuccessful, reasonUnsuccessful, reasonIncludeTimespan, frameworkDB) {
-	if (!userId || !attemptSuccessful || !frameworkDB) {
+	if (!userId || !frameworkDB) {
 		return null;
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_user_login_attempt>} */
@@ -2293,6 +2348,21 @@ function Owner(ownerRecord) {
 	}
 	
 	/**
+	 * Returns all owner modules of this owner
+	 * 
+	 * @return {Array<OwnerModule>}
+	 */
+	this.getOwnerModules = function() {
+		/** @type {Array<OwnerModule>} */
+		var result = new Array();
+		var fs = ownerRecord.sec_owner_to_sec_owner_in_module;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			result.push(new OwnerModule(fs.getRecord(i)));
+		}
+		return result;
+	}
+	
+	/**
 	 * Returns all active modules of this owner
 	 * 
 	 * @return {Array<Module>}
@@ -2308,6 +2378,96 @@ function Owner(ownerRecord) {
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * Adds a module to this owner
+	 * 
+	 * @param {Module} module the module to add
+	 * @param {Date} startDate the date from which this module is active
+	 * @param {Date} [endDate] optional date until this module is active
+	 * 
+	 * @return {OwnerModule} ownerModule
+	 */
+	this.addModule = function(module, startDate, endDate) {
+		var fs = ownerRecord.sec_owner_to_sec_owner_in_module;
+		var ownerInModuleRecord;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			ownerInModuleRecord = fs.getRecord(i);
+			if (ownerInModuleRecord.module_id == module.id) {
+				return new OwnerModule(ownerInModuleRecord);
+			}
+		}
+		ownerInModuleRecord = fs.getRecord(fs.newRecord());
+		ownerInModuleRecord.module_id = module.id;
+		ownerInModuleRecord.start_date = startDate;
+		if (endDate && endDate > startDate) {
+			ownerInModuleRecord.end_date = endDate;
+		}
+		
+		return new OwnerModule(ownerInModuleRecord);
+	}
+	
+	/**
+	 * Returns true if the owner has the given Module or the module with the given name
+	 * 
+	 * @param {String|Module} module
+	 * 
+	 * @return {Boolean} hasModule
+	 */
+	this.hasModule = function(module) {
+		var moduleId;
+		if (module instanceof Module) {
+			moduleId = module.id;
+		} else if (module instanceof String) {
+			var moduleObj = getModule(module);
+			if (!moduleObj) {
+				return false;
+			}
+			moduleId = moduleObj.id;
+		}
+		var fs = ownerRecord.sec_owner_to_sec_owner_in_module;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			var ownerInModuleRecord = fs.getRecord(i);
+			if (ownerInModuleRecord.module_id == moduleId) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Removes the given module from this owner
+	 * 
+	 * @param {Module|OwnerModule} moduleToRemove the module or ownerModule to remove
+	 * 
+	 * @return {Boolean} success
+	 */
+	this.removeModule = function(moduleToRemove) {
+		if (!moduleToRemove || !(moduleToRemove instanceof Module || moduleToRemove instanceof OwnerModule)) {
+			return false;
+		}
+		var moduleId;
+		if (moduleToRemove instanceof Module) {
+			/** @type {Module} */
+			var moduleObj = moduleToRemove;
+			moduleId = moduleObj.id;
+		} else {
+			/** @type {OwnerModule} */
+			var ownerModuleObj = moduleToRemove;
+			moduleId = ownerModuleObj.moduleId;
+		}
+		var fs = ownerRecord.sec_owner_to_sec_owner_in_module;
+		var ownerInModuleRecord;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			ownerInModuleRecord = fs.getRecord(i);
+			if (ownerInModuleRecord.module_id == moduleId) {
+				fs.deleteRecord(ownerInModuleRecord);
+				databaseManager.saveData(fs);
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
@@ -2519,6 +2679,152 @@ function Owner(ownerRecord) {
 }
 
 /**
+ * Wrapper class for db:/svy_framework/sec_owner_in_module record
+ * 
+ * @param {JSRecord<db:/svy_framework/sec_owner_in_module>} ownerInModuleRecord
+ * 
+ * @constructor 
+ * @private 
+ *
+ * @properties={typeid:24,uuid:"DCCBC9E3-1683-413A-BA6D-08D4DD1D393B"}
+ */
+function OwnerModule(ownerInModuleRecord) {
+	if (!ownerInModuleRecord || !(ownerInModuleRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(ownerInModuleRecord.getDataSource()).toLowerCase() != "sec_owner_in_module") {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("OwnerModule constructor requires a sec_owner_in_module record");
+	}
+	
+	/**
+	 * The ownerModule ID
+	 * @type {UUID}
+	 */
+	this.id = ownerInModuleRecord.owner_in_module_id;
+	
+	/**
+	 * The module ID
+	 * @type {UUID}
+	 */
+	this.moduleId = ownerInModuleRecord.module_id;
+	
+	/**
+	 * The owner ID
+	 * @type {UUID}
+	 */
+	this.ownerId = ownerInModuleRecord.owner_id;
+	
+	/**
+	 * The start date after which this module is valid for the owner
+	 * @type {Date}
+	 */
+	this.startDate = ownerInModuleRecord.start_date;
+	
+	/**
+	 * The end date until this module is valid for the owner
+	 * @type {Date}
+	 */
+	this.endDate = ownerInModuleRecord.end_date;	
+	
+	/**
+	 * Returns true if this Module is active
+	 * @return {Boolean} isActive
+	 */
+	this.isActive = function() {
+		var today = new Date();
+		if (ownerInModuleRecord.start_date && ownerInModuleRecord.start_date > today) {
+			return false;
+		}
+		if (ownerInModuleRecord.end_date && ownerInModuleRecord.end_date <= today) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Returns the Module object
+	 * @return {Module} module
+	 */
+	this.getModule = function() {
+		if (utils.hasRecords(ownerInModuleRecord.sec_owner_in_module_to_sec_module)) {
+			return new Module(ownerInModuleRecord.sec_owner_in_module_to_sec_module.getRecord(1));
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the Owner object
+	 * @return {Owner} owner
+	 */
+	this.getOwner = function() {
+		if (utils.hasRecords(ownerInModuleRecord.sec_owner_in_module_to_sec_owner)) {
+			return new Owner(ownerInModuleRecord.sec_owner_in_module_to_sec_owner.getRecord(1));
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Returns the security key associated with this Module
+	 * 
+	 * @return {Key}
+	 */
+	this.getKey = function() {
+		if (utils.hasRecords(ownerInModuleRecord.sec_owner_in_module_to_sec_security_key$not_system)) {
+			var keyRecord = ownerInModuleRecord.sec_owner_in_module_to_sec_security_key$not_system.getRecord(1);
+			return new Key(keyRecord.security_key_id, keyRecord.name, keyRecord.description, keyRecord.owner_id, keyRecord.module_id);
+		} else {
+			return null;
+		}
+	}
+	
+	Object.defineProperty(this, 'id', {
+		get: function() {
+			return ownerInModuleRecord.owner_in_module_id;
+		}
+	});
+	
+	Object.defineProperty(this, 'moduleId', {
+		get: function() {
+			return ownerInModuleRecord.module_id;
+		}
+	});	
+	
+	Object.defineProperty(this, 'ownerId', {
+		get: function() {
+			return ownerInModuleRecord.owner_id;
+		}
+	});	
+	
+	Object.defineProperty(this, 'startDate', {
+		get: function() {
+			return ownerInModuleRecord.start_date;
+		},
+		set: function(x) {
+			if (x && x instanceof Date && (ownerInModuleRecord.end_date && x >= ownerInModuleRecord.end_date)) {
+				return;
+			} else if (x && x instanceof Date) {
+				ownerInModuleRecord.start_date = x;
+				databaseManager.saveData(ownerInModuleRecord);
+			}
+		}
+	});		
+	
+	Object.defineProperty(this, 'endDate', {
+		get: function() {
+			return ownerInModuleRecord.end_date;
+		},
+		set: function(x) {
+			if (x && !(x >= ownerInModuleRecord.start_date)) {
+				return;
+			}
+			ownerInModuleRecord.end_date = x;
+			databaseManager.saveData(ownerInModuleRecord);
+		}
+	});
+	
+	Object.seal(this);
+}
+
+/**
  * Wrapper class for db:/svy_framework/sec_module record
  * 
  * @param {JSRecord<db:/svy_framework/sec_module>} moduleRecord
@@ -2539,8 +2845,10 @@ function Module(moduleRecord){
 	 */
 	this.id = moduleRecord.module_id;
 	
-	Object.defineProperty(this,'id',{
-		get:function(){return moduleRecord.module_id;}
+	Object.defineProperty(this, 'id', {
+		get: function() {
+			return moduleRecord.module_id;
+		}
 	});
 	
 	/**
@@ -2549,14 +2857,16 @@ function Module(moduleRecord){
 	 */
 	this.name = moduleRecord.name;
 	
-	Object.defineProperty(this,'name',{
-		get:function(){return moduleRecord.name},
-		set:function(x){
-			if(!x){
+	Object.defineProperty(this, 'name', {
+		get: function() {
+			return moduleRecord.name
+		},
+		set: function(x) {
+			if (!x) {
 				throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
 			}
-			if(!scopes.modUtils.isValueUnique(moduleRecord,'name',x)){
-				throw new scopes.modUtils$data.ValueNotUniqueException(null, moduleRecord,'name', x);
+			if (!scopes.modUtils.isValueUnique(moduleRecord, 'name', x)) {
+				throw new scopes.modUtils$data.ValueNotUniqueException(null, moduleRecord, 'name', x);
 			}
 			moduleRecord.name = x;
 			save(moduleRecord);
@@ -2569,9 +2879,11 @@ function Module(moduleRecord){
 	 */
 	this.description = moduleRecord.description;
 	
-	Object.defineProperty(this,'description',{
-		get:function(){return moduleRecord.description},
-		set:function(x){
+	Object.defineProperty(this, 'description', {
+		get: function() {
+			return moduleRecord.description
+		},
+		set: function(x) {
 			moduleRecord.description = x;
 			save(moduleRecord);
 		}
@@ -2593,6 +2905,61 @@ function Module(moduleRecord){
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * Adds an owner to this module
+	 * 
+	 * @param {Owner} owner the owner to add
+	 * @param {Date} startDate the date from which this module is active
+	 * @param {Date} [endDate] optional date until this module is active
+	 * 
+	 * @return {OwnerModule} ownerModule
+	 */
+	this.addOwner = function(owner, startDate, endDate) {
+		if (!owner || !(owner instanceof Owner) || !startDate) {
+			return null;
+		}
+		var fs = moduleRecord.sec_module_to_sec_owner_in_module;
+		var ownerInModuleRecord;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			ownerInModuleRecord = fs.getRecord(i);
+			if (ownerInModuleRecord.owner_id == owner.ownerId) {
+				return new OwnerModule(ownerInModuleRecord);
+			}
+		}
+		ownerInModuleRecord = fs.getRecord(fs.newRecord());
+		ownerInModuleRecord.owner_id = owner.ownerId;
+		ownerInModuleRecord.start_date = startDate;
+		if (endDate && endDate > startDate) {
+			ownerInModuleRecord.end_date = endDate;
+		}
+		databaseManager.saveData(ownerInModuleRecord);
+		return new OwnerModule(ownerInModuleRecord);
+	}
+	
+	/**
+	 * Removes the given owner from this module
+	 * 
+	 * @param {Owner} ownerToRemove the owner to remove
+	 * 
+	 * @return {Boolean} success
+	 */
+	this.removeOwner = function(ownerToRemove) {
+		if (!ownerToRemove || !(ownerToRemove instanceof Owner)) {
+			return false;
+		}
+		var fs = moduleRecord.sec_module_to_sec_owner_in_module;
+		var ownerInModuleRecord;
+		for (var i = 1; i <= fs.getSize(); i++) {
+			ownerInModuleRecord = fs.getRecord(i);
+			if (ownerInModuleRecord.module_id == ownerToRemove.ownerId) {
+				fs.deleteRecord(ownerInModuleRecord);
+				databaseManager.saveData(fs);
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	Object.seal(this);
@@ -3582,6 +3949,36 @@ function getRuntimeKey(key) {
 		filtered = runtimeKeys.filter(filterByName);
 	}
 	return filtered.length > 0 ? filtered[0] : null;
+}
+
+/**
+ * Returns the last registered login attempt of the User with the given ID
+ * 
+ * @param {String|UUID} userId
+ * @param {String} [frameworkDb] the name of the framework database
+ * 
+ * @return {Date} lastLoginAttempt
+ *
+ * @properties={typeid:24,uuid:"7A1C6F5A-D4DE-4C14-BC7D-326CE1557AB8"}
+ */
+function getLastLoginAttempt(userId, frameworkDb) {
+	if (!userId) {
+		return null;
+	}
+	if (!frameworkDb) {
+		frameworkDb = globals.nav_db_framework;
+	}
+	/** @type {QBSelect<db:/svy_framework/sec_user_login_attempt>} */
+	var query = databaseManager.createSelect("db:/" + frameworkDb + "/sec_user_login_attempt");
+	query.result.add(query.columns.attempt_datetime.max);
+	query.where.add(query.columns.user_id.eq(userId.toString()));
+	
+	var dataset = databaseManager.getDataSetByQuery(query, 1);
+	if (dataset && dataset.getMaxRowIndex() > 0) {
+		return dataset.getValue(1,1);
+	} else {
+		return null;
+	}
 }
 
 /**
