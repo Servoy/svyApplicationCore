@@ -1,4 +1,6 @@
 /**
+ * @deprecated Will be removed in version 5. Use {@link #scopes#svyLogin#loginProperties} instead
+ * 
  * @properties={typeid:35,uuid:"98104D19-F6CF-4807-AC3D-CAFFB56F3F16",variableType:-4}
  */
 var svy_lgn_properties = new Object();
