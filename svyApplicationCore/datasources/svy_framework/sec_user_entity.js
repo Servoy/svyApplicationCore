@@ -468,6 +468,7 @@ function unlockUser(record)
 	}
 	record.user_locked = null;
 	record.user_locked_datetime = null;
+	record.times_wrong_login = null;
 	return databaseManager.saveData(record);
 }
 
