@@ -3336,6 +3336,7 @@ function filterOrganization() {
 	}
 	
 	// filter i18n
+//	databaseManager.addTableFilterParam(navDatabase, "i18n_messages", "i18n_organization_id", "IN", (organizationId, null));
 	i18n.setI18NMessagesFilter("i18n_organization_id", organizationId);
 }
 
@@ -4225,7 +4226,7 @@ function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
 	// is not sent to the Smart client and cannot be used
 	// TODO: Remove this silly workaround when 6.1.5 is released
 	var versionNum = getServoyVersionNumber();
-	if (versionNum > 6104 || pbkdf2IterationVersion > 0) {
+	if (versionNum > 6104 && pbkdf2IterationVersion > 0) {
 		var iterations = PBKDF2_CURRENT_ITERATION;
 		if (pbkdf2IterationVersion && PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion]) {
 			iterations = PBKDF2_ITERATIONS["VERSION_" + pbkdf2IterationVersion];
