@@ -8,7 +8,6 @@ uuid:"C9DF3230-1018-423A-B5A9-47946615C598"
 ],
 name:"AbstractPropertyDef",
 navigatorID:"-1",
-showInMenu:true,
 size:"400,100",
 styleName:"svyPropertyEditor",
 typeid:3,
