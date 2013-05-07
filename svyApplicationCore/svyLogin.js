@@ -161,6 +161,25 @@ function AuthenticationObject(userName, password) {
 	 */
 	this.exception = null;
 	
+	/**
+	 * Marks this login attempt as failed and sets the error message to the given reason
+	 * 
+	 * @param {String} reason
+	 */
+	this.setLoginFailed = function(reason) {
+		this.error = reason;
+		this.loginSuccessful = false;
+	}
+	
+	/**
+	 * Marks this login attempt as successful and clears all errors
+	 */
+	this.setLoginSuccessful = function() {
+		this.error = null;
+		this.loginSuccessful = true;
+		this.exception = null;
+	}
+	
 	Object.seal(this);
 	
 }
