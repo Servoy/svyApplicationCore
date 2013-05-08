@@ -3752,6 +3752,7 @@ function loadSecurityKeys(user, organization) {
 	userOrgId = userOrgId.toString();
 	
 	var serverName = globals.nav_db_framework;
+	var currentDate = application.getServerTimeStamp();
 	
 	/* 
 	 * 
@@ -3803,9 +3804,9 @@ function loadSecurityKeys(user, organization) {
 			)\
 			AND NOT EXISTS (\
 				SELECT	* \
-				FROM	sec_user_right surd2 JOIN sec_user_in_group sug2 \
-				ON	surd.security_key_id = surd2.security_key_id \
-				WHERE	(\
+				FROM sec_user_right surd2, sec_user_in_group sug2 \
+				WHERE surd.security_key_id = surd2.security_key_id \
+				AND (\
 					surd2.user_org_id = ? \
 					OR (\
 						surd2.group_id = sug2.group_id\
@@ -3849,13 +3850,13 @@ function loadSecurityKeys(user, organization) {
 	var queryArgs = new Array();
 	queryArgs[0] = userOrgId;
 	queryArgs[1] = ownerId;
-	queryArgs[2] = application.getServerTimeStamp();
-	queryArgs[3] = application.getServerTimeStamp();
+	queryArgs[2] = currentDate;
+	queryArgs[3] = currentDate;
 	queryArgs[4] = userOrgId;
 	queryArgs[5] = userOrgId;
 	queryArgs[6] = userOrgId;
-	queryArgs[7] = application.getServerTimeStamp();
-	queryArgs[8] = application.getServerTimeStamp();
+	queryArgs[7] = currentDate;
+	queryArgs[8] = currentDate;
 	queryArgs[9] = ownerId;
 	queryArgs[10] = userOrgId;
 	queryArgs[11] = userOrgId;
@@ -3867,10 +3868,18 @@ function loadSecurityKeys(user, organization) {
 	keyFs.loadRecords(dataset);
 	
 	var result = new Array();
+	var debugOutput = new Array();
 	for (var i = 1; i <= keyFs.getSize(); i++) {
 		var record = keyFs.getRecord(i);
+		debugOutput.push(record.name);
 		var key = new Key(record.security_key_id, record.name, record.description, record.owner_id, record.module_id);
 		result.push(key);
+	}
+	debugOutput.sort();
+	application.output("Found security keys: " + debugOutput.join("; "), LOGGINGLEVEL.DEBUG);
+	
+	if (securityKeys == null || securityKeys.length == 0) {
+		securityKeys = result;
 	}
 	
 	return result;
