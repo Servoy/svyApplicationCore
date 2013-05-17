@@ -3410,25 +3410,18 @@ function filterTables() {
  * @properties={typeid:24,uuid:"FBDE84EE-E1A2-48B3-ABFC-EFC216A2A77B"}
  */
 function setSecuritySettings() {
-	var keyIds = getSecurityKeysForInQuery();
+	var keyIds = getSecurityKeysIds();
 	
-	// query all the element right from the sec_tables
-	var query = ' SELECT \
-						se.servoy_element_id, \
-						(SELECT sum(se_fe.flag_editable) \
-						FROM 		sec_element se_fe \
-						WHERE 		se_fe.security_key_id IN (' + keyIds + ') and \
-									se.servoy_element_id =  se_fe.servoy_element_id \
-						GROUP BY 	se_fe.servoy_element_id), \
-						(SELECT 	sum(se_se.flag_visible) \
-						FROM 		sec_element se_se \
-						WHERE 		se_se.security_key_id IN (' + keyIds + ') and \
-									se.servoy_element_id =  se_se.servoy_element_id \
-						GROUP BY	se_se.servoy_element_id) \
-						FROM 		sec_element se\
-   						GROUP BY 	se.servoy_element_id'
+	// query all the element right from sec_element
+	/** @type {QBSelect<db:/svy_framework/sec_element>} */
+	var elementQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_element");
+	elementQuery.result.add(elementQuery.columns.element_id);
+	elementQuery.result.add(elementQuery.columns.flag_editable.sum);
+	elementQuery.result.add(elementQuery.columns.flag_visible.sum);
+	elementQuery.where.add(elementQuery.columns.security_key_id.isin(keyIds))
+	elementQuery.groupBy.add(elementQuery.columns.element_id);
 
-	var dataset = databaseManager.getDataSetByQuery(globals.nav_db_framework, query, null, -1);
+	var dataset = databaseManager.getDataSetByQuery(elementQuery, -1);
 	
 	// Create dataset to be used for security.setSecuritySettings(dataset)
 	var securitySettingsDataset = databaseManager.createEmptyDataSet(0, ["id", "flags"]);
@@ -3450,21 +3443,22 @@ function setSecuritySettings() {
 		securitySettingsDataset.addRow(rowData);
 	}
 
-	// get the table security  // 1 = READ / 2 = INSERT / 4 = UPDATE / 8 = DELETE / 16 = TRACKING;
-	query = ' SELECT \
-									st.server_name, \
-									st.table_name, \
-									(max(st.flag_read) * 1) ,\
-									(max(st.flag_insert) * 2) , \
-									(max(st.flag_update) * 4),\
-									(max(st.flag_delete) * 8) , \
-									(max(st.flag_tracking) * 16)\
-						FROM 		sec_table st \
-						WHERE 		st.security_key_id IN (' + keyIds + ') \
-						GROUP BY	st.server_name, st.table_name\
-						ORDER BY	st.table_name desc '
+	// get the table security
+		/** @type {QBSelect<db:/svy_framework/sec_table>} */
+	var tableQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_table");
+	tableQuery.result.add(tableQuery.columns.server_name);
+	tableQuery.result.add(tableQuery.columns.table_name);
+	tableQuery.result.add(tableQuery.columns.flag_read.max.multiply(JSSecurity.READ));
+	tableQuery.result.add(tableQuery.columns.flag_insert.max.multiply(JSSecurity.INSERT));
+	tableQuery.result.add(tableQuery.columns.flag_update.max.multiply(JSSecurity.UPDATE));
+	tableQuery.result.add(tableQuery.columns.flag_delete.max.multiply(JSSecurity.DELETE));
+	tableQuery.result.add(tableQuery.columns.flag_tracking.max.multiply(JSSecurity.TRACKING));
+	tableQuery.where.add(tableQuery.columns.security_key_id.isin(keyIds));
+	tableQuery.groupBy.add(tableQuery.columns.server_name);
+	tableQuery.groupBy.add(tableQuery.columns.table_name);
+	tableQuery.sort.add(tableQuery.columns.table_name.desc);
 
-	dataset = databaseManager.getDataSetByQuery(globals.nav_db_framework, query, null, -1);
+	dataset = databaseManager.getDataSetByQuery(tableQuery, -1);
 
 	// convert the rights to the form required by security.setSecuritySettings
 	var tableSecurityObject = new Object()
