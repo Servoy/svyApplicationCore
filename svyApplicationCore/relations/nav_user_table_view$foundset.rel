@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/nav_user_table_view",
+joinType:1,
+name:"nav_user_table_view$foundset",
+primaryDataSource:"db:/svy_framework/nav_user_table_view",
+typeid:22,
+uuid:"D0DA6481-D3C8-44D3-8336-FE6FEA725290"

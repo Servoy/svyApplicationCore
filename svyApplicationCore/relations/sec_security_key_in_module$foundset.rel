@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/sec_security_key",
+joinType:1,
+name:"sec_security_key_in_module$foundset",
+primaryDataSource:"db:/svy_framework/sec_security_key",
+typeid:22,
+uuid:"948191D8-052B-4138-A215-313FDB7BDF69"

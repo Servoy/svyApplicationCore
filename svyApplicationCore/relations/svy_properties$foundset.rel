@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/svy_properties",
+joinType:1,
+name:"svy_properties$foundset",
+primaryDataSource:"db:/svy_framework/svy_properties",
+typeid:22,
+uuid:"E5DC3041-9BF5-45DF-81C0-0DD23717F1A8"

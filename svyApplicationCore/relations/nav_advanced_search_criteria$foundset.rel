@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/nav_advanced_search_criteria",
+joinType:1,
+name:"nav_advanced_search_criteria$foundset",
+primaryDataSource:"db:/svy_framework/nav_advanced_search_criteria",
+typeid:22,
+uuid:"7B8AD4AF-3379-40E1-B2AA-944AFCEBED4A"

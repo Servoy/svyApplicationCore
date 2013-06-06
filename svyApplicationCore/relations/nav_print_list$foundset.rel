@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/nav_print_list",
+joinType:1,
+name:"nav_print_list$foundset",
+primaryDataSource:"db:/svy_framework/nav_print_list",
+typeid:22,
+uuid:"F37B3876-436F-4C92-B4DC-BDE9C2EBE7FD"

@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/sec_user_table_properties",
+joinType:1,
+name:"sec_user_table_properties$foundset",
+primaryDataSource:"db:/svy_framework/sec_user_table_properties",
+typeid:22,
+uuid:"D0A078EE-3936-42DF-B04B-101A3FD35161"

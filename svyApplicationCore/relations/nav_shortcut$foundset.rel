@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/nav_shortcut",
+joinType:1,
+name:"nav_shortcut$foundset",
+primaryDataSource:"db:/svy_framework/nav_shortcut",
+typeid:22,
+uuid:"7529F2DD-8FB2-419A-BCB9-B14D5590E35D"

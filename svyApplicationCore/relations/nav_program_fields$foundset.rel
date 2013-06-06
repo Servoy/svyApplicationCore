@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/nav_program_fields",
+joinType:1,
+name:"nav_program_fields$foundset",
+primaryDataSource:"db:/svy_framework/nav_program_fields",
+typeid:22,
+uuid:"4186A075-BCA0-4B76-95F1-FB971501E574"

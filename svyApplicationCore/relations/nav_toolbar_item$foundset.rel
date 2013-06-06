@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/nav_toolbar_item",
+joinType:1,
+name:"nav_toolbar_item$foundset",
+primaryDataSource:"db:/svy_framework/nav_toolbar_item",
+typeid:22,
+uuid:"42F477EE-DB60-4B27-A8A1-EDEFD43C15C1"

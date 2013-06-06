@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/sec_user_org",
+joinType:1,
+name:"sec_user_org$foundset",
+primaryDataSource:"db:/svy_framework/sec_user_org",
+typeid:22,
+uuid:"8D111BBF-3F97-4BC4-A949-F3A658807B33"
