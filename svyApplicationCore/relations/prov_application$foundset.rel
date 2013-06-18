@@ -1,0 +1,7 @@
+allowCreationRelatedRecords:true,
+foreignDataSource:"db:/svy_framework/prov_application",
+joinType:1,
+name:"prov_application$foundset",
+primaryDataSource:"db:/svy_framework/prov_application",
+typeid:22,
+uuid:"C51050B6-1E8F-4C6E-AD16-307CF3C1A233"
