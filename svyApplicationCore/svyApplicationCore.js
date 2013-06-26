@@ -1,3 +1,30 @@
+/**
+ * Enumeration of event type constants for forms.
+ * Listeners can be attached to form events
+ * 
+ * @public 
+ * @enum
+ * @see forms.svyBase.addListener
+ * 
+ * @properties={typeid:35,uuid:"28D14430-2DF3-4EE4-A975-6C4DE2530390",variableType:-4}
+ */
+var FORM_EVENT_TYPES = {
+
+	DRAG:'drag',
+	DRAG_END:'drag-end',
+	DRAG_OVER:'drag-over',
+	DROP:'drop',
+	ELEMENT_FOCUS_GAINED:'element-focus-lost',
+	ELEMENT_FOCUS_LOST:'element-focus-lost',
+	HIDE:'hide',
+	RECORD_EDIT_START:'record-edit-start',
+	RECORD_EDIT_STOP:'record-edit-stop',
+	RECORD_SELECTION:'record-selection',
+	RESIZE:'resize',
+	SHOW:'show',
+	UNLOAD:'unload'
+};
+
 /*
  * Core Application logic.
  * Provides:
