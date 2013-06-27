@@ -20,7 +20,7 @@ var eventTypes = scopes.svyApplicationCore.FORM_EVENT_TYPES;
  * 
  * This base implementation does nothing to the form
  * 
- * @public
+ * @protected
  * @author Sean
  * @properties={typeid:24,uuid:"811259CD-C45B-495E-9D64-2A9F3D97F038"}
  */
