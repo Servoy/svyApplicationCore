@@ -1,11 +1,3 @@
-/*
- * Questions
- * What is the logic to call updateUI or not from events?
- * What is the logic in which order to call updateUI and fireEvent?
- * Should updateUI be public?
- * How to handle events that are to return something?
- */
-
 /**
  * Import Event Manager for convenience
  * @private 
@@ -39,33 +31,26 @@ function updateUI(){
 /**
  * Add callback handler for form-based events.
  * Callback receives the forwarded event as an argument
+ * 
  * @public 
  * @author Sean
  * 
  * @param {Function} listener
- * @param {String} [eventType] register for all events when null 
+ * @param {String} eventType
  * 
  * @see scopes.svyApplicationCore.FORM_EVENT_TYPES
  * 
  * @properties={typeid:24,uuid:"D8096A41-2CA9-4D4B-BE60-8302D0CE6676"}
  */
 function addListener(listener, eventType){
-
-	// register for all events when null
-	if(!eventType){ //Do we want this?
-		for(var e in eventTypes){
-			eventManager.addListener(this,eventTypes[e],listener);
-		}
-	} else { //	register for single event
-		eventManager.addListener(this,eventType,listener);
-	}
+	eventManager.addListener(this,eventType,listener);	
 }
 
 /**
  * Remove a listener for form-based events
  * 
  * @param {Function} listener to be removed
- * @param {String} [eventType] remove for all events when null 
+ * @param {String} eventType
  *
  * @public 
  * @see scopes.svyApplicationCore.FORM_EVENT_TYPES
@@ -74,23 +59,8 @@ function addListener(listener, eventType){
  * @properties={typeid:24,uuid:"3F1F7F10-0595-4638-A726-17B937866047"}
  */
 function removeListener(listener, eventType){
-	
-	// de-register for all events when null
-	if(!eventType){
-		for(var e in eventTypes){
-			eventManager.removeListener(this,eventTypes[e],listener);
-		}
-	//	de-register for single event
-	} else {
-		eventManager.removeListener(this,eventType,listener);
-	}
+	eventManager.removeListener(this,eventType,listener);
 }
-
-/*
- * *********************************
- * Begin default Form event bindings
- * *********************************  
- */
 
 /**
  * Handle start of a drag, it can set the data that should be transfered and should return a constant which dragndrop mode/modes is/are supported.
@@ -113,7 +83,7 @@ function removeListener(listener, eventType){
 function onDrag(event) {
 	fireEvent(eventTypes.DRAG, event);
 	return DRAGNDROP.MOVE;
-//	return DRAGNDROP.NONE //?
+//	return DRAGNDROP.NONE
 }
 
 /**
@@ -300,7 +270,7 @@ function onResize(event) {
  */
 function onShow(firstShow, event) {
 	updateUI();
-	fireEvent(eventTypes.SHOW, event); //Need to pass in the firstShow param somehow?
+	fireEvent(eventTypes.SHOW, event);
 }
 
 /**
