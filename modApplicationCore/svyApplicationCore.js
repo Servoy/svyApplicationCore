@@ -15,6 +15,7 @@ var FORM_EVENT_TYPES = { //Some of these are backed up by constants on JS(DND)Ev
 	DROP:'drop',
 	ELEMENT_FOCUS_GAINED:'element-focus-lost',
 	ELEMENT_FOCUS_LOST:'element-focus-lost',
+	LOAD:'load',
 	HIDE:'hide',
 	RECORD_EDIT_START:'record-edit-start',
 	RECORD_EDIT_STOP:'record-edit-stop',

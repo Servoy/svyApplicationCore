@@ -81,9 +81,9 @@ function removeListener(listener, eventType){
  * @properties={typeid:24,uuid:"BD554093-A048-46B8-83C8-D9F62E4962B5"}
  */
 function onDrag(event) {
+	updateUI();
 	fireEvent(eventTypes.DRAG, event);
-	return DRAGNDROP.MOVE;
-//	return DRAGNDROP.NONE
+	return DRAGNDROP.NONE
 }
 
 /**
@@ -96,6 +96,7 @@ function onDrag(event) {
  * @properties={typeid:24,uuid:"1E4919FD-83D6-4CF9-9AA4-82286B0E3C0D"}
  */
 function onDragEnd(event) {
+	updateUI();
 	fireEvent(eventTypes.DRAG_END, event);
 }
 
@@ -113,6 +114,7 @@ function onDragEnd(event) {
  * @properties={typeid:24,uuid:"EBC2F97A-EE17-4A12-8CB2-8DF7C48FF192"}
  */
 function onDragOver(event) {
+	updateUI();
 	fireEvent(eventTypes.DRAG_OVER, event);
 	return true;
 }
@@ -130,6 +132,7 @@ function onDragOver(event) {
  * @properties={typeid:24,uuid:"DF4DA119-AE68-44D6-984C-3563F6BD47CA"}
  */
 function onDrop(event) {
+	updateUI();
 	fireEvent(eventTypes.DROP, event);
 	return false
 }
@@ -146,6 +149,7 @@ function onDrop(event) {
  * @properties={typeid:24,uuid:"FECD0294-9040-40F5-A40A-AC59C98B6127"}
  */
 function onElementFocusGained(event) {
+	updateUI();
 	fireEvent(eventTypes.ELEMENT_FOCUS_GAINED, event);
 	return true;
 }
@@ -162,6 +166,7 @@ function onElementFocusGained(event) {
  * @properties={typeid:24,uuid:"A75AF1BB-E748-4025-A362-A844C7AA7DC0"}
  */
 function onElementFocusLost(event) {
+	updateUI();
 	fireEvent(eventTypes.ELEMENT_FOCUS_LOST, event);
 	return true
 }
@@ -180,6 +185,20 @@ function onElementFocusLost(event) {
 function onHide(event) {
 	fireEvent(eventTypes.HIDE, event);
 	return true
+}
+
+/**
+ * Callback method when form is (re)loaded.
+ *
+ * @param {JSEvent} event the event that triggered the action
+ *
+ * @protected
+ *
+ * @properties={typeid:24,uuid:"46694C05-A39B-4069-A027-D3A14E1D4212"}
+ */
+function onLoad(event) {
+	//	TODO Add support for a global form (re) loaded event in addition to registered listeners
+	fireEvent(eventTypes.LOAD,event);
 }
 
 /**
@@ -236,8 +255,8 @@ function onRecordEditStop(record, event) {
  * @properties={typeid:24,uuid:"A0CA6456-5EF1-4EE9-B245-95BE346E3FC8"}
  */
 function onRecordSelection(event) {
-	fireEvent(eventTypes.RECORD_SELECTION, event);
 	updateUI();
+	fireEvent(eventTypes.RECORD_SELECTION, event);
 }
 
 /**
