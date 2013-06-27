@@ -1,3 +1,11 @@
+/*
+ * Questions
+ * What is the logic to call updateUI or not from events?
+ * What is the logic in which order to call updateUI and fireEvent?
+ * Should updateUI be public?
+ * How to handle events that are to return something?
+ */
+
 /**
  * Import Event Manager for convenience
  * @private 
@@ -44,16 +52,13 @@ function updateUI(){
 function addListener(listener, eventType){
 
 	// register for all events when null
-	if(!eventType){
+	if(!eventType){ //Do we want this?
 		for(var e in eventTypes){
 			eventManager.addListener(this,eventTypes[e],listener);
 		}
-		
-	//	register for single event
-	} else {
+	} else { //	register for single event
 		eventManager.addListener(this,eventType,listener);
 	}
-	
 }
 
 /**
@@ -75,7 +80,6 @@ function removeListener(listener, eventType){
 		for(var e in eventTypes){
 			eventManager.removeListener(this,eventTypes[e],listener);
 		}
-		
 	//	de-register for single event
 	} else {
 		eventManager.removeListener(this,eventType,listener);
@@ -97,17 +101,19 @@ function removeListener(listener, eventType){
  * DRAGNDROP.MOVE|DRAGNDROP.COPY if a move or copy can happen,
  * DRAGNDROP.NONE if nothing is supported (drag should not start).
  *
+ * @protected
+ * 
  * @param {JSDNDEvent} event the event that triggered the action
  *
  * @returns {Number}
  *
- * @protected
+ * @example 
  * @properties={typeid:24,uuid:"BD554093-A048-46B8-83C8-D9F62E4962B5"}
  */
 function onDrag(event) {
 	fireEvent(eventTypes.DRAG, event);
 	return DRAGNDROP.MOVE;
-//	return DRAGNDROP.NONE
+//	return DRAGNDROP.NONE //?
 }
 
 /**
@@ -294,7 +300,7 @@ function onResize(event) {
  */
 function onShow(firstShow, event) {
 	updateUI();
-	fireEvent(eventTypes.SHOW, event);
+	fireEvent(eventTypes.SHOW, event); //Need to pass in the firstShow param somehow?
 }
 
 /**
@@ -313,9 +319,11 @@ function onUnload(event) {
 /**
  * Convenience method: Fires an event
  * 
+ * @private
+ *  
  * @param {String} eventType
  * @param {*} [data]
- * @private 
+ *  
  * @properties={typeid:24,uuid:"24330B43-0D04-4896-9A33-35D1023E01A9"}
  */
 function fireEvent(eventType, data){

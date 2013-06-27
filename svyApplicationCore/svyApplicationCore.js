@@ -8,8 +8,7 @@
  * 
  * @properties={typeid:35,uuid:"28D14430-2DF3-4EE4-A975-6C4DE2530390",variableType:-4}
  */
-var FORM_EVENT_TYPES = {
-
+var FORM_EVENT_TYPES = { //Some of these are backed up by constants on JS(DND)Event
 	DRAG:'drag',
 	DRAG_END:'drag-end',
 	DRAG_OVER:'drag-over',
