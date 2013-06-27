@@ -1,3 +1,4 @@
+encapsulation:60,
 name:"svyBase",
 navigatorID:"-1",
 onDragEndMethodID:"1E4919FD-83D6-4CF9-9AA4-82286B0E3C0D",
