@@ -6,8 +6,11 @@
  * APPLICATION_MANAGER		= the manager of the application, can create owners<br>
  * DEVELOPER				= has no limitations
  * 
+ * @public 
+ * 
  * @enum
  * @final
+ * 
  * @properties={typeid:35,uuid:"D0A4C4A2-CCFC-45E8-86A3-8A5748045075",variableType:-4}
  */
 var ADMIN_LEVEL = {
@@ -42,6 +45,8 @@ var ADMIN_LEVEL = {
 /**
  * Type of events that are fired from the SecurityManager
  * 
+ * @public
+ * 
  * @enum
  * @final
  * 
@@ -55,6 +60,8 @@ var EVENT_TYPES = {
  * Error codes used by PasswordRuleViolationException<p>
  * 
  * These codes can be used to figure out why a password change failed
+ * 
+ * @public
  * 
  * @enum
  * @final
@@ -89,6 +96,8 @@ var ERROR_CODE = {
  * If the security data is changed from outside of Servoy, the hash is <br>
  * not correct and users can't login anymore. This prevents users from <br>
  * giving themselves more privileges by meddling with the database.
+ * 
+ * @private 
  * 
  * @type {Boolean}
  *
@@ -126,6 +135,8 @@ var PBKDF2_ITERATIONS = {
 /**
  * The version number of the current PBKDF2_ITERATIONS used
  * 
+ * @public
+ * 
  * @type {Number}
  *
  * @properties={typeid:35,uuid:"243CCB52-56AF-44AC-99F1-9AEF89577813",variableType:4}
@@ -134,6 +145,8 @@ var PBKDF2_CURRENT_ITERATION_VERSION = 1;
 
 /**
  * The current PBKDF2 iteration used
+ * 
+ * @public
  * 
  * @type {Number}
  * 
@@ -175,6 +188,8 @@ var runtimeSecurityKeysRemoved = null;
 /**
  * Returns the Application with the given ID or null if not found
  * 
+ * @public 
+ * 
  * @param {String|UUID} applicationID
  * 
  * @return {Application}
@@ -202,6 +217,8 @@ function getApplicationByID(applicationID){
  * Returns the Application with the given name or null if not found<p>
  * 
  * If no application name is given, the current solution name is used
+ * 
+ * @public 
  * 
  * @param {String} [applicationName]
  * 
@@ -231,6 +248,8 @@ function getApplication(applicationName) {
 /**
  * Returns an array with all groups
  * 
+ * @public 
+ * 
  * @return {Array<Group>}
  * 
  * @author patrick
@@ -255,6 +274,8 @@ function getGroups() {
 
 /**
  * Returns the group with the given name
+ * 
+ * @public 
  * 
  * @param {String} groupname
  * @return {Group} group or null if not found
@@ -284,6 +305,8 @@ function getGroup(groupname) {
 /**
  * Gets a Module object by id or null if not found
  * 
+ * @public 
+ * 
  * @param {UUID|String} moduleID
  * 
  * @return {Module} null if not found
@@ -309,6 +332,8 @@ function getModuleByID(moduleID){
 
 /**
  * Returns the Module with the given name or null if not found
+ * 
+ * @public 
  * 
  * @param {String} moduleName
  * 
@@ -340,6 +365,8 @@ function getModule(moduleName) {
 /**
  * Returns an array with all modules
  * 
+ * @public 
+ * 
  * @return {Array<Module>} modules
  * 
  * @author patrick
@@ -364,6 +391,8 @@ function getModules() {
 
 /**
  * Returns the organization with the given UUID
+ * 
+ * @public 
  * 
  * @param {UUID|String} organizationId
  * 
@@ -398,6 +427,8 @@ function getOrganizationById(organizationId) {
  * or the organization of the logged in user if 
  * no name was provided
  * 
+ * @public 
+ * 
  * @param {String} [organization]
  * 
  * @return {Organization} organization
@@ -429,6 +460,8 @@ function getOrganization(organization) {
 /**
  * Returns all organizations as a Organization array
  * 
+ * @public 
+ * 
  * @return {Array<Organization>} organizations
  * 
  * @author patrick
@@ -457,6 +490,8 @@ function getOrganizations() {
 /**
  * Returns an Owner array of all Owners
  * 
+ * @public 
+ * 
  * @return {Array<Owner>} owners
  * 
  * @author patrick
@@ -481,6 +516,8 @@ function getOwners() {
  * Returns the owner with the given name 
  * or the owner of the logged in user if 
  * no name was provided
+ * 
+ * @public 
  * 
  * @param {String} [owner]
  * 
@@ -512,6 +549,8 @@ function getOwner(owner) {
 /**
  * Returns the owner with the given UUID
  * 
+ * @public 
+ * 
  * @param {UUID|String} ownerId
  * 
  * @return {Owner} owner
@@ -538,8 +577,38 @@ function getOwnerById(ownerId) {
 }
 
 /**
+ * Returns the ownerId of either the logged in user or of the given owner name
+ * 
+ * @public 
+ * 
+ * @version 5.0
+ * @since 27.06.2013
+ * @author patrick
+ *
+ * @param {String} [ownerName] if not provided, the ownerId of the logged in user will be returned
+ * 
+ * @return {String} ownerId
+ *
+ * @properties={typeid:24,uuid:"C73AB858-D793-49A3-83D9-71FB1265B72B"}
+ */
+function getOwnerId(ownerName) {
+	if (!ownerName) {
+		return globals.svy_sec_lgn_owner_id;
+	} else {
+		/** @type {QBSelect<db:/svy_framework/sec_owner>} */
+		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_owner");
+		query.result.addPk();
+		query.where.add(query.columns.name.lower.eq(ownerName.toLowerCase()));
+		var dataset = databaseManager.getDataSetByQuery(query, -1);
+		return dataset.getValue(1, 1);
+	}
+}
+
+/**
  * Returns a User object for the given user name<br>
  * or the current user if no user name is provided
+ * 
+ * @public 
  * 
  * @param {String} [userName] - the name of the user
  * 
@@ -577,6 +646,8 @@ function getUser(userName) {
 /**
  * Returns all users as a User array
  * 
+ * @public 
+ * 
  * @return {Array<User>}
  * 
  * @author patrick
@@ -604,6 +675,8 @@ function getUsers() {
 
 /**
  * Returns a User object for the user with the given ID
+ * 
+ * @public 
  * 
  * @param {String|UUID} userId
  * 
@@ -635,7 +708,45 @@ function getUserById(userId) {
 }
 
 /**
+ * Returns the ID of the logged in user of the user with the given name of the given owner
+ * 
+ * @private
+ * 
+ * @version 5.0
+ * @since 27.06.2013
+ * @author patrick
+ *
+ * @param {String} [userName]
+ * @param {String|UUID} [ownerId] if not provided it is assumed that the user belongs to the owner of the logged in user
+ * 
+ * @return {String} userId
+ *
+ * @properties={typeid:24,uuid:"0753F23C-CDC9-405B-97F0-81F9960AF94C"}
+ */
+function getUserId(userName, ownerId) {
+	if (!userName) {
+		return globals.svy_sec_lgn_user_id;
+	} else {
+		/** @type {QBSelect<db:/svy_framework/sec_user>} */
+		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user");
+		query.result.addPk();
+		query.where.add(query.columns.user_name.lower.eq(userName.toLowerCase()));
+		if (!ownerId) {
+			ownerId = globals.svy_sec_lgn_owner_id;
+		}
+		if (ownerId instanceof UUID) {
+			ownerId = ownerId.toString();
+		}
+		query.where.add(query.columns.owner_id.eq(ownerId));
+		var dataset = databaseManager.getDataSetByQuery(query, -1);
+		return dataset.getValue(1, 1);
+	}
+}
+
+/**
  * Creates a new application record and returns an Object handle
+ * 
+ * @public 
  * 
  * @param {String} name must be unique
  * 
@@ -668,6 +779,8 @@ function createApplication(name){
 /**
  * Creates and returns a new security key with the given name and optional description
  * 
+ * @public 
+ * 
  * @param {String} name
  * @param {String} [description]
  * @param {Owner} [owner]
@@ -697,6 +810,8 @@ function createKey(name, description, owner) {
 
 /**
  * Creates a new module
+ * 
+ * @public 
  * 
  * @param {String} name must be unique
  * 
@@ -732,6 +847,8 @@ function createModule(name){
  * 
  * If no Owner is provided, the current owner is used
  * 
+ * @public 
+ * 
  * @param {String} organizationName - the name of the new organization
  * @param {Owner} [owner] - the owner to which this organization is added; if not given, the current owner is used
  * 
@@ -754,7 +871,10 @@ function createOrganization(organizationName, owner) {
  * Creates and returns a new owner or null if the<br>
  * owner could not be created of no name was given
  * 
+ * @public 
+ * 
  * @param {String} ownerName - the name of the new owner
+ * 
  * @return {Owner} newOwner
  * 
  * @example var newOwner = scopes.svySecurityManager.createOwner("New owner");<br>
@@ -789,6 +909,8 @@ function createOwner(ownerName) {
 
 /**
  * Creates and returns a new user
+ * 
+ * @public 
  * 
  * @param {String} userName
  * @param {String} [password]
@@ -834,6 +956,8 @@ function createUser(userName, password, owner, organization) {
 
 /**
  * Creates a user login
+ * 
+ * @public 
  * 
  * @param {String|UUID} userId
  * @param {Boolean} attemptSuccessful
@@ -3155,6 +3279,8 @@ function save(record){
 /**
  * Updates the security hash
  * 
+ * @public 
+ * 
  * @param {JSRecord} [record]
  * @param {String} [serverName]
  * @param {String} [ownerName]
@@ -3200,6 +3326,8 @@ function updateSecurityHash(record, serverName, ownerName) {
  * 
  * If <code>PERFORM_HASH_CHECKS</code> is false, this method always returns <code>true</code>
  * 
+ * @public 
+ * 
  * @param {String} ownerName
  * @param {String} [serverName]
  * 
@@ -3240,6 +3368,8 @@ function verifySecurityHash(ownerName, serverName) {
 
 /**
  * Filters all tables on owner_id
+ * 
+ * @public 
  * 
  * @properties={typeid:24,uuid:"FCFE99CB-13EF-4C5B-9F87-0059C19FF032"}
  */
@@ -3282,6 +3412,8 @@ function filterOwner() {
 
 /**
  * Filters all tables of the user DB on the relevant organization column
+ * 
+ * @public 
  * 
  * @properties={typeid:24,uuid:"0899F742-38FA-4386-8670-7B9524B79EB8"}
  */
@@ -3342,6 +3474,8 @@ function filterOrganization() {
 
 /**
  * Applies filters based on security keys to tables 
+ * 
+ * @public 
  * 
  * @properties={typeid:24,uuid:"777EDD27-60C1-4424-ABC4-98EDD207897B"}
  */
@@ -3406,6 +3540,8 @@ function filterTables() {
  * table read, insert, update, delete and tracking rights
  * from the keys of the logged in user 
  * by using security.setSecuritySettings()
+ * 
+ * @public 
  * 
  * @properties={typeid:24,uuid:"FBDE84EE-E1A2-48B3-ABFC-EFC216A2A77B"}
  */
@@ -3526,6 +3662,8 @@ function setSecuritySettings() {
  * security hashes are calculated to prevent unauthorized manipulation
  * of security relevant data directly in the database
  * 
+ * @public 
+ * 
  * @param {Boolean} performHashChecks
  * 
  * @author patrick
@@ -3619,6 +3757,8 @@ function getUserOrgId(organization, user) {
 /**
  * Removes all the data in the user DB that is linked to the given organizationId
  * 
+ * @public 
+ * 
  * @param {UUID|String} organizationId
  * 
  * @return {Array<String>} failedTables - array containing all table names for which the delete failed
@@ -3690,6 +3830,8 @@ function removeDataForOrganization(organizationId) {
 /**
  * Thrown when a password does not comply to the rules set for the owner
  * 
+ * @public 
+ * 
  * @param {JSRecord<db:/svy_framework/sec_user>} record
  * @param {String} message
  * @param {Number} errorCode
@@ -3719,6 +3861,8 @@ function PasswordRuleViolationException(record, message, errorCode) {
 
 /**
  * Gets all the security keys for the logged in user
+ * 
+ * @public 
  * 
  * @return {Array<Key>}
  * 
@@ -3883,6 +4027,8 @@ function loadSecurityKeys(user, organization) {
  * Returns the IDs of all keys of the logged in user as a quoted, 
  * comma separated list that can be directly parsed into IN queries
  * 
+ * @public 
+ * 
  * @return {String}
  * 
  * @author patrick
@@ -3904,6 +4050,8 @@ function getSecurityKeysForInQuery() {
  * Returns an array with all security key IDs of the logged in user<br>
  * or [00000000-0000-0000-0000-000000000000] if the user has no keys
  * 
+ * @public 
+ * 
  * @return {Array<String>}
  * 
  * @author patrick
@@ -3924,6 +4072,8 @@ function getSecurityKeysIds() {
 
 /**
  * Returns the runtime key with the given name or UUID or null if not found
+ * 
+ * @public 
  * 
  * @param {String|UUID} key
  * 
@@ -3958,6 +4108,8 @@ function getRuntimeKey(key) {
 /**
  * Returns the last registered login attempt of the User with the given ID
  * 
+ * @public 
+ * 
  * @param {String|UUID} userId
  * @param {String} [frameworkDb] the name of the framework database
  * 
@@ -3987,6 +4139,8 @@ function getLastLoginAttempt(userId, frameworkDb) {
 
 /**
  * Returns the key with the given name or UUID or null if not found
+ * 
+ * @public 
  * 
  * @param {String|UUID} key
  * 
@@ -4022,6 +4176,8 @@ function getKey(key) {
 /**
  * Returns <code>true</code> if the logged in user has 
  * the key with the given name or UUID
+ * 
+ * @public 
  * 
  * @param {String|UUID} key
  * 
@@ -4089,6 +4245,8 @@ function getRuntimeSecurityKeys() {
 /**
  * Adds the given key to the list of loaded security keys
  * 
+ * @public 
+ * 
  * @param {UUID|String} keyId
  * @param {String} keyName
  * @param {String} [keyDescription]
@@ -4128,6 +4286,8 @@ function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) 
 /**
  * Removes the key with the given Id from the list of runtime keys
  * 
+ * @public 
+ * 
  * @param {UUID|String} keyId
  *
  * @properties={typeid:24,uuid:"5ABE723C-054F-4F82-A3E9-174286CB87EA"}
@@ -4153,6 +4313,8 @@ function removeRuntimeKey(keyId) {
  * returns an object containing the salt and the password hash<br>
  * 
  * Note that the method uses a pepper defined in PBKDF2_PEPPER
+ * 
+ * @public 
  * 
  * @param {String} password
  * 
@@ -4211,6 +4373,8 @@ function getServoyVersionNumber() {
  * 
  * Note that the method uses a pepper defined in PBKDF2_PEPPER
  * 
+ * @public 
+ * 
  * @param {String} password 					- the password to validate
  * @param {String} salt 						- the salt used when the hash was calculated
  * @param {String} hash 						- the password hash
@@ -4245,6 +4409,8 @@ function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
  * Changes the organization of the logged in user<p>
  * 
  * Fires a ORGANIZATION_CHANGE event when successful
+ * 
+ * @public 
  * 
  * @param {String|UUID} oldOrganizationId
  * @param {String|UUID} newOrganizationId
@@ -4289,6 +4455,8 @@ function changeOrganization(oldOrganizationId, newOrganizationId) {
  * <li>newOrganizationId - the organizationId after the change</li> 
  * </ul>
  * as parameters
+ * 
+ * @public 
  * 
  * @param {Function} methodToCall
  * 
