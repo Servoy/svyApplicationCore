@@ -4408,7 +4408,11 @@ function validatePBKDF2Hash(password, salt, hash, pbkdf2IterationVersion) {
 /**
  * Changes the organization of the logged in user<p>
  * 
- * Fires a ORGANIZATION_CHANGE event when successful
+ * Fires a ORGANIZATION_CHANGE event when successful<p>
+ * 
+ * - reloads security keys
+ * - re-applies table filters
+ * - re-applies security settings
  * 
  * @public 
  * 
