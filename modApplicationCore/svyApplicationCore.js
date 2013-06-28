@@ -42,6 +42,7 @@ var FORM_EVENT_TYPES = { //Some of these are backed up by constants on JS(DND)Ev
  */
 function initModules(startupArguments) {
 	//Init self
+	// TODO: properties module can init itself inside the BAP 
 	scopes.svyProperties.initProperties(true);
 	
 	//Init modules
@@ -110,6 +111,7 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
  * @properties={typeid:24,uuid:"DD317CC0-665B-4993-8669-D6B42A279B4D"}
  */
 function addDataBroadcastListener(listener) {
+	//TODO: Data broadcast event should be in a constant enum w/ event types, i.e. SOLUTION_EVENTS or APPLICATION_EVENTS{}
 	//TODO: figure out how to filter and fire only for datasource/pk match
 	//TODO: add option to hold a reference to an empty foundset on the datasource, so the client gets the databroadcast for that entity
 	scopes.modUtils$eventManager.addListener(this,'databroadcast', listener)
