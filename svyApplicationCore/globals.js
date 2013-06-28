@@ -1,5 +1,5 @@
 /**
- * @deprecated Will be removed in version 5. Use {@link #scopes#svyLogin#loginProperties} instead
+ * @deprecated Will be removed in version 6. Use {@link #scopes#svyLogin#loginProperties} instead
  * 
  * @properties={typeid:35,uuid:"98104D19-F6CF-4807-AC3D-CAFFB56F3F16",variableType:-4}
  */
@@ -41,15 +41,6 @@ var svy_sec_lgn_user_id = null;
 var svy_sec_lgn_user_org_id = null;
 
 /**
- * @type {String}
- * 
- * @deprecated use globals.svy_sec_lgn_user_id instead
- *
- * @properties={typeid:35,uuid:"99C1F8DB-0035-4062-9357-0CCCA421DDC9"}
- */
-var user_id = '5';
-
-/**
  * @type {UUID}
  * 
  * @properties={typeid:35,uuid:"5BCE382C-1D81-48E5-B539-BDDEAE037525",variableType:-4}
@@ -62,15 +53,6 @@ var zero_uuid = application.getUUID("00000000-0000-0000-0000-000000000000");
  * @properties={typeid:35,uuid:"D9F91349-8EA7-4EF0-9A6A-7A16DD6E0652"}
  */
 var zero_uuid_string = "00000000-0000-0000-0000-000000000000";
-
-/**
- * @type {String}
- * 
- * @deprecated use globals.svy_sec_lgn_owner_id instead
- *
- * @properties={typeid:35,uuid:"754EA469-B7C1-4ACB-88AC-AE8765C4D44F"}
- */
-var owner_id = null;
 /**
  * @type {Number}
  *
