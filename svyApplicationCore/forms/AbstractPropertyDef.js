@@ -9,7 +9,7 @@
  * 
  * @protected 
  *
- * @properties={typeid:35,uuid:"0D685C21-F438-4E57-9B0F-007CD4B88E71",variableType:8}
+ * @properties={typeid:35,uuid:"E303F1BB-856D-4109-82B9-B340D56E93EC",variableType:8}
  */
 var adminLevel;
 
@@ -22,7 +22,7 @@ var adminLevel;
  * 
  * @protected 
  *
- * @properties={typeid:35,uuid:"F2AAD16C-AF9C-4B25-9D79-E2989051A5C4",variableType:-4}
+ * @properties={typeid:35,uuid:"F097BCAA-A241-4B22-9B3E-B21F30596336",variableType:-4}
  */
 var propertyNames;
 
@@ -39,7 +39,7 @@ var propertyNames;
  * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
  * @throws {scopes.modUtils$exceptions.SvyException}
  * 
- * @properties={typeid:24,uuid:"BD147337-DC27-4F86-BB16-564E3E8C798E"}
+ * @properties={typeid:24,uuid:"C9A8DB84-6EDF-40C6-889D-15C3EDD473FF"}
  */
 function onDataChangeValue(oldValue, newValue, event, propertyName) {
 	if (!propertyName) {
@@ -62,7 +62,7 @@ function onDataChangeValue(oldValue, newValue, event, propertyName) {
  * 
  * @throws {scopes.modUtils$exceptions.SvyException}
  *
- * @properties={typeid:24,uuid:"0971E366-C940-4346-B033-2ED299C50051"}
+ * @properties={typeid:24,uuid:"BAF01236-BB62-4159-90F4-84A05A47845C"}
  */
 function setPropertyValue(propertyName, propertyValue) {
 	scopes.svyProperties.setPropertyValue(propertyName, propertyValue, adminLevel);
@@ -73,14 +73,14 @@ function setPropertyValue(propertyName, propertyValue) {
  * 
  * @return {Array<scopes.svyProperties.RuntimeProperty>}
  * 
- * @properties={typeid:24,uuid:"DEAC0C97-2650-4C0E-A71B-F630C2E19398"}
+ * @properties={typeid:24,uuid:"554D9FB5-6904-4A51-B423-3A712D1FE546"}
  */
 function getPropertyValues() {
 	return scopes.svyProperties.getRuntimeProperties(adminLevel, getPropertyNames());
 }
 
 /**
- * @properties={typeid:24,uuid:"E8C7804A-240F-4DCD-AF3C-7FD431F0E648"}
+ * @properties={typeid:24,uuid:"80B8EAE0-73C3-493B-B414-4DED315493BB"}
  */
 function getPropertyNames() {
 	return propertyNames;
@@ -95,6 +95,6 @@ function getPropertyNames() {
  * @param {String} styleClass the style name used by the propertyEditor that called this form
  * 
  * @abstract
- * @properties={typeid:24,uuid:"C4757087-A7C5-4269-B764-D918AF7A18A3"}
+ * @properties={typeid:24,uuid:"CC35C781-AC7F-463B-83C3-B3B8FB6E4239"}
  */
 function initPropertyForm(propertyEditorAdminLevel, styleClass) {}
