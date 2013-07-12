@@ -1928,8 +1928,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel, ownerId, prop
 		runtimeProperties = loadRuntimeProperties();
 	}
 	
-	scopes.modUtils$eventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [new Property(propertyRecord), getRuntimeProperty(propertyName)]);
-	
+	scopes.modUtils$eventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [propertyRecord ? new Property(propertyRecord) : null, getRuntimeProperty(propertyName)]);
 }
 
 /**
