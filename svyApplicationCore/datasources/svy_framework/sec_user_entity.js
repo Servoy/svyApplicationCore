@@ -160,22 +160,25 @@ function deleteUser(record)
  *
  * @properties={typeid:24,uuid:"B3613BEA-C8FE-4917-A666-B15A0D0B9164"}
  */
-function assignKey(keyId, organizationId, record)
-{
+function assignKey(keyId, organizationId, record) {
+	if (!organizationId || !keyId) {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for assignKey");
+	}
+
 	if (!record) {
 		record = getSelectedRecord();
 	}
 	if (!record) {
 		throw new scopes.modUtils$data.NoRecordException();
 	}
-	
+
 	if (keyId instanceof UUID) {
 		keyId = keyId.toString();
 	}
 	if (organizationId instanceof UUID) {
 		organizationId = organizationId.toString();
-	}	
-	
+	}
+
 	var userOrgRecord;
 	if (utils.hasRecords(record.sec_user_to_sec_user_org)) {
 		for (var uoi = 1; uoi <= record.sec_user_to_sec_user_org.getSize(); uoi++) {
@@ -184,12 +187,12 @@ function assignKey(keyId, organizationId, record)
 				break;
 			}
 		}
-	} 
-	
+	}
+
 	if (!userOrgRecord) {
 		throw new scopes.modUtils$exceptions.IllegalArgumentException("User not member of the given organization");
 	}
-	
+
 	var userRightRecord;
 	if (utils.hasRecords(userOrgRecord.sec_user_org_to_sec_user_right)) {
 		for (var uri = 1; uri <= userOrgRecord.sec_user_org_to_sec_user_right.getSize(); uri++) {
@@ -199,12 +202,80 @@ function assignKey(keyId, organizationId, record)
 			}
 		}
 	}
-	
+
 	userRightRecord = userOrgRecord.sec_user_org_to_sec_user_right.getRecord(userOrgRecord.sec_user_org_to_sec_user_right.newRecord());
 	userRightRecord.security_key_id = keyId;
-	
+
 	return databaseManager.saveData(userRightRecord);
 }
+
+
+/**
+ * Removes the key with the given ID from either the given or the selected record for the given organization<p>
+ *
+ * If no organization is provided, the key will be removed from all organizations of the user
+ *
+ * @version 5.0
+ * @since 18.07.2013
+ * @author patrick
+ *
+ * @param {String|UUID} keyId
+ * @param {String|UUID} [organizationId]
+ * @param {JSRecord<db:/svy_framework/sec_user>} [record]
+ *
+ * @properties={typeid:24,uuid:"335C9A27-9E89-4AEF-B7CB-4CA491675E27"}
+ */
+function removeKey(keyId, organizationId, record) {
+	if (!keyId) {
+		throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for removeKey");
+	}
+
+	if (!record) {
+		record = getSelectedRecord();
+	}
+	if (!record) {
+		throw new scopes.modUtils$data.NoRecordException();
+	}
+
+	if (keyId instanceof UUID) {
+		keyId = keyId.toString();
+	}
+	if (organizationId && organizationId instanceof UUID) {
+		organizationId = organizationId.toString();
+	}
+
+	/**
+	 * @param {JSRecord<db:/svy_framework/sec_user_org>} recordUserOrg
+	 * @return {Boolean} success
+	 */
+	function removeKeyFromUserOrg(recordUserOrg) {
+		if (utils.hasRecords(recordUserOrg.sec_user_org_to_sec_user_right)) {
+			for (var i = 1; i <= recordUserOrg.sec_user_org_to_sec_user_right.getSize(); i++) {
+				var recordSecUserRight = recordUserOrg.sec_user_org_to_sec_user_right.getRecord(i);
+				if (recordSecUserRight.security_key_id == keyId) {
+					recordUserOrg.sec_user_org_to_sec_user_right.deleteRecord(recordSecUserRight);
+				}
+			}
+			return databaseManager.saveData(recordUserOrg.sec_user_org_to_sec_user_right);
+		} else {
+			return true;
+		}
+	}
+
+	if (utils.hasRecords(record.sec_user_to_sec_user_org)) {
+		for (var uo = 1; uo <= record.sec_user_to_sec_user_org.getSize(); uo++) {
+			/** @type {JSRecord<db:/svy_framework/sec_user_org>} */
+			var recordSecUserOrg = record.sec_user_to_sec_user_org.getRecord(uo);
+			if (!organizationId) {
+				removeKeyFromUserOrg(recordSecUserOrg);
+			} else if (organizationId == recordSecUserOrg.organization_id) {
+				removeKeyFromUserOrg(recordSecUserOrg);
+				break;
+			}
+		}
+	}
+}
+
 
 /**
  * Adds either the given or the selected record to the given group for the given organization.<br>

@@ -1122,6 +1122,23 @@ function User(userRecord) {
 	}
 	
 	/**
+	 * Removes the given security key from this user<br>
+	 * (optionally for the given organization only)
+	 * 
+	 * @version 5.0
+	 * @since 18.07.2013
+	 * @author patrick
+	 * 
+	 * @param {Key} key
+	 * @param {Organization} [organization]
+	 */
+	this.removeKey = function(key, organization) {
+		/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
+		var fs = userRecord.foundset;
+		return fs.removeKey(key.keyId, organization.orgId, userRecord);
+	}
+	
+	/**
 	 * Adds this user to the given group
 	 * 
 	 * @param {Group} group
