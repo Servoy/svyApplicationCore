@@ -105,7 +105,6 @@ function onDragEnd(event) {
  * Handle a drag over. Determines of a drop is allowed in this location.
  * Return true is drop is allowed, otherwise false.
  *
- * TODO Add support for VEOTABLE events
  * @param {JSDNDEvent} event the event that triggered the action
  *
  * @returns {Boolean}
@@ -116,14 +115,14 @@ function onDragEnd(event) {
  */
 function onDragOver(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.DRAG_OVER, event);
+	var permitted = fireEvent(eventTypes.DRAG_OVER, event, true);
 	return permitted;
 }
 
 /**
  * Handle a drop.
  * Return true if drop has been performed successfully, otherwise false.
- * TODO Add support for VEOTABLE events
+ * 
  * @param {JSDNDEvent} event the event that triggered the action
  *
  * @returns {Boolean}
@@ -134,13 +133,13 @@ function onDragOver(event) {
  */
 function onDrop(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.DROP, event);
+	var permitted = fireEvent(eventTypes.DROP, event, true);
 	return permitted;
 }
 
 /**
  * Handle focus gained event of an element on the form. Return false when the focus gained event of the element itself shouldn't be triggered.
- * TODO Add support for VEOTABLE events
+ * 
  * @param {JSEvent} event the event that triggered the action
  *
  * @returns {Boolean}
@@ -151,13 +150,13 @@ function onDrop(event) {
  */
 function onElementFocusGained(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_GAINED, event);
+	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_GAINED, event, true);
 	return permitted;
 }
 
 /**
  * Handle focus lost event of an element on the form. Return false when the focus lost event of the element itself shouldn't be triggered.
- * TODO Add support for VEOTABLE events
+ * 
  * @param {JSEvent} event the event that triggered the action
  *
  * @returns {Boolean}
@@ -168,7 +167,7 @@ function onElementFocusGained(event) {
  */
 function onElementFocusLost(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_LOST, event);
+	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_LOST, event, true);
 	return permitted;
 }
 
@@ -184,7 +183,7 @@ function onElementFocusLost(event) {
  * @properties={typeid:24,uuid:"E32455DA-B6F2-45CB-BAEA-FA9952612CEE"}
  */
 function onHide(event) {
-	var permitted = fireEvent(eventTypes.HIDE, event);
+	var permitted = fireEvent(eventTypes.HIDE, event, true);
 	return permitted;
 }
 
@@ -204,7 +203,7 @@ function onLoad(event) {
 
 /**
  * Callback method form when editing is started.
- * TODO Add support for VEOTABLE events
+ * 
  * @param {JSEvent} event the event that triggered the action
  *
  * @returns {Boolean}
@@ -215,7 +214,7 @@ function onLoad(event) {
  */
 function onRecordEditStart(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.RECORD_EDIT_START, event);
+	var permitted = fireEvent(eventTypes.RECORD_EDIT_START, event, true);
 	return permitted;
 }
 
@@ -224,7 +223,7 @@ function onRecordEditStart(event) {
  * - Calls updateUI
  * - Notifies any event listeners for the RECORD_EDIT_STOP event
  * - Return false if the record fails to validate then the user cannot leave the record.
- * TODO Add support for VEOTABLE events
+ * 
  * 
  * @param {JSRecord} record record being saved
  * @param {JSEvent} event the event that triggered the action
@@ -238,7 +237,7 @@ function onRecordEditStart(event) {
  */
 function onRecordEditStop(record, event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.RECORD_EDIT_STOP, event);
+	var permitted = fireEvent(eventTypes.RECORD_EDIT_STOP, event, true);
 	return permitted;
 }
 
@@ -312,10 +311,12 @@ function onUnload(event) {
  * @private
  *  
  * @param {String} eventType
- * @param {*} [data]
+ * @param {*} [data] Event args
+ * @param {Boolean} [isVetoable] Optionally specify if an event can be vetoed. A listener may veto an event by returning false. Subsequent propagation of the event is then cancelled
+ * 
  * @return {Boolean} True unless event was vetoed
  * @properties={typeid:24,uuid:"24330B43-0D04-4896-9A33-35D1023E01A9"}
  */
-function fireEvent(eventType, data){
-	return eventManager.fireEvent(this,eventType, data);
+function fireEvent(eventType, data, isVetoable){
+	return eventManager.fireEvent(this,eventType, data, isVetoable);
 }
