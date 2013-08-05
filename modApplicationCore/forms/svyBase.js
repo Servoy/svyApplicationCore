@@ -70,6 +70,7 @@ function removeListener(listener, eventType){
  * DRAGNDROP.COPY if only a copy can happen,
  * DRAGNDROP.MOVE|DRAGNDROP.COPY if a move or copy can happen,
  * DRAGNDROP.NONE if nothing is supported (drag should not start).
+ * 
  *
  * @protected
  * 
@@ -115,8 +116,8 @@ function onDragEnd(event) {
  */
 function onDragOver(event) {
 	updateUI();
-	fireEvent(eventTypes.DRAG_OVER, event);
-	return true;
+	var permitted = fireEvent(eventTypes.DRAG_OVER, event);
+	return permitted;
 }
 
 /**
@@ -133,8 +134,8 @@ function onDragOver(event) {
  */
 function onDrop(event) {
 	updateUI();
-	fireEvent(eventTypes.DROP, event);
-	return false
+	var permitted = fireEvent(eventTypes.DROP, event);
+	return permitted;
 }
 
 /**
@@ -150,8 +151,8 @@ function onDrop(event) {
  */
 function onElementFocusGained(event) {
 	updateUI();
-	fireEvent(eventTypes.ELEMENT_FOCUS_GAINED, event);
-	return true;
+	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_GAINED, event);
+	return permitted;
 }
 
 /**
@@ -167,8 +168,8 @@ function onElementFocusGained(event) {
  */
 function onElementFocusLost(event) {
 	updateUI();
-	fireEvent(eventTypes.ELEMENT_FOCUS_LOST, event);
-	return true
+	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_LOST, event);
+	return permitted;
 }
 
 /**
@@ -183,8 +184,8 @@ function onElementFocusLost(event) {
  * @properties={typeid:24,uuid:"E32455DA-B6F2-45CB-BAEA-FA9952612CEE"}
  */
 function onHide(event) {
-	fireEvent(eventTypes.HIDE, event);
-	return true
+	var permitted = fireEvent(eventTypes.HIDE, event);
+	return permitted;
 }
 
 /**
@@ -214,8 +215,8 @@ function onLoad(event) {
  */
 function onRecordEditStart(event) {
 	updateUI();
-	fireEvent(eventTypes.RECORD_EDIT_START, event);
-	return true;
+	var permitted = fireEvent(eventTypes.RECORD_EDIT_START, event);
+	return permitted;
 }
 
 /**
@@ -237,8 +238,8 @@ function onRecordEditStart(event) {
  */
 function onRecordEditStop(record, event) {
 	updateUI();
-	fireEvent(eventTypes.RECORD_EDIT_STOP, event);
-	return true
+	var permitted = fireEvent(eventTypes.RECORD_EDIT_STOP, event);
+	return permitted;
 }
 
 /**
@@ -312,9 +313,9 @@ function onUnload(event) {
  *  
  * @param {String} eventType
  * @param {*} [data]
- *  
+ * @return {Boolean} True unless event was vetoed
  * @properties={typeid:24,uuid:"24330B43-0D04-4896-9A33-35D1023E01A9"}
  */
 function fireEvent(eventType, data){
-	eventManager.fireEvent(this,eventType, data);
+	return eventManager.fireEvent(this,eventType, data);
 }
