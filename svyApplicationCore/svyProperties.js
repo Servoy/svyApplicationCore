@@ -121,11 +121,11 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
  * 
  * @param {String} name						- the name of this property set
  * @param {String|UUID} [applicationId]		- an optional applicationId of the application that this property is exclusively for
- * @param {String} [displayName] 			- the name that is shown (usually i18n)
+ * @param {String} [displayName]			- the name that is shown (usually i18n)
  * @param {String} [description]			- the description of this property set (usually i18n)
  * @param {String} [icon]					- the icon of this property set as a String URL or byte[]
  * @param {RuntimeForm|String} [formName]	- the (name of the) form used to present this property set
- * @param {Number} [sortOrder] 				- the index on which this set is shown in a property editor
+ * @param {Number} [sortOrder]				- the index on which this set is shown in a property editor
  * 
  * @return {PropertySet}
  * 
@@ -1427,7 +1427,7 @@ function PropertyValue(propertyDescription, sortOrder, name, dataType, displayTy
 		}
 	})
 	
-	Object.seal(this);	
+	Object.seal(this);
 }
 
 /**
@@ -1444,14 +1444,14 @@ function PropertyValue(propertyDescription, sortOrder, name, dataType, displayTy
  * @properties={typeid:24,uuid:"FFADE8FA-F97C-4883-A256-0FC6774899CF"}
  */
 function getValueArray(_values) {
-	/** @type {Array} */	
-	var result = new Array();
+	/** @type {Array} */
+	var result = [];
 	if (!_values || !(_values instanceof Array)) {
 		return result;
 	}
 	for (var i = 0; i < _values.length; i++) {
 		var entry = _values[i];
-		if (parseInt(entry) && utils.numberFormat(parseInt(entry),"####") == entry) {
+		if (parseInt(entry, 10) && utils.numberFormat(parseInt(entry, 10),"####") == entry) {
 			result.push(parseInt(entry))
 		} else if (entry == "true") {
 			result.push(true);
