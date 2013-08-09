@@ -11,6 +11,10 @@
  * @enum
  * @final
  * 
+ * @example <pre> if ( scopes.svySecurityManager.getUser().adminLevel & (scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER | scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER) ) { //if user is admin also show option to open the configurator
+ * 	//logic here
+ * }</pre>		
+ * 
  * @properties={typeid:35,uuid:"D0A4C4A2-CCFC-45E8-86A3-8A5748045075",variableType:-4}
  */
 var ADMIN_LEVEL = {
