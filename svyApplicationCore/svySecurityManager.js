@@ -118,7 +118,7 @@ var PERFORM_HASH_CHECKS = false;
  * 
  * @private 
  *
- * @properties={typeid:35,uuid:"0EFB97F1-7EDD-4C26-9E7B-F769BCED9E60"}
+ * @properties={typeid:35,uuid:"764C8539-174F-4ECA-A7CC-F1B9F2A1E01D"}
  */
 var PBKDF2_PEPPER = "Uv9<42,3yN6rDw;FL{8i+T}dsQEC=3Gj67xk:cRzn]MhaJ8[Wg+t38rDvV}823X*nWYK4h;Uu$Po2#7@k]m=9qwMGgjpi<HL6dENL9kUs)}xPbc/2AK9oCD+Nh6Bp73^]&2@8eZy8MmvWiFJ4>zg=V";
 
@@ -363,8 +363,6 @@ function getModule(moduleName) {
 	}
 	return null;
 }
-
-
 
 /**
  * Returns an array with all modules
@@ -3877,7 +3875,7 @@ function PasswordRuleViolationException(record, message, errorCode) {
 	 */
 	this.errorCode = errorCode;
 	
-	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message);
+	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message||'Password rule violated');
 }
 
 /**
@@ -4504,5 +4502,6 @@ function addOrganizationChangeListener(methodToCall) {
  * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
  */
 var init = function() {
-	PasswordRuleViolationException.prototype = new scopes.modUtils$exceptions.IllegalArgumentException("Password rule violated");
+	PasswordRuleViolationException.prototype = Object.create(scopes.modUtils$exceptions.IllegalArgumentException.prototype);
+	PasswordRuleViolationException.prototype.constructor = PasswordRuleViolationException
 }();
