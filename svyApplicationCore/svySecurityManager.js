@@ -3942,18 +3942,18 @@ function loadSecurityKeys(user, organization) {
 	var query = '\
 		SELECT DISTINCT	surd.security_key_id \
 		FROM sec_user_right surd \
-		WHERE (\
+		WHERE surd.deletion_date IS NULL AND (\
 			surd.security_key_id IN (\
 				SELECT	ssk.security_key_id  \
 				FROM	sec_security_key ssk \
 						JOIN sec_user_right sur ON ssk.security_key_id = sur.security_key_id \
 						JOIN sec_user_in_group sug ON sur.group_id = sug.group_id\
-				WHERE	sug.user_org_id = ? \
+				WHERE	sug.deletion_date IS NULL AND sug.user_org_id = ? \
 				OR		(\
 					ssk.module_id IS NOT NULL AND ssk.module_id IN (\
 						SELECT	som.module_id \
 						FROM	sec_owner_in_module som \
-						WHERE	som.owner_id = ? \
+						WHERE	som.deletion_date IS NULL AND som.owner_id = ? \
 						AND		som.start_date <= ? \
 						AND		( som.end_date IS NULL OR som.end_date >= ? ) \
 					)\
@@ -3962,7 +3962,7 @@ function loadSecurityKeys(user, organization) {
 			AND NOT EXISTS (\
 				SELECT	* \
 				FROM sec_user_right surd2, sec_user_in_group sug2 \
-				WHERE surd.security_key_id = surd2.security_key_id \
+				WHERE surd2.deletion_date IS NULL AND surd.security_key_id = surd2.security_key_id \
 				AND (\
 					surd2.user_org_id = ? \
 					OR (\
@@ -3982,23 +3982,23 @@ function loadSecurityKeys(user, organization) {
 		(\
 			SELECT	ssk2.security_key_id  \
 			FROM	sec_security_key ssk2  \
-					JOIN prov_package_modules ppm ON ssk2.module_id = ppm.module_id \
-					JOIN prov_owner_packages pop ON  ppm.package_id = pop.package_id \
-			WHERE	pop.start_date <= ? \
+					JOIN prov_package_modules ppm ON ppm.deletion_date IS NULL AND ssk2.module_id = ppm.module_id \
+					JOIN prov_owner_packages pop ON  pop.deletion_date IS NULL AND ppm.package_id = pop.package_id \
+			WHERE	ssk2.deletion_date IS NULL AND  pop.start_date <= ? \
 			AND   ( pop.end_date >= ? OR pop.end_date is null) \
 			AND		pop.owner_id = ? \
 			AND	 ssk2.security_key_id NOT IN \
 			( \
 				( 	SELECT 	sur4.security_key_id \
 					FROM 	sec_user_right sur4 \
-					WHERE 	sur4.user_org_id = ? \
+					WHERE 	sur4.deletion_date IS NULL AND sur4.user_org_id = ? \
 					AND 	sur4.is_denied = 1 \
 				)\
 				UNION \
 				(	SELECT	sur5.security_key_id \
 					FROM 	sec_user_right sur5 \
 							JOIN sec_user_in_group uig5 ON sur5.group_id = uig5.group_id\
-					WHERE 	uig5.user_org_id = ?\
+					WHERE 	sur5.deletion_date IS NULL AND uig5.user_org_id = ?\
 					AND		sur5.is_denied = 1 \
 				)\
 			)\
