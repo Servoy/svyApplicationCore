@@ -269,8 +269,8 @@ function getGroups() {
 	fs.loadAllRecords();
 	if (utils.hasRecords(fs)) {
 		for (var i = 1; i <= fs.getSize(); i++) {
-			var _groupRecord = fs.getRecord(i);
-			result.push(new Group(_groupRecord));
+			var groupRecord = fs.getRecord(i);
+			result.push(new Group(groupRecord));
 		}
 	}
 	return result;
@@ -304,6 +304,36 @@ function getGroup(groupname) {
 	} else {
 		return null;
 	}
+}
+
+/**
+ * Returns the Application with the given ID or null if not found
+ * 
+ * @public 
+ * 
+ * @param {String|UUID} groupId
+ * 
+ * @return {Group}
+ * 
+ * @version 5.0
+ * @since 07.10.2013
+ * @author patrick
+ *
+ * @properties={typeid:24,uuid:"9561E729-361E-4C91-8D4D-B33A8A8148FE"}
+ */
+function getGroupById(groupId) {
+	if (!groupId) {
+		return null;
+	}
+	if (groupId instanceof String) {
+		groupId = application.getUUID(groupId);
+	}
+	/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
+	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_group');
+	if (utils.hasRecords(fs)) {
+		return new Group(fs.getRecord(1));
+	}
+	return null;
 }
 
 /**
@@ -779,13 +809,66 @@ function createApplication(name){
 }
 
 /**
+ * Creates a security group with the given name, optionally for the given owner, adding the optional securityKeys
+ * 
+ * @public
+ * 
+ * @version 5.0
+ * @since 25.09.2013
+ * @author patrick
+ *
+ * @param {String} name - the name of the group
+ * @param {Owner|String|UUID} [owner] - the owner object or owner UUID of the owner to which this group belongs (defaults to the owner of the logged in user)
+ * @param {Array<Key>} [securityKeysToAdd] - optional security keys that will be added to this group
+ * 
+ * @return {Group} group
+ * 
+ * @throws {scopes.modUtils$data.ValueNotUniqueException} the group name has to be unique for an owner
+ *
+ * @properties={typeid:24,uuid:"7471A2B7-775C-44F0-80A6-81B59F97D14F"}
+ */
+function createGroup(name, owner, securityKeysToAdd) {
+	if (!name) {
+		return null;
+	}
+	var ownerId;
+	if (!owner) {
+		ownerId = globals.svy_sec_lgn_owner_id;
+	}
+	if (owner instanceof Owner) {
+		ownerId = owner.ownerId;
+	}
+	/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
+	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, "sec_group");
+	if (!scopes.modUtils.isValueUnique(fs, 'name', name, ["owner_id"], [ownerId.toString()])) {
+		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, 'application_name', name);
+	}
+	
+	var recordGroup = fs.getRecord(fs.newRecord());
+	recordGroup.name = name;
+	recordGroup.owner_id = ownerId;
+	databaseManager.saveData(recordGroup);
+	var group = new Group(recordGroup);
+	if (securityKeysToAdd) {
+		for (var i = 0; i < securityKeysToAdd.length; i++) {
+			group.addKey(securityKeysToAdd[i]);
+		}
+	}
+	return group;
+}
+
+/**
  * Creates and returns a new security key with the given name and optional description
  * 
  * @public 
  * 
- * @param {String} name
- * @param {String} [description]
- * @param {Owner} [owner]
+ * @param {String} name - the name of the key
+ * @param {String} [description] - the optional description of the key
+ * @param {Owner} [owner] - the optional owner ID for this key
+ * 
+ * @throws {scopes.modUtils$data.ValueNotUniqueException} the key name has to be unique
+ * 
+ * @return {Key} new key
  * 
  * @author patrick
  * @since 14.08.2012
@@ -799,6 +882,10 @@ function createKey(name, description, owner) {
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
+	if (!scopes.modUtils.isValueUnique(fs, 'name', name)) {
+		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, 'name', name);
+	}
+	
 	var keyRecord = fs.getRecord(fs.newRecord());
 	keyRecord.name = name;
 	keyRecord.description = description;
@@ -920,6 +1007,7 @@ function createOwner(ownerName) {
  * @param {Organization} [organization]
  * 
  * @throws {scopes.modUtils$data.ValueNotUniqueException} the user name has to be unique for an owner
+ * @throws {scopes.svySecurityManager.PasswordRuleViolationException} the password must comply to the password rules of the owner
  * 
  * @return {User} newUser
  * 
@@ -941,18 +1029,32 @@ function createUser(userName, password, owner, organization) {
 	if (!scopes.modUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"], [owner.ownerId.toString()])) {
 		throw new scopes.modUtils$data.ValueNotUniqueException(null, "user_name");
 	}
-		
+	
+	var autoSave = databaseManager.getAutoSave();
+	if (autoSave && password) databaseManager.setAutoSave(false);
+	
 	var userRecord = userFs.getRecord(userFs.newRecord());
 	userRecord.user_name = userName;
 	userRecord.owner_id = owner.ownerId;
-	save(userRecord);
 	var user = new User(userRecord);
+	
 	if (password) {
-		user.changePassword(password);
+		try {
+			user.changePassword(password);
+		} catch (/** @type {scopes.svySecurityManager.PasswordRuleViolationException} */ e) {
+			databaseManager.revertEditedRecords(userFs);
+			if (autoSave) databaseManager.setAutoSave(true);
+			throw e;
+		}
 	}
+	
+	save(userRecord);
+	
 	if (organization) {
 		organization.addUser(user);
 	}
+	
+	if (autoSave && password) databaseManager.setAutoSave(true);
 	return user;
 }
 
@@ -1057,7 +1159,7 @@ function User(userRecord) {
 	 * 
 	 * @param {String} newPassword
 	 * 
-	 * @throws {scopes.modUtils$exceptions.SvyException}
+	 * @throws {scopes.svySecurityManager.PasswordRuleViolationException}
 	 * 
 	 * @return {boolean} success
 	 */
@@ -1066,7 +1168,7 @@ function User(userRecord) {
 		var fs = userRecord.foundset;
 		try {
 			return fs.changePassword(newPassword, userRecord);
-		} catch(e) {
+		} catch (e) {
 			throw e;
 		}
 	}
@@ -1333,6 +1435,15 @@ function User(userRecord) {
 	}
 	
 	/**
+	 * Returns <code>true</code> if the user is locked
+	 * 
+	 * @return {Boolean} isLocked
+	 */
+	this.isLocked = function() {
+		return userRecord.user_locked ? true : false;
+	}	
+	
+	/**
 	 * Returns <code>true</code> if the password is expired, <code>false</code> otherwise
 	 * 
 	 * @return {Boolean} isExpired
@@ -1479,6 +1590,7 @@ function User(userRecord) {
 				throw new scopes.modUtils$exceptions.IllegalArgumentException("The owner with the ID " + x + " could not be found");
 			}
 			userRecord.owner_id = owner.ownerId;
+			// TODO: remove all organizations or not allow to do this at all
 			save(userRecord);
 		}
     });		
@@ -1605,6 +1717,48 @@ function Group(groupRecord) {
 	this.description = groupRecord.description;
 	
 	/**
+	 * Owner ID of this Group
+	 * @type {UUID}
+	 */
+	this.ownerId = groupRecord.owner_id;
+	
+	/**
+	 * If true the group is global<p>
+	 * If set to false, the group will belong to the owner of the logged in user
+	 * @type {Boolean}
+	 */
+	this.isGlobal = groupRecord.owner_id == globals.zero_uuid ? true : false;
+	
+	/**
+	 * Returns all the keys of this group
+	 * 
+	 * @return {Array<Key>} keys
+	 */
+	this.getKeys = function() {
+		/** @type {Array<Key>} */
+		var result = new Array();
+		/** @type {QBSelect<db:/svy_framework/sec_security_key>} */
+		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_security_key");
+		query.result.add(query.columns.security_key_id);
+		query.result.add(query.columns.name);
+		query.result.add(query.columns.description);
+		query.result.add(query.columns.owner_id);
+		query.result.add(query.columns.module_id);
+		/** @type {QBJoin<db:/svy_framework/sec_user_right>} */
+		var joinUserInGroup = query.joins.sec_security_key_to_sec_user_right;
+		/** @type {QBJoin<db:/svy_framework/sec_group>} */		
+		var joinGroup = joinUserInGroup.joins.sec_user_right_to_sec_group;
+		query.where.add(joinGroup.columns.group_id.eq(groupRecord.group_id));
+		var dataset = databaseManager.getDataSetByQuery(query, -1);
+		if (dataset.getMaxRowIndex() > 0) {
+			for (var i = 1; i <= dataset.getMaxRowIndex(); i++) {
+				result.push(new Key(dataset.getValue(i,1), dataset.getValue(i,2), dataset.getValue(i,3), dataset.getValue(i,4), dataset.getValue(i,5)));
+			}
+		}
+		return result;
+	}
+	
+	/**
 	 * Returns the users in this group for all or the given organization
 	 * 
 	 * @this {Group}
@@ -1712,6 +1866,18 @@ function Group(groupRecord) {
 		return save(newUserRightRec);
 	}
 	
+	/**
+	 * Returns the Owner of this Group or null if the group is a global group
+	 * @return {Owner} owner or null
+	 */
+	this.getOwner = function() {
+		if (groupRecord.owner_id != globals.zero_uuid) {
+			return getOwnerById(groupRecord.owner_id);
+		} else {
+			return null;
+		}
+	}
+	
 	Object.defineProperty(this, "name", {
         set: function (x) {
         	groupRecord.name = x;
@@ -1729,6 +1895,35 @@ function Group(groupRecord) {
         },
         get: function () {
             return groupRecord.description;
+        }
+    });	
+	
+	Object.defineProperty(this, "isGlobal", {
+        set: function (x) {
+        	if (x === true) {
+        		groupRecord.owner_id = globals.zero_uuid;
+        		save(groupRecord);
+        	} else if (x === false) {
+        		groupRecord.owner_id = globals.svy_sec_lgn_owner_id;
+        		save(groupRecord);
+        	}
+        },
+        get: function () {
+            return groupRecord.owner_id == globals.zero_uuid;
+        }
+    });
+	
+	Object.defineProperty(this, "ownerId", {
+        set: function (x) {
+        	if (x == null) {
+        		groupRecord.owner_id = globals.zero_uuid;
+        	} else {
+        		groupRecord.owner_id = x;
+        	}
+        	databaseManager.saveData(groupRecord);
+        },
+        get: function () {
+            return groupRecord.owner_id;
         }
     });	
 	
@@ -2201,6 +2396,29 @@ function Organization(organizationRecord) {
 	}
 	
 	/**
+	 * Returns the user with the given user name or null if not found
+	 * 
+	 * @return {User} user
+	 */
+	this.getUser = function(userName) {
+		/** @type {QBSelect<db:/svy_framework/sec_user>} */
+		var userQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user");
+		userQuery.result.addPk();
+		/** @type {QBJoin<db:/svy_framework/sec_user_org>} */
+		var userOrgJoin = userQuery.joins.add("db:/" + globals.nav_db_framework + "/sec_user_org", JSRelation.INNER_JOIN);
+		userOrgJoin.on.add(userQuery.columns.user_id.eq(userOrgJoin.columns.user_id));
+		userQuery.where.add(userOrgJoin.columns.organization_id.eq(this.orgId));
+		userQuery.where.add(userQuery.columns.user_name.eq(userName));
+		/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
+		var userFs = databaseManager.getFoundSet(userQuery);
+		if (utils.hasRecords(userFs)) {
+			return new User(userFs.getRecord(1));
+		} else {
+			return null;
+		}
+	}
+	
+	/**
 	 * Returns all users of this organization
 	 * 
 	 * @return {Array<User>}
@@ -2420,6 +2638,26 @@ function Owner(ownerRecord) {
 	}
 	
 	/**
+	 * Returns the organization with the given name or null if not found
+	 * 
+	 * @return {Organization} organization
+	 */
+	this.getOrganization = function(organizationName) {
+		var result = null;
+		if (utils.hasRecords(ownerRecord.sec_owner_to_sec_organization)) {
+			/** @type {JSFoundSet<db://>} */
+			for (var i = 1; i <= ownerRecord.sec_owner_to_sec_organization.getSize(); i++) {
+				var organizationRecord = ownerRecord.sec_owner_to_sec_organization.getRecord(i);
+				if (organizationRecord.name == organizationName) {
+					result = new Organization(organizationRecord);
+					break;
+				}
+			}
+		}
+		return result;
+	}
+	
+	/**
 	 * Gets an array of users in this company
 	 * @return {Array<User>}
 	 */
@@ -2432,31 +2670,64 @@ function Owner(ownerRecord) {
 	}
 	
 	/**
+	 * Creates a group with the given name for this owner
+	 * 
+	 * @return {Group} new group
+	 * 
+	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the group name has to be unique for an owner
+	 */
+	this.createGroup = function(groupName) {
+		try {
+			return createGroup(groupName, this);
+		} catch (e) {
+			throw e;
+		}
+	}
+	
+	/**
 	 * Creates a new organization for this owner
 	 * and returns an Organization object
 	 * 
 	 * @param {String} organizationName
 	 * 
 	 * @return {Organization} newOrganization
+	 * 
+	 * @throws {scopes.modUtils$data.ValueNotUniqueException}
 	 */
 	this.createOrganization = function(organizationName) {
 		/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 		var fs = ownerRecord.foundset;
-		var orgRecord = fs.createOrganization(organizationName, ownerRecord);
-		if (orgRecord) {
-			return new Organization(orgRecord);
-		} else {
-			return null;
+		try {
+			var orgRecord = fs.createOrganization(organizationName, ownerRecord);
+			if (orgRecord) {
+				return new Organization(orgRecord);
+			} else {
+				return null;
+			}
+		} catch (e) {
+			throw e;
 		}
 	}
 	/**
+	 * Creates a new user for this owner
+	 * 
 	 * @param {String} userName
 	 * @param {String} [password]
 	 * @param {Organization} [organization]
+	 * 
+	 * @return {User} new user
+	 * 
+	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the user name has to be unique for an owner
+	 * @throws {scopes.svySecurityManager.PasswordRuleViolationException} the password must comply to the password rules of the owner
+	 * 
 	 * @this {Owner}
 	 */
 	this.createUser = function(userName, password, organization){
-		return createUser(userName,password,this,organization);
+		try {
+			return createUser(userName, password, this, organization);
+		} catch (e) {
+			throw e;
+		}
 	}
 	
 	/**
@@ -2501,6 +2772,45 @@ function Owner(ownerRecord) {
 		var fs = ownerRecord.sec_owner_to_sec_owner_in_module;
 		for (var i = 1; i <= fs.getSize(); i++) {
 			result.push(new OwnerModule(fs.getRecord(i)));
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns all groups of this owner
+	 * 
+	 * @return {Array<Group>} groups or an empty array if the owner has no groups
+	 */
+	this.getGroups = function() {
+		var result = new Array();
+		/** @type {QBSelect<db:/svy_framework/sec_group>} */
+		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_group");
+		query.result.addPk();
+		query.where.add(query.columns.owner_id.eq(ownerRecord.owner_id.toString()));
+		/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
+		var fs = databaseManager.getFoundSet(query);
+		for (var i = 1; i <= fs.getSize(); i++) {
+			result.push(new Group(fs.getRecord(i)));
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns the group with the given name
+	 * 
+	 * @return {Group} group or null if not found
+	 */
+	this.getGroup = function(groupName) {
+		var result = null;
+		/** @type {QBSelect<db:/svy_framework/sec_group>} */
+		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_group");
+		query.result.addPk();
+		query.where.add(query.columns.owner_id.eq(ownerRecord.owner_id.toString()));
+		query.where.add(query.columns.name.eq(groupName));
+		/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
+		var fs = databaseManager.getFoundSet(query);
+		if (utils.hasRecords(fs)) {
+			result = new Group(fs.getRecord(1));
 		}
 		return result;
 	}
@@ -3570,10 +3880,16 @@ function setSecuritySettings() {
 	// query all the element right from sec_element
 	/** @type {QBSelect<db:/svy_framework/sec_element>} */
 	var elementQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_element");
-	elementQuery.result.add(elementQuery.columns.element_id);
-	elementQuery.result.add(elementQuery.columns.flag_editable.sum);
-	elementQuery.result.add(elementQuery.columns.flag_visible.sum);
-	elementQuery.where.add(elementQuery.columns.security_key_id.isin(keyIds))
+	/** @type {QBJoin<db:/svy_framework/sec_element>} */
+	var editableJoin = elementQuery.joins.add("db:/" + globals.nav_db_framework + "/sec_element", JSRelation.LEFT_OUTER_JOIN, "se");
+	editableJoin.on.add(elementQuery.columns.servoy_element_id.eq(editableJoin.columns.servoy_element_id)).add(editableJoin.columns.security_key_id.isin(keyIds));
+	/** @type {QBJoin<db:/svy_framework/sec_element>} */
+	var visibleJoin = elementQuery.joins.add("db:/" + globals.nav_db_framework + "/sec_element", JSRelation.LEFT_OUTER_JOIN, "sv");
+	visibleJoin.on.add(elementQuery.columns.servoy_element_id.eq(visibleJoin.columns.servoy_element_id)).add(visibleJoin.columns.security_key_id.isin(keyIds));
+	
+	elementQuery.result.add(elementQuery.columns.servoy_element_id);
+	elementQuery.result.add(editableJoin.columns.flag_editable.sum);
+	elementQuery.result.add(visibleJoin.columns.flag_visible.sum);
 	elementQuery.groupBy.add(elementQuery.columns.element_id);
 
 	var dataset = databaseManager.getDataSetByQuery(elementQuery, -1);
@@ -3875,7 +4191,7 @@ function PasswordRuleViolationException(record, message, errorCode) {
 	 */
 	this.errorCode = errorCode;
 	
-	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message||'Password rule violated');
+	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message || 'Password rule violated');
 }
 
 /**
@@ -4193,6 +4509,31 @@ function getKey(key) {
 }
 
 /**
+ * Returns all security keys
+ * 
+ * @public 
+ * 
+ * @return {Array<Key>} keys
+ * 
+ * @version 5.0
+ * @since 25.09.2013
+ * @author patrick
+ *
+ * @properties={typeid:24,uuid:"4D402372-661E-4F92-A8EC-92D5093D3775"}
+ */
+function getKeys() {
+	var result = new Array();
+	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
+	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
+	fs.loadAllRecords();
+	for (var i = 1; i <= fs.getSize(); i++) {
+		var record = fs.getRecord(i);
+		result.push(new Key(record.security_key_id, record.name, record.description, record.owner_id, record.module_id));
+	}
+	return result;
+}
+
+/**
  * Returns <code>true</code> if the logged in user has 
  * the key with the given name or UUID
  * 
@@ -4300,6 +4641,37 @@ function addRuntimeKey(keyId, keyName, keyDescription, keyOwnerId, keyModuleId) 
 	}
 	runtimeSecurityKeys.push(newKey);
 	return newKey;
+}
+
+/**
+ * Adds the given keys to the list of loaded security keys<p>
+ * 
+ * All previously added keys are overwritten
+ * 
+ * @public
+ * 
+ * @version 5.0
+ * @since 18.09.2013
+ * @author patrick
+ *
+ * @param {Array<String>|Array<UUID>} keyIds
+ * @param {Array<String>} keyNames
+ *
+ * @properties={typeid:24,uuid:"8AB2D6EC-BFF4-4F5D-9A79-CE45A45900B2"}
+ */
+function setRuntimeKeys(keyIds, keyNames) {
+	if (!keyIds || !keyNames || keyIds.length != keyNames.length) {
+		return;
+	}
+	runtimeSecurityKeys = new Array();
+	for (var i = 0; i < keyIds.length; i++) {
+		var keyId = keyIds[i];
+		if (keyId instanceof String) {
+			keyId = application.getUUID(keyId);
+		}
+		var newKey = new Key(keyId, keyNames[i], null, null, null);
+		runtimeSecurityKeys.push(newKey);
+	}
 }
 
 /**
@@ -4466,6 +4838,120 @@ function changeOrganization(oldOrganizationId, newOrganizationId) {
 	filterTables();
 	
 	scopes.modUtils$eventManager.fireEvent(this, EVENT_TYPES.ORGANIZATION_CHANGE, [oldOrganizationId, newOrganizationId]);
+	return true;
+}
+
+/**
+ * Checks a given password for a given user name whether it complies to the password rules of the given or current owner<p>
+ * This method can be used to verify if a password complies to the rules before an attempt is made to actually create that user<p>
+ * If the password does not comply to any of the rules, a PasswordRuleViolationException exception is thrown
+ * 
+ * @public
+ * 
+ * @version 5.0
+ * @since 05.10.2013
+ * @author patrick
+ *
+ * @param {String} userName - the user name
+ * @param {String} passwordToCheck - the password to be checked
+ * @param {String|UUID} [ownerId] - the ownerId of the user; if not given, the owner of the logged in user will be used
+ * 
+ * @return {Boolean} true if successful, throws exception otherwise
+ * 
+ * @throws {scopes.svySecurityManager.PasswordRuleViolationException}
+ *
+ * @properties={typeid:24,uuid:"AB02B2C1-B03B-41A6-BAD7-DC5D75A32E47"}
+ */
+function checkPasswordRules(userName, passwordToCheck, ownerId) {
+	// no ownerId given, use logged in owner
+	if (!ownerId) {
+		ownerId = globals.svy_sec_lgn_owner_id;
+	}	
+	
+	/** @type {JSRecord<db:/svy_framework/sec_user>} */
+	var record = null;	
+	
+	if (userName) {
+		// see if we already have this user; if yes, the password_number_unique_before_reuse can be checked
+		/** @type {QBSelect<db:/svy_framework/sec_user>} */
+		var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/sec_user");
+		query.result.addPk();
+		query.where.add(query.columns.user_name.eq(userName));
+		query.where.add(query.columns.owner_id.eq(ownerId.toString()));
+		var userFs = databaseManager.getFoundSet(query);
+		if (utils.hasRecords(userFs)) {
+			record = userFs.getRecord(1);
+		}
+	}	
+	
+	// get all rules in one
+	var propValues = scopes.svyProperties.getRuntimeProperties(scopes.svySecurityManager.ADMIN_LEVEL.TENANT_MANAGER, ["password_must_not_start_with_user_name", "password_numbers_and_letters", "password_minimum_length", "password_maximum_length", "password_number_unique_before_reuse"], ownerId);
+	
+	function findPasswordRule(givenValue) {
+		function filter(x) {
+			return x.propertyName == givenValue;
+		}
+		var result = propValues.filter(filter);
+		if (result && result.length > 0) {
+			return result[0].value;
+		} else {
+			return null;
+		}
+	}
+	
+	// no password given
+	if (!passwordToCheck) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_empty') || "The password cannot be empty.", scopes.svySecurityManager.ERROR_CODE.EMPTY_PASSWORD);
+	}
+
+	// password can not have same begin as username
+	var passwordRule = findPasswordRule("password_must_not_start_with_user_name");
+	if (passwordRule && passwordToCheck.substr(0, 3) == userName.substr(0, 3)) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_same_begin') || "The password cannot begin with the same letters as the username.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_MUST_NOT_START_WITH_USER_NAME);
+	}
+	
+	// password has to contain letters and numbers
+	passwordRule = findPasswordRule("password_numbers_and_letters");
+	if (passwordRule && ! (/[0-9]/.test(passwordToCheck) && /[a-zA-Z]/.test(passwordToCheck))) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_contain_letters_numbers') || 'The password must contain letters and numbers.', scopes.svySecurityManager.ERROR_CODE.PASSWORD_MUST_CONTAIN_NUMBERS_AND_LETTERS);
+	}
+
+	// password is too short
+	passwordRule = findPasswordRule("password_minimum_length");
+	if (passwordRule && passwordToCheck.length < passwordRule) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_min_length', [passwordRule]) || "The password is too short.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_TOO_SHORT);
+	}
+
+	// password is too long
+	passwordRule = findPasswordRule("password_maximum_length");
+	if (passwordRule && passwordToCheck.length > passwordRule) {
+		throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_max_length', [passwordRule]) || "The password is too long.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_TOO_LONG);
+	}
+
+	var md5Hash = utils.stringMD5HashBase64(passwordToCheck);
+	var oldPasswordRecord;
+
+	// password has to be unique for a certain number of previous passwords
+	passwordRule = findPasswordRule("password_number_unique_before_reuse");
+	if (passwordRule && record && utils.hasRecords(record.sec_user_to_sec_user_password)) {
+		/** @type {JSFoundSet<db:/svy_framework/sec_user_password>} */
+		var previousPasswordFs = record.sec_user_to_sec_user_password;
+		previousPasswordFs.sort("start_date desc");
+
+		var endLoopAt = previousPasswordFs.getSize() < passwordRule ? previousPasswordFs.getSize() : passwordRule;
+
+		for (var pp = 1; pp <= endLoopAt; pp++) {
+			oldPasswordRecord = previousPasswordFs.getRecord(pp);
+			if (oldPasswordRecord.password_value && oldPasswordRecord.password_value == md5Hash) {
+				throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule]) || "The password may not be the same as a previous password.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_NOT_UNIQUE);
+			} else if (oldPasswordRecord.password_hash && oldPasswordRecord.password_salt && oldPasswordRecord.password_version) {
+				if (scopes.svySecurityManager.validatePBKDF2Hash(passwordToCheck, oldPasswordRecord.password_salt, oldPasswordRecord.password_hash, oldPasswordRecord.password_version)) {
+					throw new scopes.svySecurityManager.PasswordRuleViolationException(record, i18n.getI18NMessage('svy.fr.dlg.password_unique_before_reuse', [passwordRule]) || "The password may not be the same as a previous password.", scopes.svySecurityManager.ERROR_CODE.PASSWORD_NOT_UNIQUE);
+				}
+			}
+		}
+	}
+	
 	return true;
 }
 
