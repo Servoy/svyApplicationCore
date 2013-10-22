@@ -44,12 +44,14 @@ function getLoadedProperties() {
 /**
  * Creates a new Property
  * 
- * @param {String} name								- the name of this property
- * @param {String|UUID|PropertySet} propertySet		- the propertySet given as name, ID or PropertySet object
- * @param {String|UUID} [applicationId]				- an optional applicationId of the application that this property is exclusively for
- * @param {Number} [sortOrder]						- the sortOrder of this property in the set
- * @param {Number} [adminLevel]						- the minimum admin level required to edit this property
- * @param {String} [header]							- the header text that is placed above the property values
+ * @public 
+ * 
+ * @param {String} name								the name of this property
+ * @param {String|UUID|PropertySet} propertySet		the propertySet given as name, ID or PropertySet object
+ * @param {String|UUID} [applicationId]				an optional applicationId of the application that this property is exclusively for
+ * @param {Number} [sortOrder]						the sortOrder of this property in the set
+ * @param {Number} [adminLevel]						the minimum admin level required to edit this property
+ * @param {String} [header]							the header text that is placed above the property values
  * 
  * @return {Property}
  * 
@@ -113,11 +115,14 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
 		propertyRecord.header_text = header;
 	}
 	databaseManager.saveData(propertyRecord);
+	
 	return new Property(propertyRecord);
 }
 
 /**
- * Creates a new PropertySet
+ * Creates a new property set that is used to logically group properties
+ * 
+ * @public 
  * 
  * @param {String} name						- the name of this property set
  * @param {String|UUID} [applicationId]		- an optional applicationId of the application that this property is exclusively for
@@ -176,9 +181,11 @@ function createPropertySet(name, applicationId, displayName, description, icon, 
 /**
  * Returns the Property with the given name
  * 
+ * @public 
+ * 
  * @param {String} name
  * 
- * @return {Property} propertyDescription
+ * @return {Property} property
  *
  * @properties={typeid:24,uuid:"006BEBB6-6D13-4DD9-AEDA-DA0A49FC7F64"}
  */
@@ -198,6 +205,8 @@ function getProperty(name) {
 
 /**
  * Returns the PropertyDescription with the given ID
+ * 
+ * @public 
  *  
  * @param {String|UUID} id
  * 
@@ -222,6 +231,8 @@ function getPropertyById(id) {
 /**
  * Returns the PropertySet with the given name or null if not found
  * 
+ * @public 
+ * 
  * @param {String} name
  * 
  * @return {PropertySet}
@@ -245,6 +256,8 @@ function getPropertySet(name) {
 /**
  * Returns the PropertySet with the given ID or null if not found
  * 
+ * @public 
+ * 
  * @param {String|UUID} propertySetId
  * 
  * @return {PropertySet}
@@ -266,6 +279,38 @@ function getPropertySetById(propertySetId) {
 }
 
 /**
+ * Returns a PropertySet array with all defined property sets sorted by sort oder
+ * 
+ * @public 
+ * 
+ * @return {Array<PropertySet>} property sets
+ * 
+ * @version 5.0
+ * @since 18.10.2013
+ * @author patrick
+ *
+ * @properties={typeid:24,uuid:"D958FB6F-A4CE-4BED-82EC-FFEEEA7950B2"}
+ */
+function getPropertySets() {
+	var result = new Array();
+	/** @type {QBSelect<db:/svy_framework/svy_property_sets>} */	
+	var query = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_sets");
+	query.result.addPk();
+	query.sort.add(query.columns.sort_order.asc);
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
+	var fs = databaseManager.getFoundSet(query);
+	for (var i = 1; i <= fs.getSize(); i++) {
+		var record = fs.getRecord(i);
+		result.push(new PropertySet(record));
+	}
+	return result;
+}
+
+/**
+ * Returns the runtime property with the given name
+ * 
+ * @public 
+ * 
  * @param {String} propertyName
  * 
  * @return {RuntimeProperty} property
@@ -307,6 +352,8 @@ function getRuntimeProperty(propertyName) {
  * 
  * If an ownerId is given and data is not filtered on ownerId, the properties returned apply to the given owner
  * 
+ * @public 
+ * 
  * @param {Number} [adminLevel]
  * @param {Array<String>} [propertyNames]
  * @param {String|UUID} [ownerId]
@@ -343,6 +390,8 @@ function getRuntimeProperties(adminLevel, propertyNames, ownerId) {
  * 
  * This function should only be called if the property is known to have only one value; otherwise use {@link #getPropertyValues()}
  * 
+ * @public 
+ * 
  * @param {String} propertyName
  * 
  * @return {Object} propertyValue
@@ -368,6 +417,8 @@ function getPropertyValue(propertyName) {
 
 /**
  * Returns the runtime value of the given property as a Boolean
+ * 
+ * @public 
  * 
  * @param {String} propertyName
  * 
@@ -409,6 +460,8 @@ function getPropertyValueAsBoolean(propertyName) {
 
 /**
  * Returns all runtime property values for the given property
+ * 
+ * @public 
  * 
  * @param {String|Array<String>} propertyName
  * 
@@ -479,6 +532,8 @@ function getPropertyValues(propertyName) {
 
 /**
  * A single runtime property
+ * 
+ * @private 
  * 
  * @param {String} name						- the name of the property
  * @param {Object} value					- the value
@@ -761,19 +816,76 @@ function Property(propertyRecord) {
 	 * 
 	 * @this {Property}
 	 * 
+	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the name of the property value has to be unique
+	 * 
 	 * @return {PropertyValue}
 	 */
 	this.addValueDescription = function(sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues) {
+		for (var i = 0; i < this.valueDescriptions.length; i++) {
+			if (this.valueDescriptions[i].name == name) {
+				throw new scopes.modUtils$data.ValueNotUniqueException(null, null, "property_value_name", name);
+			}
+		}
+		
 		var propDescription = new PropertyValue(this, sortOrder, name, dataType, displayType, label, description, defaultValue, valueListName, valueListValues);
 		var values = new Array();
-		for (var i = 0; i < this.valueDescriptions.length; i++) {
+		for (i = 0; i < this.valueDescriptions.length; i++) {
 			values.push(this.valueDescriptions[i]);
 		}
 		values.push(propDescription);
 		record.value_description = values;
 		databaseManager.saveData(record);
 		this.valueDescriptions = values;
+		updateDefaultPropertyValues();
+		reloadRuntimeProperties();
 		return propDescription;
+	}
+	
+	/**
+	 * Removes the value description with the given name from this property<p>
+	 * 
+	 * WARNING: all stored values from users will also be removed
+	 * 
+	 * @param {String} valueName
+	 */
+	this.removeValueDescription = function(valueName) {
+		var found = false;
+		for (var i = 0; i < this.valueDescriptions.length; i++) {
+			var valueDesc = this.valueDescriptions[i];
+			if (valueDesc.name == valueName) {
+				this.valueDescriptions.splice(i,1);
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			return;
+		}
+		record.value_description = this.valueDescriptions;
+		databaseManager.saveData(record);
+		
+		/** @type {QBSelect<db:/svy_framework/svy_property_values>} */
+		var valuesQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
+		valuesQuery.result.addPk();
+		valuesQuery.where.add(valuesQuery.where.add(valuesQuery.columns.svy_properties_id.eq(this.propertyId)));
+		/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
+		var valuesFs = databaseManager.getFoundSet(valuesQuery);
+		for (i = 1; i <= valuesFs.getSize(); i++) {
+			var valuesRecord = valuesFs.getRecord(i);
+			/** @type {Array<PropertyValue>} */
+			var currValue = valuesRecord.property_value;
+			if (currValue) {
+				for (var j = 0; j < currValue.length; j++) {
+					var currValueEntry = currValue[j];
+					if (currValueEntry.name == valueName) {
+						currValue.splice(j,1);
+						break;
+					}
+				}
+			}
+			valuesRecord.property_value = currValue;
+		}
+		databaseManager.saveData(valuesFs);
 	}
 	
 	/**
@@ -794,6 +906,22 @@ function Property(propertyRecord) {
 		}
 		return null;
 	}	
+	
+	this.getPropertyValues = function() {
+		/** @type {Array<PropertyValue>} */
+		var result = this.valueDescriptions;
+		
+		/**
+		 * @param {PropertyValue} x
+		 * @param {PropertyValue} y
+		 * @return {Object}
+		 */
+		function sortValues(x, y) {
+			return x.sortOrder > y.sortOrder;
+		}
+		
+		return result.sort(sortValues);
+	}
 	
 	/**
 	 * Returns the property set of this property
@@ -822,8 +950,10 @@ function Property(propertyRecord) {
 		},
 		set: function(x) {
 			if (x) {
-				if (!scopes.modUtils.isValueUnique(record, "property_name", x)) {
-					throw new scopes.modUtils$data.ValueNotUniqueException(null, record, "property_name", x);
+				if (record.property_name != x) {
+					if (!scopes.modUtils.isValueUnique(record, "property_name", x)) {
+						throw new scopes.modUtils$data.ValueNotUniqueException(null, record, "property_name", x);
+					}
 				}
 				record.property_name = x;
 				databaseManager.saveData(record);
@@ -1000,6 +1130,7 @@ function PropertySet(propertySetRecord) {
 		/** @type {Array<Property>} */
 		var result = new Array();
 		if (utils.hasRecords(record.svy_property_sets_to_svy_properties)) {
+			record.svy_property_sets_to_svy_properties.sort("sort_order asc");
 			for (var i = 1; i <= record.svy_property_sets_to_svy_properties.getSize(); i++) {
 				var propRecord = record.svy_property_sets_to_svy_properties.getRecord(i);
 				result.push(new Property(propRecord));
@@ -1025,11 +1156,80 @@ function PropertySet(propertySetRecord) {
 		return result;
 	}
 	
+	/**
+	 * Adds a property to this set
+	 * 
+	 * @param {String} name						the name of this property
+	 * @param {String|UUID} [applicationId]		an optional applicationId of the application that this property is exclusively for
+	 * @param {Number} [sortOrder]				the sortOrder of this property in the set
+	 * @param {Number} [adminLevel]				the minimum admin level required to edit this property
+	 * @param {String} [header]					the header text that is placed above the property values
+	 * 
+	 * @return {Property} 
+	 * 
+	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the name of the property has to be unique
+	 */
+	this.addProperty = function(name, applicationId, sortOrder, adminLevel, header) { 
+		try {
+			var property = createProperty(name, this, applicationId, sortOrder, adminLevel, header);
+		} catch(e) {
+			throw e;
+		}
+		return property;
+	}
+	
+	/**
+	 * Deletes this property<p>
+	 * 
+	 * WARNING: all stored values from users will also be removed
+	 * 
+	 * @param {Property|String|UUID} propertyToRemove Property object, name or UUID of the property to be removed
+	 */
+	this.removeProperty = function(propertyToRemove) {
+		var propertyId;
+		if (propertyToRemove instanceof String) {
+			propertyToRemove = getProperty(propertyToRemove);
+			if (!propertyToRemove) {
+				application.output("scopes.svyProperties.PropertySet.removeProperty(): failed to find given Property", LOGGINGLEVEL.ERROR);
+				return;
+			}
+			propertyId = propertyToRemove.propertyId;
+		} else if (propertyToRemove instanceof Property) {
+			propertyId = propertyToRemove.propertyId;
+		} else if (propertyToRemove instanceof UUID) {
+			propertyId = propertyToRemove;
+		} else {
+			application.output("scopes.svyProperties.PropertySet.removeProperty(): failed to find given Property", LOGGINGLEVEL.ERROR);
+			return;
+		}
+		/** @type {QBSelect<db:/svy_framework/svy_property_values>} */
+		var propValueQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_values");
+		propValueQuery.result.addPk();
+		propValueQuery.where.add(propValueQuery.columns.svy_properties_id.eq(propertyId.toString()));
+		/** @type {JSFoundSet<db:/svy_framework/svy_property_values>} */
+		var propValueFs = databaseManager.getFoundSet(propValueQuery);
+		propValueFs.deleteAllRecords();
+		databaseManager.saveData(propValueFs);
+		/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
+		var propFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_properties");
+		propFs.loadRecords(propertyId);
+		if (utils.hasRecords(propFs)) {
+			propFs.deleteRecord(1);
+		}
+		databaseManager.saveData(propFs);
+	}
+	
 	Object.defineProperty(this, "name", {
 		get: function() {
 			return record.name;
 		},
 		set: function(x) {
+			if (x != record.name) {
+				var fs = record.foundset;
+				if (!scopes.modUtils.isValueUnique(fs, "name", x))	{
+					throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, "property_name", x);
+				}
+			}
 			record.name = x;
 			databaseManager.saveData(record);
 		}
@@ -1471,6 +1671,8 @@ function getValueArray(_values) {
  * 
  * This is usually called when modules are initialized
  * 
+ * @public 
+ * 
  * @param {{propertySet: Object, properties: Array<Object>}} props
  *
  * @properties={typeid:24,uuid:"CC1F58C5-B612-4476-B1F3-AF267DDAC38B"}
@@ -1744,28 +1946,32 @@ function loadRuntimeProperties(adminLevel, ownerId) {
 			var propertyLevel = record.admin_level;
 			/** @type {Array<{name: String, value, Object, sort: Number}>} */
 			var propertyValues = record.property_value;
-			for (var j = 0; j < propertyValues.length; j++) {
-				var propertyValue = propertyValues[j];
-				if (propertyValue.name in relevantProperties) {
-					if (givenAdminLevel > -1 && relevantProperties[propertyValue.name].level > givenAdminLevel && record.admin_level < relevantProperties[propertyValue.name].level && record.admin_level >= givenAdminLevel) {
-						// highest level wins
+			if (propertyValues) {
+				for (var j = 0; j < propertyValues.length; j++) {
+					var propertyValue = propertyValues[j];
+					if (propertyValue.name in relevantProperties) {
+						if (givenAdminLevel > -1 && relevantProperties[propertyValue.name].level > givenAdminLevel && record.admin_level < relevantProperties[propertyValue.name].level && record.admin_level >= givenAdminLevel) {
+							// highest level wins
+							relevantProperties[propertyValue.name].value = propertyValue.value;
+							relevantProperties[propertyValue.name].record = record;
+							relevantProperties[propertyValue.name].level = record.admin_level;
+						} else if (givenAdminLevel == -1 && relevantProperties[propertyValue.name].level > propertyLevel) {
+							// smallest level wins
+							relevantProperties[propertyValue.name].value = propertyValue.value;
+							relevantProperties[propertyValue.name].record = record;
+							relevantProperties[propertyValue.name].level = record.admin_level;						
+						}
+					} else {
+						relevantProperties[propertyValue.name] = new Object();
+						relevantProperties[propertyValue.name].level = propertyLevel;
 						relevantProperties[propertyValue.name].value = propertyValue.value;
+						relevantProperties[propertyValue.name].name = propertyValue.name;
+						relevantProperties[propertyValue.name].sort = propertyValue.sort;
 						relevantProperties[propertyValue.name].record = record;
-						relevantProperties[propertyValue.name].level = record.admin_level;
-					} else if (givenAdminLevel == -1 && relevantProperties[propertyValue.name].level > propertyLevel) {
-						// smallest level wins
-						relevantProperties[propertyValue.name].value = propertyValue.value;
-						relevantProperties[propertyValue.name].record = record;
-						relevantProperties[propertyValue.name].level = record.admin_level;						
 					}
-				} else {
-					relevantProperties[propertyValue.name] = new Object();
-					relevantProperties[propertyValue.name].level = propertyLevel;
-					relevantProperties[propertyValue.name].value = propertyValue.value;
-					relevantProperties[propertyValue.name].name = propertyValue.name;
-					relevantProperties[propertyValue.name].sort = propertyValue.sort;
-					relevantProperties[propertyValue.name].record = record;
 				}
+			} else {
+				application.output("Property " + record.property_name + " has no value description", LOGGINGLEVEL.WARNING)
 			}
 		}
 		for ( var rp in relevantProperties) {
@@ -1806,22 +2012,9 @@ function reloadRuntimeProperties() {
 }
 
 /**
- * @param {Property} propertyDescription
- *
- * @properties={typeid:24,uuid:"09B91526-05CA-46EA-909E-1CEBD6A204FC"}
- */
-function addProperty(propertyDescription) {
-	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
-	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_properties");
-	var record = fs.getRecord(fs.newRecord());
-	record.property_name = propertyDescription.name;
-	record.value_description = propertyDescription.valueDescriptions;
-	databaseManager.saveData(record);
-	return record;
-}
-
-/**
  * Saves the given value to the property with the given name
+ * 
+ * @public 
  * 
  * @param {String} propertyName			- the name of the property
  * @param {Object} propertyValue		- the new value
@@ -1958,6 +2151,8 @@ function getOwnerIdForAdminLevel(adminLevel) {
 /**
  * Initializes the runtime properties
  * 
+ * @public 
+ * 
  * @param {Boolean} [forceReload]
  * 
  * @properties={typeid:24,uuid:"E0C41D84-7632-490D-82CD-D0C0F8706D92"}
@@ -1975,6 +2170,8 @@ function initProperties(forceReload) {
 
 /**
  * Updates the default property values for the logged in owner
+ * 
+ * @public 
  *
  * @properties={typeid:24,uuid:"50B0F774-D8A7-4370-917C-29AE32D71578"}
  */
@@ -2123,23 +2320,23 @@ function updateDefaultPropertyValues() {
 				propSavedValues.push(propValues[j]);
 			}
 			arrayAdded = true;
-		} else {
+		} else if (propValues) {
 			arrayAdded = addMissingValues(propValues, propSavedValues);
+		} else {
+			application.output("Property " + propRecord.property_name + " has no value description", LOGGINGLEVEL.WARNING);
 		}
 		
 		var arrayRemoved = removeDeletedValues(propValues, propSavedValues);
 		
 		if (!arrayAdded && !arrayRemoved) {
-//			if (adjustDefaults(propValues, propSavedValues)) {
-//				propValueRecord.property_value = propSavedValues;
-//				databaseManager.saveData(propValueRecord);			
-//			}
 			continue;
 		}
 		
-		var propValuesToSave = new Array();			
-		for (var p = 0; p < propSavedValues.length; p++) {
-			propValuesToSave.push({name: propSavedValues[p].name, value: propSavedValues[p].value, sort: propSavedValues[p].sortOrder});
+		var propValuesToSave = new Array();	
+		if (propSavedValues) {
+			for (var p = 0; p < propSavedValues.length; p++) {
+				propValuesToSave.push({name: propSavedValues[p].name, value: propSavedValues[p].value, sort: propSavedValues[p].sortOrder});
+			}
 		}
 		propValueRecord.property_value = propValuesToSave;
 		databaseManager.saveData(propValueRecord);
@@ -2151,6 +2348,8 @@ function updateDefaultPropertyValues() {
  * 
  * Depending on the setting in <code>save_user_properties_in_db</code> the 
  * user property is stored in the local .properties file or in the database
+ * 
+ * @public 
  * 
  * @param {String} propertyName
  * @param {Object} propertyValue
@@ -2234,6 +2433,8 @@ function setUserProperty(propertyName, propertyValue, userId) {
  * 
  * The method fired will receive the Property object and the RuntimeProperty for the changed property
  * 
+ * @public 
+ * 
  * @param {Function} action
  * 
  * @author patrick
@@ -2266,6 +2467,8 @@ function printRuntimeProperties(adminLevel) {
  * since the BAP filters on solution_name by itself<p>
  * 
  * Note: This call will trigger a reload of runtimeProperties
+ * 
+ * @public 
  * 
  * @param {String|UUID} applicationIdOrName
  *
@@ -2320,4 +2523,223 @@ function setApplicationContext(applicationIdOrName) {
 	
 	APPLICATION_CONTEXT = app;	
 	reloadRuntimeProperties();	
+}
+
+
+/**
+ * TODO: check out where this belongs
+ * 
+ * @private
+ * 
+ * @version 5.0
+ * @since 17.10.2013
+ * @author patrick
+ *
+ * @properties={typeid:24,uuid:"49E0D7B8-063D-44C8-882C-048AEDDC119B"}
+ * @AllowToRunInFind
+ */
+function createBasicProperties() {
+	/**
+	 * use readMetaDataFromDeveloper to get the contents of the meta data file in your workspace in the console and copy the result into this method
+	 */
+	
+	// svy_property_sets
+	 var columnNames = ["svy_property_sets_id","application_id","deletion_date","description","display_name","form_name","icon","modification_date","name","sort_order"]
+
+	 var columnTypes = [12,12,93,12,12,12,12,93,12,4]
+
+	 var rowData = new Array();
+	 rowData.push(["494F8E96-3781-4711-B705-4C9F79D2E9A1","","","i18n:svy.fr.property_set_description.document_management","i18n:svy.fr.property_set.document_management","","media:///svy_documents_preferences_48.png","","document_management","40"])
+	 rowData.push(["99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","","","","i18n:svy.fr.property_set.application_settings","","media:///svy_application_server_preferences_48.png","","application_settings","10"])
+	 rowData.push(["BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","","","i18n:svy.fr.property_set_description.password_rules","i18n:svy.fr.property_set.password_rules","","media:///svy_key1_preferences_48.png","","password_rules","30"])
+	 rowData.push(["BFC7ABA4-8E3A-46A8-98E3-32FAC7BE5522","","","i18n:svy.fr.property_set_description.monitoring","i18n:svy.fr.property_set.monitoring","","media:///svy_debug_preferences_48.png","","monitoring","50"])
+	 rowData.push(["E24D319B-71F6-48AF-848D-9A86F47B8251","","","i18n:svy.fr.property_set_description.runtime_settings","i18n:svy.fr.property_set.runtime_settings","","media:///svy_application_preferences_48.png","","runtime_settings","20"])
+	 rowData.push(["EE6A87B0-4C76-4614-8D50-C2EF97990346","","","i18n:svy.fr.property_set_description.authentication","i18n:svy.fr.property_set.authentication","svyAuthenticateProperty","media:///svyAuthenticate/svy_authentication_48.png","","authentication","29"])
+	
+	/** @type {QBSelect<db:/svy_framework/svy_property_sets>} */
+	var propertySetQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_property_sets");
+	propertySetQuery.result.addPk();
+	propertySetQuery.where.add(propertySetQuery.columns.svy_property_sets_id.eq(propertySetQuery.getParameter("propertySetsId")));
+	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
+	var propertySetFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_sets");
+	/** @type {JSRecord<db:/svy_framework/svy_property_sets>} */
+	var propertySetsRecord;
+	var propertySetsEntry;
+	for (var i = 0; i < rowData.length; i++) {
+		propertySetsEntry = rowData[i];
+		propertySetQuery.params["propertySetsId"] = propertySetsEntry[0];
+		propertySetFs.loadRecords(propertySetQuery);
+		if (utils.hasRecords(propertySetFs)) {
+			propertySetsRecord = propertySetFs.getRecord(1);
+		} else {
+			propertySetsRecord = propertySetFs.getRecord(propertySetFs.newRecord());
+		}
+		
+		for (var c = 0; c < columnNames.length; c++) {
+			var dataType = columnTypes[c];
+			/** @type {String} */
+			var columnValue = rowData[i][c];
+			if (!columnValue) columnValue = null;
+			if (columnValue && dataType == JSColumn.DATETIME) {
+				columnValue = new Date(columnValue);
+			} else if (columnValue && dataType == JSColumn.INTEGER) {
+				columnValue = parseInt(columnValue);
+			} else if (columnValue && dataType == JSColumn.NUMBER) {
+				columnValue = parseFloat(columnValue);
+			}
+			propertySetsRecord[columnNames[c]] = columnValue;
+		}
+		
+		databaseManager.saveData(propertySetsRecord);
+	}
+	
+	
+	// svy_properties 
+	
+	columnNames = ["svy_properties_id","admin_level","application_id","deletion_date","header_text","modification_date","property_name","sort_order","svy_property_sets_id","value_description"]
+
+	columnTypes = [12,4,12,93,12,93,12,4,12,12]
+
+	rowData = new Array();
+	rowData.push(["00ED5658-8649-4F75-8F2A-7693A6E89E7D","2","","","","Fri Nov 30 15:07:27 CET 2012","document_management","1","494F8E96-3781-4711-B705-4C9F79D2E9A1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"document_management\",\"label\":\"i18n:svy.fr.property.document_management\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["01AF36D5-A4C7-4F69-877E-68C5FF12B6E0","8","","","","Fri Nov 30 15:07:27 CET 2012","form_prefix","30","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":8,\"description\":\"\",\"name\":\"form_prefix\",\"label\":\"i18n:svy.fr.property.form_prefix\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"svy_\",\"dataType\":12}]"])
+	rowData.push(["14778DE9-771A-445B-AE31-B8ECDC55C7EC","8","","","","Fri Nov 30 15:07:27 CET 2012","form_types","20","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":8,\"description\":\"\",\"name\":\"form_types\",\"label\":\"i18n:svy.fr.property.form_types\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"detail, table\",\"dataType\":12}]"])
+	rowData.push(["1591D832-3F3F-4AC6-8AC9-421ED918280D","8","","","i18n:svy.fr.property.form_conventions","Fri Nov 30 15:07:27 CET 2012","form_conventions","10","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":8,\"description\":\"\",\"name\":\"form_conventions_detail\",\"label\":\"i18n:svy.fr.property.form_conventions_detail\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"base_form_name + '_dtl'\",\"dataType\":12},{\"securityLevel\":8,\"description\":\"\",\"name\":\"form_conventions_table\",\"label\":\"i18n:svy.fr.property.form_conventions_table\",\"header\":null,\"sortOrder\":2,\"displayType\":0,\"value\":\"base_form_name + '_tbl'\",\"dataType\":12}]"])
+	rowData.push(["17B355AD-501C-4E34-8C36-AE10A33B0FA8","0","","","","Fri Nov 30 15:07:27 CET 2012","keep_record_history","5","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"keep_record_history\",\"label\":\"i18n:svy.fr.property.keep_record_history\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["1A13A8BC-E306-4E3E-9389-E584B12F86EF","0","","","","Fri Nov 30 15:07:27 CET 2012","advanced_search","6","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"advanced_search\",\"label\":\"i18n:svy.fr.property.advanced_search\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["1A96ECD7-C050-4AD7-8E2D-E64446ABE106","1","","","","Fri Nov 30 15:07:27 CET 2012","document_management_allow_all_file_types","4","494F8E96-3781-4711-B705-4C9F79D2E9A1","[{\"securityLevel\":1,\"description\":\"\",\"name\":\"document_management_allow_all_file_types\",\"label\":\"i18n:svy.fr.property.document_management_allow_all_file_types\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":0,\"dataType\":4}]"])
+	rowData.push(["1E366BEB-570B-46E5-BF55-6A8D14C5115A","2","","","","Fri Nov 30 15:07:27 CET 2012","document_management_revision","2","494F8E96-3781-4711-B705-4C9F79D2E9A1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"document_management_revision\",\"label\":\"i18n:svy.fr.property.document_management_revision\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["2188FEF3-2DFE-432F-AA67-55D3B9690FD6","2","","","","Fri Nov 30 15:07:27 CET 2012","document_management_in_database","2","494F8E96-3781-4711-B705-4C9F79D2E9A1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"document_management_in_database\",\"label\":\"i18n:svy.fr.property.document_management_in_database\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["26CF06CA-49A1-49BA-BAAE-2B508760FC26","2","","","","Fri Nov 30 15:07:27 CET 2012","password_must_not_start_with_user_name","4","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_must_not_start_with_user_name\",\"label\":\"i18n:svy.fr.dlg.password_same_begin\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["3CEFBBB3-0FCD-46CF-9A79-2B227A42B21E","4","","","","Fri Nov 30 16:33:40 CET 2012","monitoring_google_analytics_tracking_code","2","BFC7ABA4-8E3A-46A8-98E3-32FAC7BE5522","[{\"securityLevel\":4,\"name\":\"monitoring_google_analytics_tracking_code\",\"label\":\"i18n:svy.fr.property.monitoring_google_analytics_tracking_code\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"\",\"dataType\":12}]"])
+	rowData.push(["3E028D50-E5B6-4A36-94F0-4210AD08D929","2","","","","Fri Nov 30 15:07:27 CET 2012","password_number_unique_before_reuse","6","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_number_unique_before_reuse\",\"label\":\"i18n:svy.fr.lbl.password_unique_before_reuse\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":10,\"dataType\":4}]"])
+	rowData.push(["4C9C4568-23C2-491C-9443-20A070BDB54B","0","","","i18n:svy.fr.property.split_panes_divider","Fri Nov 30 15:07:27 CET 2012","split_panes_divider","4","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"split_panes_divider_size\",\"label\":\"i18n:svy.fr.property.split_panes_divider_size\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"8\",\"dataType\":4},{\"securityLevel\":0,\"description\":\"\",\"name\":\"split_panes_divider_color\",\"label\":\"i18n:svy.fr.property.split_panes_divider_color\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"\",\"dataType\":12}]"])
+	rowData.push(["637901FC-EA41-4DE9-8C6F-D5DC0D9D1C00","4","","","","Fri Nov 30 15:07:27 CET 2012","hide_menu_bar","90","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"hide_menu_bar\",\"label\":\"i18n:svy.fr.property.hide_menu_bar\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":0,\"dataType\":4}]"])
+	rowData.push(["694BD6FC-4996-42DB-9FFA-B69648238717","0","","","","Fri Nov 30 15:07:27 CET 2012","startup_program","9","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"startup_program\",\"label\":\"i18n:svy.fr.property.startup_program\",\"header\":null,\"sortOrder\":1,\"displayType\":2,\"value\":\"customers\",\"dataType\":12,\"valueListName\":\"nav_programname\"}]"])
+	rowData.push(["6DC76AC3-EA85-4C04-A9AB-1B17B263A1B5","2","","","","Fri Nov 30 15:07:27 CET 2012","max_bookmarks","7","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"max_bookmarks\",\"label\":\"i18n:svy.fr.property.max_bookmarks\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":7,\"dataType\":4}]"])
+	rowData.push(["6E30D656-6F51-420F-9D55-B5431D1044DE","2","","","","Mon Apr 22 12:47:32 CEST 2013","authentication_ldap_port","2","EE6A87B0-4C76-4614-8D50-C2EF97990346","[{\"securityLevel\":2,\"name\":\"authentication_ldap_port\",\"label\":\"i18n:svy.fr.property.authentication_ldap_port\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":389,\"dataType\":4}]"])
+	rowData.push(["755ADCD1-1C58-4301-B4B2-4658B1705754","0","","","","Fri Nov 30 15:07:27 CET 2012","show_open_tabs","3","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"show_open_tabs\",\"label\":\"i18n:svy.fr.property.show_open_tabs\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["7CAC3E33-DBF3-4636-9191-8BD3392E02E3","4","","","","Fri Nov 30 15:07:27 CET 2012","save_user_properties_in_db","80","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"save_user_properties_in_db\",\"label\":\"i18n:svy.fr.property.save_user_properties_in_db\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":0,\"dataType\":4}]"])
+	rowData.push(["7EBB1B71-C700-45EF-A378-929741D12266","2","","","","Fri Nov 30 15:07:27 CET 2012","password_lock_user_after_number_of_attempts","8","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_lock_user_after_number_of_attempts\",\"label\":\"i18n:svy.fr.lbl.password_wrong_times\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":3,\"dataType\":4}]"])
+	rowData.push(["815FBE2C-22F8-4D14-B0E2-F2E191CD6964","2","","","","Fri Nov 30 15:07:27 CET 2012","max_favorites","8","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"max_favorites\",\"label\":\"i18n:svy.fr.property.max_favorites\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":12,\"dataType\":4}]"])
+	rowData.push(["84E99EDC-0A27-404B-B97C-6F356D94B9E4","8","","","i18n:svy.fr.property.program_toolbar","Fri Nov 30 15:07:27 CET 2012","program_toolbar","40","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":8,\"description\":\"\",\"name\":\"program_toolbar_main\",\"label\":\"i18n:svy.fr.property.program_toolbar_main\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"svy_nav_fr_toolbar_pv\",\"dataType\":12},{\"securityLevel\":8,\"description\":\"\",\"name\":\"program_toolbar_tab\",\"label\":\"i18n:svy.fr.property.program_toolbar_tab\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"svy_nav_fr_toolbar_pv\",\"dataType\":12}]"])
+	rowData.push(["95D27563-729C-44A2-9368-BA03D31D3EBB","2","","","","Tue May 07 13:17:10 CEST 2013","authentication_framework_username_ignore_case","2","EE6A87B0-4C76-4614-8D50-C2EF97990346","[{\"securityLevel\":2,\"name\":\"authentication_framework_username_ignore_case\",\"label\":\"i18n:svy.fr.property.authentication_framework_username_ignore_case\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":0,\"dataType\":4}]"])
+	rowData.push(["9A1BB667-DE88-4C62-BCA5-26B16688C263","0","","","i18n:svy.fr.property.framework_window_size","Fri Nov 30 15:07:27 CET 2012","framework_window_size","1","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"framework_window_size_width\",\"label\":\"i18n:svy.fr.property.framework_window_size_width\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"1020\",\"dataType\":4},{\"securityLevel\":0,\"description\":\"\",\"name\":\"framework_window_size_height\",\"label\":\"i18n:svy.fr.property.framework_window_size_height\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"740\",\"dataType\":4}]"])
+	rowData.push(["9E9F9561-A297-4E7B-84D4-6C4C505791D9","2","","","","Fri Nov 30 15:07:27 CET 2012","password_minimum_length","1","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_minimum_length\",\"label\":\"i18n:svy.fr.lbl.min_password_length\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":6,\"dataType\":4}]"])
+	rowData.push(["9FC94C8A-36C7-4739-AF58-5ADD8F3EDAED","4","","","","Fri Nov 30 15:07:27 CET 2012","multiple_tabs_per_program","60","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"multiple_tabs_per_program\",\"label\":\"i18n:svy.fr.property.multiple_tabs_per_program\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":0,\"dataType\":4}]"])
+	rowData.push(["A0597D61-2496-4F94-85F9-D7D15C7A108B","2","","","","Mon Apr 22 11:33:52 CEST 2013","authentication_method","1","EE6A87B0-4C76-4614-8D50-C2EF97990346","[{\"securityLevel\":2,\"name\":\"authentication_method\",\"label\":\"i18n:svy.fr.property.authentication_method\",\"header\":null,\"sortOrder\":1,\"displayType\":2,\"value\":\"defaultAuthenticationImpl\",\"dataType\":12,\"valueListName\":\"svyAuthenticationMethods\"}]"])
+	rowData.push(["A3D4524D-36E4-45D0-A187-E09E7310163A","4","","","","Mon Mar 25 12:26:51 CET 2013","search_begin_fields","105","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"search_begin_fields\",\"label\":\"i18n:svy.fr.property.search_begin_fields\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["AFB2DADE-D48C-4E5C-A5D7-E88285CCEDE7","8","","","","Fri Nov 30 15:07:27 CET 2012","filter_on_solution_name","70","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":8,\"description\":\"\",\"name\":\"filter_on_solution_name\",\"label\":\"i18n:svy.fr.property.filter_on_solution_name\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["B0A7B1EB-3464-408E-A076-D162F86C6C64","1","","","","Fri Nov 30 15:07:27 CET 2012","document_management_tracked_checkout","3","494F8E96-3781-4711-B705-4C9F79D2E9A1","[{\"securityLevel\":1,\"description\":\"\",\"name\":\"document_management_tracked_checkout\",\"label\":\"i18n:svy.fr.property.document_management_tracked_checkout\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["B9B5FEC2-4734-49C3-905C-2CBEBD591CA3","2","","","","Fri Nov 30 15:07:27 CET 2012","password_numbers_and_letters","3","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_numbers_and_letters\",\"label\":\"i18n:svy.fr.dlg.password_contain_letters_numbers\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["C40BADF7-8500-43F0-AA63-C27C8A34F217","4","","","","Fri Nov 30 15:07:27 CET 2012","null_column_validator_enabled","100","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"null_column_validator_enabled\",\"label\":\"i18n:svy.fr.property.null_column_validator_enabled\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["C9B7FBFC-3592-48BD-8542-A4E9D1BF95E2","4","","","","Fri Nov 30 16:33:40 CET 2012","monitoring_google_analytics","1","BFC7ABA4-8E3A-46A8-98E3-32FAC7BE5522","[{\"securityLevel\":4,\"name\":\"monitoring_google_analytics\",\"label\":\"i18n:svy.fr.property.monitoring_google_analytics\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["D02CE99D-6C27-4C43-8D14-E91E4C201961","4","","","i18n:svy.fr.property.organization_filter","Fri Nov 30 15:07:27 CET 2012","organization_filter","110","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"organization_filter_type\",\"label\":\"i18n:svy.fr.property.organization_filter_type\",\"header\":null,\"sortOrder\":1,\"displayType\":2,\"value\":\"COMBOBOX\",\"dataType\":12,\"valueListName\":null,\"valueListValues\":[\"Combobox|COMBOBOX\",\"Type ahead|TYPE_AHEAD\"]},{\"securityLevel\":4,\"description\":\"\",\"name\":\"organization_filter_width\",\"label\":\"i18n:svy.fr.property.organization_filter_width\",\"header\":null,\"sortOrder\":2,\"displayType\":0,\"value\":\"140\",\"dataType\":4}]"])
+	rowData.push(["D0EC7CEA-AD2E-4C57-A5A7-A3E936AC5906","2","","","","Mon Apr 22 12:47:32 CEST 2013","authentication_ldap_server","1","EE6A87B0-4C76-4614-8D50-C2EF97990346","[{\"securityLevel\":2,\"name\":\"authentication_ldap_server\",\"label\":\"i18n:svy.fr.property.authentication_ldap_server\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"\",\"dataType\":12}]"])
+	rowData.push(["D2C5DA1E-9314-4585-8FFD-98DE288A440C","8","","","Data version","Fri Nov 30 15:07:27 CET 2012","data_version","120","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":8,\"description\":\"\",\"name\":\"data_version\",\"label\":\"i18n:svy.fr.property.data_version\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"3.1.1_6.1.2\",\"dataType\":12}]"])
+	rowData.push(["D7938729-2952-438F-ACBB-6B7478DAD875","0","","","","Fri Nov 30 15:07:27 CET 2012","force_window_size","2","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"force_window_size\",\"label\":\"i18n:svy.fr.property.force_window_size\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":0,\"dataType\":4}]"])
+	rowData.push(["D8006E3A-12E0-45B4-A9F0-26CB13A3823B","2","","","","Fri Nov 30 15:07:27 CET 2012","password_maximum_length","2","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_maximum_length\",\"label\":\"i18n:svy.fr.lbl.max_password_length\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":null,\"dataType\":4}]"])
+	rowData.push(["EF5BC397-BADD-4C2E-AEFD-1EECD95A6BC8","1","","","","Fri Nov 30 15:07:27 CET 2012","document_management_test","4","494F8E96-3781-4711-B705-4C9F79D2E9A1","[{\"solutionName\":\"test\",\"securityLevel\":1,\"description\":\"\",\"name\":\"document_management_test\",\"label\":\"Test me\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["F346C32C-E679-4942-9C75-CF34F2CA0A51","2","","","","Fri Nov 30 15:07:27 CET 2012","password_renewal_interval","5","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_renewal_interval\",\"label\":\"i18n:svy.fr.lbl.password_renewed\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":90,\"dataType\":4}]"])
+	rowData.push(["F42036C9-E284-4E91-A6DE-14FCB1F732F2","2","","","","Fri Nov 30 15:07:27 CET 2012","password_timespan_before_lock","9","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_timespan_before_lock\",\"label\":\"i18n:svy.fr.lbl.password_timespan_before_lock\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":null,\"dataType\":4}]"])
+	rowData.push(["FA4DFE6F-FCCD-41A6-82B8-9D478D2F2F5A","4","","","","Fri Nov 30 15:07:27 CET 2012","create_new_records_on_top","50","99AAAE7F-1264-4501-AAE8-12CCE2E6B5CF","[{\"securityLevel\":4,\"description\":\"\",\"name\":\"create_new_records_on_top\",\"label\":\"i18n:svy.fr.property.create_new_records_on_top\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+	rowData.push(["FDF03243-5B49-414D-9E7D-DF4BE2314633","2","","","","Fri Nov 30 15:07:27 CET 2012","password_input_interval","7","BF27A0E3-CDBD-4BCC-A604-9B4DDFE6D7D1","[{\"securityLevel\":2,\"description\":\"\",\"name\":\"password_input_interval\",\"label\":\"i18n:svy.fr.lbl.password_input_interval\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":null,\"dataType\":4}]"])
+	rowData.push(["FDF64AB0-5252-458C-AA97-EB63F414DF0D","2","","","","Tue Apr 23 14:33:49 CEST 2013","authentication_ldap_query","3","EE6A87B0-4C76-4614-8D50-C2EF97990346","[{\"securityLevel\":2,\"name\":\"authentication_ldap_query\",\"label\":\"i18n:svy.fr.property.authentication_ldap_query\",\"header\":null,\"sortOrder\":1,\"displayType\":0,\"value\":\"cn=%%username%%,OU=users,OU=Example,DC=example,DC=com\",\"dataType\":12}]"])
+	rowData.push(["FDFB9E5B-33EA-4C2A-B6AC-0009A4A610A6","0","","","i18n:svy.fr.property.web_client_tableview","Fri Nov 30 15:07:27 CET 2012","web_client_tableview","10","E24D319B-71F6-48AF-848D-9A86F47B8251","[{\"securityLevel\":0,\"description\":\"\",\"name\":\"web_client_tableview_scrollable\",\"label\":\"i18n:svy.fr.property.web_client_tableview_scrollable\",\"header\":null,\"sortOrder\":1,\"displayType\":4,\"value\":1,\"dataType\":4},{\"securityLevel\":0,\"description\":\"\",\"name\":\"web_client_tableview_scrollable_keep_loaded_rows\",\"label\":\"i18n:svy.fr.property.web_client_tableview_scrollable_keep_loaded_rows\",\"header\":null,\"sortOrder\":2,\"displayType\":4,\"value\":1,\"dataType\":4}]"])
+
+
+	/** @type {QBSelect<db:/svy_framework/svy_properties>} */
+	var propertiesQuery = databaseManager.createSelect("db:/" + globals.nav_db_framework + "/svy_properties");
+	propertiesQuery.result.addPk();
+	propertiesQuery.where.add(propertiesQuery.columns.svy_properties_id.eq(propertiesQuery.getParameter("propertyId")));
+	/** @type {JSFoundSet<db:/svy_framework/svy_properties>} */
+	var propertyFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_properties");
+	/** @type {JSRecord<db:/svy_framework/svy_properties>} */
+	var propertyRecord;
+	var propertEntry;
+	for (i = 0; i < rowData.length; i++) {
+		propertEntry = rowData[i];
+		propertiesQuery.params["propertyId"] = propertEntry[0];
+		propertyFs.loadRecords(propertiesQuery);
+		if (utils.hasRecords(propertyFs)) {
+			propertyRecord = propertyFs.getRecord(1);
+		} else {
+			propertyRecord = propertyFs.getRecord(propertyFs.newRecord());
+		}
+		
+		for (c = 0; c < columnNames.length; c++) {
+			dataType = columnTypes[c];
+			/** @type {String} */
+			columnValue = rowData[i][c];
+			if (!columnValue) columnValue = null;
+			if (columnValue && dataType == JSColumn.DATETIME) {
+				columnValue = new Date(columnValue);
+			} else if (columnValue && dataType == JSColumn.INTEGER) {
+				columnValue = parseInt(columnValue);
+			} else if (columnValue && dataType == JSColumn.NUMBER) {
+				columnValue = parseFloat(columnValue);
+			} else if (columnValue && dataType == JSColumn.TEXT && columnNames[c] == "value_description") {
+				columnValue = JSON.parse(columnValue);
+			}
+			propertyRecord[columnNames[c]] = columnValue;
+		}
+		
+		databaseManager.saveData(propertySetsRecord);
+	}
+}
+
+/**
+ * TODO: check out where this belongs
+ * 
+ * @private
+ * 
+ * @version 5.0
+ * @since 
+ * @author patrick
+ *
+ * @properties={typeid:24,uuid:"47722E03-1ABF-4233-9CA4-A26C28CE5C9F"}
+ */
+function readMetaDataFromDeveloper() {
+	var workspacePath = java.lang.System.getProperty("osgi.instance.area");
+	workspacePath = utils.stringReplace(workspacePath,"file:/","");
+	var file = plugins.file.convertToJSFile(workspacePath);
+	if(!file.exists()) {
+		return;
+	}
+	var datasourceDir = plugins.file.convertToJSFile(file.getAbsolutePath() + java.io.File.separator + "servoy_localhost_resources/datasources/svy_framework");
+	if (!datasourceDir.exists()) {
+		return;
+	}
+	var filesToProcess = ["svy_property_sets.data", "svy_properties.data"];
+	for (var f = 0; f < filesToProcess.length; f++) {
+		var dataFile = plugins.file.convertToJSFile(datasourceDir.getAbsolutePath() + java.io.File.separator + filesToProcess[f]);
+		if (!dataFile.exists()) {
+			continue;
+		}
+		application.output("");
+		application.output("***** " + filesToProcess[f]);		
+		application.output("");		
+		
+		/** @type {JSDataSet} */
+		var dataset = Packages.com.servoy.j2db.dataprocessing.MetaDataUtils.deserializeTableMetaDataContents(plugins.file.readTXTFile(dataFile));
+		if (dataset) {
+			application.output((f == 0 ? "var" : "") + " columnNames = [\"" + dataset.getColumnNames().join("\",\"") + "\"]");
+			var columnDataTypes = new Array();
+			for (var c = 1; c <= dataset.getMaxColumnIndex(); c++) {
+				columnDataTypes.push(dataset.getColumnType(c));
+			}
+			application.output("");			
+			application.output((f == 0 ? "var" : "") + " columnTypes = [" + columnDataTypes.join(",") + "]");
+			application.output("");			
+			application.output((f == 0 ? "var" : "") + " rowData = new Array();");			
+			for (var i = 1; i <= dataset.getMaxRowIndex(); i++) {
+				var row = dataset.getRowAsArray(i);
+				var resultRow = new Array();
+				for (var rd = 0; rd < row.length; rd++) {
+					resultRow.push(utils.stringReplace(row[rd], '"', '\\"'));
+				}
+				application.output("rowData.push([\"" + resultRow.join("\",\"") + "\"])");
+			}
+		}
+	}
 }
