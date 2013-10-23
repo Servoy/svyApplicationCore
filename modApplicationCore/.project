@@ -3,6 +3,7 @@
 	<name>modApplicationCore</name>
 	<comment></comment>
 	<projects>
+		<project>elliottResources</project>
 		<project>servoy_localhost_resources</project>
 	</projects>
 	<buildSpec>
