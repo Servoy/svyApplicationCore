@@ -2113,7 +2113,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel, ownerId, prop
 	
 	var propertyRecord = null;
 	if (utils.hasRecords(propertyValueRecord.svy_property_values_to_svy_properties)) {
-		propertyRecord = propertyValueRecord.svy_property_values_to_svy_properties;
+		propertyRecord = propertyValueRecord.svy_property_values_to_svy_properties.getRecord(1);
 	}
 	
 	if (propertyOwnerId == globals.svy_sec_lgn_owner_id.toString()) {
