@@ -11,7 +11,8 @@
  * @enum
  * @final
  * 
- * @example <pre> if ( scopes.svySecurityManager.getUser().adminLevel & (scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER | scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER) ) { //if user is admin also show option to open the configurator
+ * @example <pre>//Check if the user has Application Manager or Developer priviledges
+ * if ( scopes.svySecurityManager.getUser().adminLevel & (scopes.svySecurityManager.ADMIN_LEVEL.APPLICATION_MANAGER | scopes.svySecurityManager.ADMIN_LEVEL.DEVELOPER) ) { 
  * 	//logic here
  * }</pre>		
  * 
