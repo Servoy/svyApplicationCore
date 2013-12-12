@@ -12,6 +12,88 @@ function testModuleDefinitions() {
 	}
 }
 
+/**
+ * @properties={typeid:35,uuid:"17FB8046-3DC9-4CA4-B62C-49F6C0DCEF00",variableType:-4}
+ */
+var moduleInitRetval = []
+
+/**
+ * @properties={typeid:24,uuid:"755BFFEF-FA01-49C4-BF77-1C31FA85D3D7"}
+ */
+function testModuleInit() {
+	var config = {
+		status: "error",
+		plugins: 'scopes.modUnitTestUtils.TestAppender',
+		appenders: [{
+			type: "scopes.modUnitTestUtils.TestAppender",
+			name: "TestAppender",
+			PatternLayout: {
+				pattern: "%5level %logger{1.} - %msg"
+			}
+		}],
+		loggers: {
+			root: {
+				level: "error",
+				AppenderRef: {
+					ref: "TestAppender"
+				}
+			}
+		}
+	}
+	scopes.svyLogManager.loadConfig(config)
+	if (scopes.modUnitTestUtils.logMessages.TestAppender) {
+		scopes.modUnitTestUtils.logMessages.TestAppender.length = 0
+	}
+	
+	var namePrefix = 'moduleInitTest'
+	var abstractModuleDefJSForm = solutionModel.getForm('AbstractModuleDef')
+	
+
+	var jsForm
+	/*
+	 * Setting up the following dependancies
+	 * ModA
+	 * 	ModB
+	 *  ModC
+	 *  	ModD
+	 *  		ModA
+	 */
+	jsForm = solutionModel.newForm(namePrefix + 'A', abstractModuleDefJSForm)
+	jsForm.newMethod('function getId(){return "mod.a"}')
+	jsForm.newMethod('function getVersion(){return "1.0.0"}')
+	jsForm.newMethod('function getDependancies(){return ["mod.b"]}')
+	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("a")}')
+	
+	jsForm = solutionModel.newForm(namePrefix + 'B', abstractModuleDefJSForm)
+	jsForm.newMethod('function getId(){return "mod.b"}')
+	jsForm.newMethod('function getVersion(){return "1.0.0"}')
+	jsForm.newMethod('function getDependancies(){return ["mod.c"]}')
+	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("b")}')
+	
+	jsForm = solutionModel.newForm(namePrefix + 'C', abstractModuleDefJSForm)
+	jsForm.newMethod('function getId(){return "mod.c"}')
+	jsForm.newMethod('function getVersion(){return "1.0.0"}')
+	jsForm.newMethod('function getDependancies(){return ["mod.d"]}')
+	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("c")}')
+	
+	jsForm = solutionModel.newForm(namePrefix + 'D', abstractModuleDefJSForm)
+	jsForm.newMethod('function getId(){return "mod.d"}')
+	jsForm.newMethod('function getVersion(){return "1.0.0"}')
+	jsForm.newMethod('function getDependancies(){return ["mod.a"]}')
+	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("d")}')	
+	
+	jsForm = solutionModel.newForm(namePrefix + 'E', abstractModuleDefJSForm)
+	jsForm.newMethod('function getId(){return "mod.e"}')
+	jsForm.newMethod('function getVersion(){return "1.0.0"}')
+	jsForm.newMethod('function getDependancies(){return ["mod.d"]}')
+	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("e")}')	
+
+	scopes.svyApplicationCore.initModules()
+	
+	jsunit.assertEquals('dcbae', moduleInitRetval.join(''))
+	jsunit.assertEquals(scopes.modUnitTestUtils.logMessages.TestAppender.join('\n'), 1, scopes.modUnitTestUtils.logMessages.TestAppender.length)
+}
+
 /*
  * Start testcode for {@link #scopes#svyApplicationCore#addDataBroadcastListener()}
  */

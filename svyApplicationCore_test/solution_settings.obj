@@ -1,4 +1,4 @@
-modulesNames:"svyApplicationCore",
+modulesNames:"svyApplicationCore,modUnitTestUtils",
 onDataBroadcastMethodID:"FAA2B4E0-180C-4CDF-BE10-2D458AE6EC07",
 onOpenMethodID:"9B16F740-0A85-4CA9-9F4F-91B5100D3080",
 typeid:43,
