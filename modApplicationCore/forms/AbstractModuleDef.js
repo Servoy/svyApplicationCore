@@ -96,7 +96,7 @@ function moduleInit(startupArguments) {}
 
 /**
  * If the module depends on other modules being initialized first, return the ID's of those modules as an Array of Strings
- * @return {Array<String>}
+ * @return {Array<{id: String}>}
  *
  * @properties={typeid:24,uuid:"D6A3F8D4-5E03-40BA-93DF-84D39270A3DF"}
  */

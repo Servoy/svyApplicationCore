@@ -90,7 +90,7 @@ function initModules(startupArguments) {
 			var dependancies = form.getDependancies()
 			if (dependancies) {
 				dependancies: for (var j = 0; j < dependancies.length; j++) {
-					var name = moduleDefNameById[dependancies[j]]
+					var name = moduleDefNameById[dependancies[j].id]
 					if (name in processed) { //already processed
 						continue dependancies
 					}
@@ -98,7 +98,7 @@ function initModules(startupArguments) {
 						var ids = stack.map(function(value) {
 							return forms[value].getId()
 						})
-						ids.push(dependancies[j])
+						ids.push(dependancies[j].id)
 						log.error('Circuclar module dependancies detected: ' + ids.join(' > '))
 						continue dependancies
 					}
