@@ -603,7 +603,7 @@ function changePassword(newPassword, record)
 	}
 	
 	if (renewInterval) {
-		newPasswordRecord.end_date = scopes.modUtils$date.addDays(newPasswordRecord.start_date, renewInterval);
+		newPasswordRecord.end_date = scopes.svyDateUtils.addDays(newPasswordRecord.start_date, renewInterval);
 	} else {
 		newPasswordRecord.end_date = new Date(newPasswordRecord.start_date.getFullYear() + maxPasswordValidity, 
 			newPasswordRecord.start_date.getMonth(), 
