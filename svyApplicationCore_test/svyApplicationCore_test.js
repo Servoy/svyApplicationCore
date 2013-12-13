@@ -23,9 +23,9 @@ var moduleInitRetval = []
 function testModuleInit() {
 	var config = {
 		status: "error",
-		plugins: 'scopes.modUnitTestUtils.TestAppender',
+		plugins: 'scopes.svyUnitTestUtils.TestAppender',
 		appenders: [{
-			type: "scopes.modUnitTestUtils.TestAppender",
+			type: "scopes.svyUnitTestUtils.TestAppender",
 			name: "TestAppender",
 			PatternLayout: {
 				pattern: "%5level %logger{1.} - %msg"
@@ -41,8 +41,8 @@ function testModuleInit() {
 		}
 	}
 	scopes.svyLogManager.loadConfig(config)
-	if (scopes.modUnitTestUtils.logMessages.TestAppender) {
-		scopes.modUnitTestUtils.logMessages.TestAppender.length = 0
+	if (scopes.svyUnitTestUtils.logMessages.TestAppender) {
+		scopes.svyUnitTestUtils.logMessages.TestAppender.length = 0
 	}
 	
 	var namePrefix = 'moduleInitTest'
@@ -91,7 +91,7 @@ function testModuleInit() {
 	scopes.svyApplicationCore.initModules()
 	
 	jsunit.assertEquals('dcbae', moduleInitRetval.join(''))
-	jsunit.assertEquals(scopes.modUnitTestUtils.logMessages.TestAppender.join('\n'), 1, scopes.modUnitTestUtils.logMessages.TestAppender.length)
+	jsunit.assertEquals(scopes.svyUnitTestUtils.logMessages.TestAppender.join('\n'), 1, scopes.svyUnitTestUtils.logMessages.TestAppender.length)
 }
 
 /*
