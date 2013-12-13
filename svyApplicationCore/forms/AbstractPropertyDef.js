@@ -36,8 +36,8 @@ var propertyNames;
  * @param {JSEvent} event			- the JSEvent
  * @param {String} [propertyName]	- if not given, it is assumed that the dataprovider name of the field is the property name
  * 
- * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
- * @throws {scopes.modUtils$exceptions.SvyException}
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
+ * @throws {scopes.svyExceptions.SvyException}
  * 
  * @properties={typeid:24,uuid:"C9A8DB84-6EDF-40C6-889D-15C3EDD473FF"}
  */
@@ -49,7 +49,7 @@ function onDataChangeValue(oldValue, newValue, event, propertyName) {
 		}
 	}
 	if (!propertyName) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Could not find the property name in onDataChangeValue");
+		throw new scopes.svyExceptions.IllegalArgumentException("Could not find the property name in onDataChangeValue");
 	}
 	scopes.svyProperties.setPropertyValue(propertyName, newValue, adminLevel);
 }
@@ -60,7 +60,7 @@ function onDataChangeValue(oldValue, newValue, event, propertyName) {
  * @param {String} propertyName
  * @param {Object} propertyValue
  * 
- * @throws {scopes.modUtils$exceptions.SvyException}
+ * @throws {scopes.svyExceptions.SvyException}
  *
  * @properties={typeid:24,uuid:"BAF01236-BB62-4159-90F4-84A05A47845C"}
  */

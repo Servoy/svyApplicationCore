@@ -7,7 +7,7 @@ var ERROR_CODES = {
 }
 
 /**
- * @extends {scopes.modUtils$exceptions.IllegalStateException}
+ * @extends {scopes.svyExceptions.IllegalStateException}
  * 
  * @param {String} errorMessage
  * @param {Number} code see {@link #ERROR_CODES}
@@ -19,7 +19,7 @@ function SvyNavigationException(errorMessage, code) {
 		return new SvyNavigationException(errorMessage, code)
 	}
 	this.code = code
-	scopes.modUtils$exceptions.IllegalStateException.call(this, errorMessage||'Illegal state in Navigation')
+	scopes.svyExceptions.IllegalStateException.call(this, errorMessage||'Illegal state in Navigation')
 }
 
 /**
@@ -30,7 +30,7 @@ function SvyNavigationException(errorMessage, code) {
  * @properties={typeid:35,uuid:"63104534-E136-4F5C-A3D1-9809EE4785D0",variableType:-4}
  */
 var init = (function() {
-	SvyNavigationException.prototype = Object.create(scopes.modUtils$exceptions.IllegalStateException.prototype);
+	SvyNavigationException.prototype = Object.create(scopes.svyExceptions.IllegalStateException.prototype);
 	SvyNavigationException.prototype.constructor = SvyNavigationException
 }())
 

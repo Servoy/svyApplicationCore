@@ -1105,7 +1105,7 @@ function createUserLogin(userId, attemptSuccessful, reasonUnsuccessful, reasonIn
  */
 function User(userRecord) {
 	if (!userRecord || !(userRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(userRecord.getDataSource()).toLowerCase() != "sec_user") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("User constructor requires a sec_user record");
+		throw new scopes.svyExceptions.IllegalArgumentException("User constructor requires a sec_user record");
 	}
 
 	/**
@@ -1135,7 +1135,7 @@ function User(userRecord) {
 	 * 
 	 * @type {String}
 	 * 
-	 * @throws scopes.modUtils$exceptions.InvalidEmailAddressException
+	 * @throws scopes.svyExceptions.InvalidEmailAddressException
 	 */
 	this.emailAddress = userRecord.com_email;
 	
@@ -1144,7 +1144,7 @@ function User(userRecord) {
 	 * 
 	 * @type {UUID}
 	 * 
-	 * @throws scopes.modUtils$exceptions.NoOwnerException if the given ownerId could not be found or reached
+	 * @throws scopes.svyExceptions.NoOwnerException if the given ownerId could not be found or reached
 	 */
 	this.ownerId = userRecord.owner_id;
 	
@@ -1387,13 +1387,13 @@ function User(userRecord) {
 	 * @param {Date} start
 	 * @param {Date} end
 	 * 
-	 * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
+	 * @throws {scopes.svyExceptions.IllegalArgumentException}
 	 * 
 	 * @return {Array<UserLogin>}
 	 */
 	this.getLoginsBetween = function(start, end) {
 		if (!start || !end) {
-			throw new scopes.modUtils$exceptions.IllegalArgumentException("Missing date for getLoginsBetween");
+			throw new scopes.svyExceptions.IllegalArgumentException("Missing date for getLoginsBetween");
 		}
 		
 		var queryStart;
@@ -1402,12 +1402,12 @@ function User(userRecord) {
 		if (start instanceof Date || start instanceof String) {
 			queryStart = new Date(start.valueOf());
 		} else {
-			throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong argument passed for start in getLoginsBetween");
+			throw new scopes.svyExceptions.IllegalArgumentException("Wrong argument passed for start in getLoginsBetween");
 		}
 		if (end instanceof Date || end instanceof String) {
 			queryEnd = new Date(end.valueOf());
 		} else {
-			throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong argument passed for end in getLoginsBetween");
+			throw new scopes.svyExceptions.IllegalArgumentException("Wrong argument passed for end in getLoginsBetween");
 		}
 		
 		if (queryStart > queryEnd) {
@@ -1588,7 +1588,7 @@ function User(userRecord) {
 		set: function(x) {
 			var owner = getOwnerById(x);
 			if (!owner) {
-				throw new scopes.modUtils$exceptions.IllegalArgumentException("The owner with the ID " + x + " could not be found");
+				throw new scopes.svyExceptions.IllegalArgumentException("The owner with the ID " + x + " could not be found");
 			}
 			userRecord.owner_id = owner.ownerId;
 			// TODO: remove all organizations or not allow to do this at all
@@ -1605,7 +1605,7 @@ function User(userRecord) {
 				userRecord.com_email = x;
 				save(userRecord);
 			} else {
-				throw new scopes.modUtils$exceptions.IllegalArgumentException("Invalid email address: " + x);
+				throw new scopes.svyExceptions.IllegalArgumentException("Invalid email address: " + x);
 			}
 		}
     });	
@@ -1702,7 +1702,7 @@ function User(userRecord) {
  */
 function Group(groupRecord) {
 	if (!groupRecord || !(groupRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(groupRecord.getDataSource()).toLowerCase() != "sec_group") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Group constructor requires a sec_group record");
+		throw new scopes.svyExceptions.IllegalArgumentException("Group constructor requires a sec_group record");
 	}
 	
 	/**
@@ -2292,7 +2292,7 @@ function Key(keyID, keyName, keyDescription, keyOwnerId, keyModuleId) {
  */
 function UserLogin(userLoginAttempt) {
 	if (!userLoginAttempt || !(userLoginAttempt instanceof JSRecord) || databaseManager.getDataSourceTableName(userLoginAttempt.getDataSource()).toLowerCase() != "sec_user_login_attempt") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("UserLogin requires a sec_user_login_attempt record");
+		throw new scopes.svyExceptions.IllegalArgumentException("UserLogin requires a sec_user_login_attempt record");
 	}
 	
 	/**
@@ -2364,7 +2364,7 @@ function UserLogin(userLoginAttempt) {
  */
 function Organization(organizationRecord) {
 	if (!organizationRecord || !(organizationRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(organizationRecord.getDataSource()).toLowerCase() != "sec_organization") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Organization constructor requires a sec_organization record");
+		throw new scopes.svyExceptions.IllegalArgumentException("Organization constructor requires a sec_organization record");
 	}
 	
 	/**
@@ -2522,7 +2522,7 @@ function Organization(organizationRecord) {
  */
 function Owner(ownerRecord) {
 	if (!ownerRecord || !(ownerRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(ownerRecord.getDataSource()).toLowerCase() != "sec_owner") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Owner constructor requires a sec_owner record");
+		throw new scopes.svyExceptions.IllegalArgumentException("Owner constructor requires a sec_owner record");
 	}
 	
 	/**
@@ -3144,7 +3144,7 @@ function Owner(ownerRecord) {
  */
 function OwnerModule(ownerInModuleRecord) {
 	if (!ownerInModuleRecord || !(ownerInModuleRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(ownerInModuleRecord.getDataSource()).toLowerCase() != "sec_owner_in_module") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("OwnerModule constructor requires a sec_owner_in_module record");
+		throw new scopes.svyExceptions.IllegalArgumentException("OwnerModule constructor requires a sec_owner_in_module record");
 	}
 	
 	/**
@@ -3290,7 +3290,7 @@ function OwnerModule(ownerInModuleRecord) {
  */
 function Module(moduleRecord){
 	if (!moduleRecord || !(moduleRecord instanceof JSRecord) || databaseManager.getDataSourceTableName(moduleRecord.getDataSource()).toLowerCase() != "sec_module") {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Module constructor requires a sec_module record");
+		throw new scopes.svyExceptions.IllegalArgumentException("Module constructor requires a sec_module record");
 	}
 	
 	/**
@@ -3317,7 +3317,7 @@ function Module(moduleRecord){
 		},
 		set: function(x) {
 			if (!x) {
-				throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
+				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 			}
 			if (!scopes.modUtils.isValueUnique(moduleRecord, 'name', x)) {
 				throw new scopes.modUtils$data.ValueNotUniqueException(null, moduleRecord, 'name', x);
@@ -3434,7 +3434,7 @@ function Module(moduleRecord){
  */
 function Application(applicationRecord){
 	if (!applicationRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("prov_application record is required");
+		throw new scopes.svyExceptions.IllegalArgumentException("prov_application record is required");
 	}
 	
 	/**
@@ -3459,7 +3459,7 @@ function Application(applicationRecord){
 			},
 			set: function(x) {
 				if (!x) {
-					throw new scopes.modUtils$exceptions.IllegalArgumentException('Name is required');
+					throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 				}
 				if (!scopes.modUtils.isValueUnique(applicationRecord, 'application_name', x)) {
 					throw new scopes.modUtils$data.ValueNotUniqueException(null, applicationRecord, 'application_name', x);
@@ -3480,7 +3480,7 @@ function Application(applicationRecord){
 			},
 			set: function(x) {
 				if (!x) {
-					throw new scopes.modUtils$exceptions.IllegalArgumentException('solution name is required');
+					throw new scopes.svyExceptions.IllegalArgumentException('solution name is required');
 				}
 				applicationRecord.servoy_solution_name = x;
 				save(applicationRecord);
@@ -3509,7 +3509,7 @@ function Application(applicationRecord){
 	 */
 	this.addModule = function(moduleID){
 		if (!moduleID) {
-			throw new scopes.modUtils$exceptions.IllegalArgumentException('Module cannot be null');
+			throw new scopes.svyExceptions.IllegalArgumentException('Module cannot be null');
 		}
 		if (moduleID instanceof String) {
 			moduleID = application.getUUID(moduleID);
@@ -3532,7 +3532,7 @@ function Application(applicationRecord){
 	 */
 	this.containsModule = function(moduleID){
 		if (!moduleID) {
-			throw new scopes.modUtils$exceptions.IllegalArgumentException('Module ID cannot be null');
+			throw new scopes.svyExceptions.IllegalArgumentException('Module ID cannot be null');
 		}
 		if (moduleID instanceof String) {
 			moduleID = application.getUUID(moduleID);
@@ -3553,7 +3553,7 @@ function Application(applicationRecord){
 	 */
 	this.removeModule = function(moduleRecordOrID){
 		if (!moduleRecordOrID) {
-			throw new scopes.modUtils$exceptions.IllegalArgumentException('Module ID or Record cannot be null');
+			throw new scopes.svyExceptions.IllegalArgumentException('Module ID or Record cannot be null');
 		}
 		if (moduleRecordOrID instanceof JSRecord) {
 			moduleRecordOrID = moduleRecordOrID.module_id;
@@ -4174,7 +4174,7 @@ function removeDataForOrganization(organizationId) {
  * 
  * @constructor 
  * 
- * @extends {scopes.modUtils$exceptions.IllegalArgumentException}
+ * @extends {scopes.svyExceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"BE06D0A6-A86F-426E-ABE6-610D46175DF6"}
  */
@@ -4192,7 +4192,7 @@ function PasswordRuleViolationException(record, message, errorCode) {
 	 */
 	this.errorCode = errorCode;
 	
-	scopes.modUtils$exceptions.IllegalArgumentException.call(this, message || 'Password rule violated');
+	scopes.svyExceptions.IllegalArgumentException.call(this, message || 'Password rule violated');
 }
 
 /**
@@ -4616,7 +4616,7 @@ function getRuntimeSecurityKeys() {
  * 
  * @return {Key}
  * 
- * @throws {scopes.modUtils$exceptions.IllegalArgumentException}
+ * @throws {scopes.svyExceptions.IllegalArgumentException}
  *
  * @properties={typeid:24,uuid:"B2513CBE-E5E8-4ECD-A75C-51DD2248F9FC"}
  */
@@ -4976,7 +4976,7 @@ function checkPasswordRules(userName, passwordToCheck, ownerId) {
  */
 function addOrganizationChangeListener(methodToCall) {
 	if (!methodToCall) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Method is required");
+		throw new scopes.svyExceptions.IllegalArgumentException("Method is required");
 	}
 	return scopes.svyEventManager.addListener(this, EVENT_TYPES.ORGANIZATION_CHANGE, methodToCall);
 }
@@ -4989,6 +4989,6 @@ function addOrganizationChangeListener(methodToCall) {
  * @properties={typeid:35,uuid:"A2432865-B484-4ABD-9DA4-3FA1E713D328",variableType:-4}
  */
 var init = function() {
-	PasswordRuleViolationException.prototype = Object.create(scopes.modUtils$exceptions.IllegalArgumentException.prototype);
+	PasswordRuleViolationException.prototype = Object.create(scopes.svyExceptions.IllegalArgumentException.prototype);
 	PasswordRuleViolationException.prototype.constructor = PasswordRuleViolationException
 }();

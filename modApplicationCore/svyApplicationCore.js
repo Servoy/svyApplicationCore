@@ -197,7 +197,7 @@ function addDataBroadcastListener(listener, obj) {
 	var context = this
 	if (obj) {
 		if (!(obj instanceof JSRecord || obj.constructor instanceof String)) {
-			throw scopes.modUtils$exceptions.IllegalArgumentException('obj param value passed into addDatabroadcastListener must be either a JSRecord or a String representing a datasource')
+			throw scopes.svyExceptions.IllegalArgumentException('obj param value passed into addDatabroadcastListener must be either a JSRecord or a String representing a datasource')
 		} else if (obj instanceof JSRecord) {
 			var pks = obj.getPKs()
 			context = obj.getDataSource() + '/'

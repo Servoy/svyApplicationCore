@@ -18,7 +18,7 @@ var version;
  * @properties={typeid:24,uuid:"88C8B51B-1405-4ED0-A0A0-389230BF5663"}
  */
 function getVersion() {
-	throw new scopes.modUtils$exceptions.AbstractMethodInvocationException('Abstract method getVersion() must be implemented on instances of AbstractModuleDef');
+	throw new scopes.svyExceptions.AbstractMethodInvocationException('Abstract method getVersion() must be implemented on instances of AbstractModuleDef');
 }
 
 /**
@@ -37,7 +37,7 @@ var id;
  * @properties={typeid:24,uuid:"47D17F1A-7591-435A-9952-E0366D65F206"}
  */
 function getId() {
-	throw new scopes.modUtils$exceptions.AbstractMethodInvocationException('Abstract method getId() must be implemented on instances of AbstractModuleDef');
+	throw new scopes.svyExceptions.AbstractMethodInvocationException('Abstract method getId() must be implemented on instances of AbstractModuleDef');
 }
 
 /**

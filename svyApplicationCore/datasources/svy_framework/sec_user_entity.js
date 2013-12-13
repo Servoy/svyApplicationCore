@@ -162,7 +162,7 @@ function deleteUser(record)
  */
 function assignKey(keyId, organizationId, record) {
 	if (!organizationId || !keyId) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for assignKey");
+		throw new scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for assignKey");
 	}
 
 	if (!record) {
@@ -190,7 +190,7 @@ function assignKey(keyId, organizationId, record) {
 	}
 
 	if (!userOrgRecord) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("User not member of the given organization");
+		throw new scopes.svyExceptions.IllegalArgumentException("User not member of the given organization");
 	}
 
 	var userRightRecord;
@@ -227,7 +227,7 @@ function assignKey(keyId, organizationId, record) {
  */
 function removeKey(keyId, organizationId, record) {
 	if (!keyId) {
-		throw new scopes.modUtils$exceptions.IllegalArgumentException("Wrong arguments provided for removeKey");
+		throw new scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for removeKey");
 	}
 
 	if (!record) {
@@ -569,7 +569,7 @@ function changePassword(newPassword, record)
 	
 	// check if there is an owner
 	if (!record.owner_id || !databaseManager.hasRecords(record.sec_user_to_sec_owner)) {
-		throw new scopes.modUtils$exceptions.IllegalStateException("User has no owner");
+		throw new scopes.svyExceptions.IllegalStateException("User has no owner");
 	}
 	
 	try {
