@@ -9,7 +9,7 @@
  * 
  * @return {Boolean} success
  * 
- * @throws {scopes.modUtils$data.NoRecordException} - no record given or foundset empty
+ * @throws {scopes.svyDataUtils.NoRecordException} - no record given or foundset empty
  * 
  * @author patrick
  * @since 19.09.2012
@@ -22,6 +22,6 @@ function addUser(userId, organizationId, record)
 		record = getSelectedRecord();
 	}
 	if (!record) {
-		throw new scopes.modUtils$data.NoRecordException();
+		throw new scopes.svyDataUtils.NoRecordException();
 	}
 }

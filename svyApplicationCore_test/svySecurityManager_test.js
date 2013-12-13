@@ -192,7 +192,7 @@ function user() {
 		scopes.svySecurityManager.createUser("testUser", "abcdef1", newOwner, newOwner.getOrganization("testOrganization"));
 		jsunit.assertEquals("User name not unique", 1, 2);
 	} catch (e) {
-		jsunit.assertTrue("User name not unique", e instanceof scopes.modUtils$data.ValueNotUniqueException);
+		jsunit.assertTrue("User name not unique", e instanceof scopes.svyDataUtils.ValueNotUniqueException);
 	}
 
 	try {
@@ -228,7 +228,7 @@ function keys() {
 		newKey = scopes.svySecurityManager.createKey("testKey", "test key description");
 		jsunit.assertEquals("Key name not unique", 1, 2);
 	} catch(e) {
-		jsunit.assertTrue("Key name not unique", e instanceof scopes.modUtils$data.ValueNotUniqueException);
+		jsunit.assertTrue("Key name not unique", e instanceof scopes.svyDataUtils.ValueNotUniqueException);
 	}
 	newKey = scopes.svySecurityManager.createKey("testKey3", "test key description");
 	jsunit.assertEquals("Third key added", "testKey3", newKey.name);
@@ -256,7 +256,7 @@ function groups() {
 		otherNewGroup = newOwner.createGroup("testGroup");
 		jsunit.assertEquals("Group name not unique", 1, 2);
 	} catch(e) {
-		jsunit.assertTrue("Group name not unique", e instanceof scopes.modUtils$data.ValueNotUniqueException);
+		jsunit.assertTrue("Group name not unique", e instanceof scopes.svyDataUtils.ValueNotUniqueException);
 	}
 	
 	otherNewGroup = newOwner.createGroup("testGroup2");

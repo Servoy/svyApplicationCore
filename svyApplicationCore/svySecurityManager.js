@@ -736,7 +736,7 @@ function getUserById(userId) {
 		userRecord = foundset.getRecord(1);
 		return new User(userRecord);	
 	} else {
-		throw new scopes.modUtils$data.NoRecordException();
+		throw new scopes.svyDataUtils.NoRecordException();
 	}
 }
 
@@ -785,7 +785,7 @@ function getUserId(userName, ownerId) {
  * 
  * @return {Application}
  * 
- * @throws {scopes.modUtils$data.ValueNotUniqueException} 
+ * @throws {scopes.svyDataUtils.ValueNotUniqueException} 
  * 
  * @author Sean
  * 
@@ -798,10 +798,10 @@ function createApplication(name){
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, 'prov_application');
 	if (!scopes.modUtils.isValueUnique(fs, 'application_name', name)) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, 'application_name', name);
+		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'application_name', name);
 	}
 	if (!fs.newRecord()) {
-		throw new scopes.modUtils$data.NewRecordFailedException('Could not create Application', fs);
+		throw new scopes.svyDataUtils.NewRecordFailedException('Could not create Application', fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.application_name = name;
@@ -824,7 +824,7 @@ function createApplication(name){
  * 
  * @return {Group} group
  * 
- * @throws {scopes.modUtils$data.ValueNotUniqueException} the group name has to be unique for an owner
+ * @throws {scopes.svyDataUtils.ValueNotUniqueException} the group name has to be unique for an owner
  *
  * @properties={typeid:24,uuid:"7471A2B7-775C-44F0-80A6-81B59F97D14F"}
  */
@@ -842,7 +842,7 @@ function createGroup(name, owner, securityKeysToAdd) {
 	/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, "sec_group");
 	if (!scopes.modUtils.isValueUnique(fs, 'name', name, ["owner_id"], [ownerId.toString()])) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, 'application_name', name);
+		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'application_name', name);
 	}
 	
 	var recordGroup = fs.getRecord(fs.newRecord());
@@ -867,7 +867,7 @@ function createGroup(name, owner, securityKeysToAdd) {
  * @param {String} [description] - the optional description of the key
  * @param {Owner} [owner] - the optional owner ID for this key
  * 
- * @throws {scopes.modUtils$data.ValueNotUniqueException} the key name has to be unique
+ * @throws {scopes.svyDataUtils.ValueNotUniqueException} the key name has to be unique
  * 
  * @return {Key} new key
  * 
@@ -884,7 +884,7 @@ function createKey(name, description, owner) {
 	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
 	if (!scopes.modUtils.isValueUnique(fs, 'name', name)) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, 'name', name);
+		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'name', name);
 	}
 	
 	var keyRecord = fs.getRecord(fs.newRecord());
@@ -907,7 +907,7 @@ function createKey(name, description, owner) {
  * 
  * @return {Module}
  * 
- * @throws {scopes.modUtils$data.ValueNotUniqueException}
+ * @throws {scopes.svyDataUtils.ValueNotUniqueException}
  * 
  * @author Sean
  * 
@@ -920,10 +920,10 @@ function createModule(name){
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
 	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
 	if (!scopes.modUtils.isValueUnique(fs, 'name', name)) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, fs, 'name', name);
+		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'name', name);
 	}
 	if (!fs.newRecord()) {
-		throw new scopes.modUtils$data.NewRecordFailedException('Cound not create module record', fs);
+		throw new scopes.svyDataUtils.NewRecordFailedException('Cound not create module record', fs);
 	}
 	var record = fs.getSelectedRecord();
 	record.name = name;
@@ -973,7 +973,7 @@ function createOrganization(organizationName, owner) {
  * &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// ...<br>
  * }
  * 
- * @throws {scopes.modUtils$data.ValueNotUniqueException} - the owner name must be unique
+ * @throws {scopes.svyDataUtils.ValueNotUniqueException} - the owner name must be unique
  * 
  * @author patrick
  * @since 02.08.2012
@@ -988,7 +988,7 @@ function createOwner(ownerName) {
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	
 	if (!scopes.modUtils.isValueUnique(fs,"name",ownerName)) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, "ownername");
+		throw new scopes.svyDataUtils.ValueNotUniqueException(null, "ownername");
 	}
 	
 	var ownerRecord = fs.getRecord(fs.newRecord());
@@ -1007,7 +1007,7 @@ function createOwner(ownerName) {
  * @param {Owner} [owner]
  * @param {Organization} [organization]
  * 
- * @throws {scopes.modUtils$data.ValueNotUniqueException} the user name has to be unique for an owner
+ * @throws {scopes.svyDataUtils.ValueNotUniqueException} the user name has to be unique for an owner
  * @throws {scopes.svySecurityManager.PasswordRuleViolationException} the password must comply to the password rules of the owner
  * 
  * @return {User} newUser
@@ -1028,7 +1028,7 @@ function createUser(userName, password, owner, organization) {
 	/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 	var userFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user");
 	if (!scopes.modUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"], [owner.ownerId.toString()])) {
-		throw new scopes.modUtils$data.ValueNotUniqueException(null, "user_name");
+		throw new scopes.svyDataUtils.ValueNotUniqueException(null, "user_name");
 	}
 	
 	var autoSave = databaseManager.getAutoSave();
@@ -1564,7 +1564,7 @@ function User(userRecord) {
         	}
         	if (userRecord.user_name != x) {
 	        	if (!scopes.modUtils.isValueUnique(userRecord, "user_name", x, ["owner_id"],[userRecord.owner_id.toString()])) {
-	        		throw new scopes.modUtils$data.ValueNotUniqueException(null, "user_name");
+	        		throw new scopes.svyDataUtils.ValueNotUniqueException(null, "user_name");
 	        	}
 	        	userRecord.user_name = x;
 	            save(userRecord);
@@ -2379,7 +2379,7 @@ function Organization(organizationRecord) {
 	 * 
 	 * @return {String} name
 	 * 
-	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the name of the organization has to be unique for a given owner
+	 * @throws {scopes.svyDataUtils.ValueNotUniqueException} the name of the organization has to be unique for a given owner
 	 */
 	this.name = organizationRecord.name;
 	
@@ -2474,7 +2474,7 @@ function Organization(organizationRecord) {
 	Object.defineProperty(this, "name", {
         set: function (x) {
         	if (!scopes.modUtils.isValueUnique(organizationRecord, "name", x, ["owner_id"], [organizationRecord.owner_id.toString()])) {
-        		throw new scopes.modUtils$data.ValueNotUniqueException(null, organizationRecord, "name", x);
+        		throw new scopes.svyDataUtils.ValueNotUniqueException(null, organizationRecord, "name", x);
         	}
         	organizationRecord.name = x;
             save(organizationRecord);
@@ -2675,7 +2675,7 @@ function Owner(ownerRecord) {
 	 * 
 	 * @return {Group} new group
 	 * 
-	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the group name has to be unique for an owner
+	 * @throws {scopes.svyDataUtils.ValueNotUniqueException} the group name has to be unique for an owner
 	 */
 	this.createGroup = function(groupName) {
 		try {
@@ -2693,7 +2693,7 @@ function Owner(ownerRecord) {
 	 * 
 	 * @return {Organization} newOrganization
 	 * 
-	 * @throws {scopes.modUtils$data.ValueNotUniqueException}
+	 * @throws {scopes.svyDataUtils.ValueNotUniqueException}
 	 */
 	this.createOrganization = function(organizationName) {
 		/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
@@ -2718,7 +2718,7 @@ function Owner(ownerRecord) {
 	 * 
 	 * @return {User} new user
 	 * 
-	 * @throws {scopes.modUtils$data.ValueNotUniqueException} the user name has to be unique for an owner
+	 * @throws {scopes.svyDataUtils.ValueNotUniqueException} the user name has to be unique for an owner
 	 * @throws {scopes.svySecurityManager.PasswordRuleViolationException} the password must comply to the password rules of the owner
 	 * 
 	 * @this {Owner}
@@ -3320,7 +3320,7 @@ function Module(moduleRecord){
 				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 			}
 			if (!scopes.modUtils.isValueUnique(moduleRecord, 'name', x)) {
-				throw new scopes.modUtils$data.ValueNotUniqueException(null, moduleRecord, 'name', x);
+				throw new scopes.svyDataUtils.ValueNotUniqueException(null, moduleRecord, 'name', x);
 			}
 			moduleRecord.name = x;
 			save(moduleRecord);
@@ -3462,7 +3462,7 @@ function Application(applicationRecord){
 					throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 				}
 				if (!scopes.modUtils.isValueUnique(applicationRecord, 'application_name', x)) {
-					throw new scopes.modUtils$data.ValueNotUniqueException(null, applicationRecord, 'application_name', x);
+					throw new scopes.svyDataUtils.ValueNotUniqueException(null, applicationRecord, 'application_name', x);
 				}
 				applicationRecord.application_name = x;
 				save(applicationRecord);
@@ -3518,7 +3518,7 @@ function Application(applicationRecord){
 			return false;
 		}
 		if (!applicationRecord.prov_application_to_prov_application_modules.newRecord()) {
-			throw new scopes.modUtils$data.NewRecordFailedException('Failed to create record', applicationRecord.prov_application_to_prov_application_modules);
+			throw new scopes.svyDataUtils.NewRecordFailedException('Failed to create record', applicationRecord.prov_application_to_prov_application_modules);
 		}
 		applicationRecord.prov_application_to_prov_application_modules.module_id = moduleID;
 		save(applicationRecord.prov_application_to_prov_application_modules);
@@ -3566,7 +3566,7 @@ function Application(applicationRecord){
 			var module = modules.getRecord(i);
 			if (module.module_id == moduleRecordOrID) {
 				if (!modules.deleteRecord(module)) {
-					throw new scopes.modUtils$data.DeleteRecordFailedException('Failed to delete record', module);
+					throw new scopes.svyDataUtils.DeleteRecordFailedException('Failed to delete record', module);
 				}
 				return true;
 			}
@@ -3601,7 +3601,7 @@ function Application(applicationRecord){
  */
 function save(record){
 	if (!databaseManager.saveData(record)) {
-		throw new scopes.modUtils$data.SaveDataFailedException('Save data failed:' + record.exception, record);
+		throw new scopes.svyDataUtils.SaveDataFailedException('Save data failed:' + record.exception, record);
 	}
 	return true;
 }
