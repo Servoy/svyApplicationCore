@@ -797,7 +797,7 @@ function createApplication(name){
 	}
 	/** @type {JSFoundSet<db:/svy_framework/prov_application>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, 'prov_application');
-	if (!scopes.modUtils.isValueUnique(fs, 'application_name', name)) {
+	if (!scopes.svyUtils.isValueUnique(fs, 'application_name', name)) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'application_name', name);
 	}
 	if (!fs.newRecord()) {
@@ -841,7 +841,7 @@ function createGroup(name, owner, securityKeysToAdd) {
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_group>} */
 	var fs = databaseManager.getFoundSet(scopes.globals.nav_db_framework, "sec_group");
-	if (!scopes.modUtils.isValueUnique(fs, 'name', name, ["owner_id"], [ownerId.toString()])) {
+	if (!scopes.svyUtils.isValueUnique(fs, 'name', name, ["owner_id"], [ownerId.toString()])) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'application_name', name);
 	}
 	
@@ -883,7 +883,7 @@ function createKey(name, description, owner) {
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_security_key>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_security_key");
-	if (!scopes.modUtils.isValueUnique(fs, 'name', name)) {
+	if (!scopes.svyUtils.isValueUnique(fs, 'name', name)) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'name', name);
 	}
 	
@@ -919,7 +919,7 @@ function createModule(name){
 	}
 	/** @type {JSFoundSet<db:/svy_framework/sec_module>} */
 	var fs = databaseManager.getFoundSet(globals.nav_db_framework, 'sec_module');
-	if (!scopes.modUtils.isValueUnique(fs, 'name', name)) {
+	if (!scopes.svyUtils.isValueUnique(fs, 'name', name)) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, 'name', name);
 	}
 	if (!fs.newRecord()) {
@@ -987,7 +987,7 @@ function createOwner(ownerName) {
 	/** @type {JSFoundSet<db:/svy_framework/sec_owner>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_owner");
 	
-	if (!scopes.modUtils.isValueUnique(fs,"name",ownerName)) {
+	if (!scopes.svyUtils.isValueUnique(fs,"name",ownerName)) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, "ownername");
 	}
 	
@@ -1027,7 +1027,7 @@ function createUser(userName, password, owner, organization) {
 	
 	/** @type {JSFoundSet<db:/svy_framework/sec_user>} */
 	var userFs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/sec_user");
-	if (!scopes.modUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"], [owner.ownerId.toString()])) {
+	if (!scopes.svyUtils.isValueUnique(userFs, "user_name", userName, ["owner_id"], [owner.ownerId.toString()])) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, "user_name");
 	}
 	
@@ -1563,7 +1563,7 @@ function User(userRecord) {
         		return;
         	}
         	if (userRecord.user_name != x) {
-	        	if (!scopes.modUtils.isValueUnique(userRecord, "user_name", x, ["owner_id"],[userRecord.owner_id.toString()])) {
+	        	if (!scopes.svyUtils.isValueUnique(userRecord, "user_name", x, ["owner_id"],[userRecord.owner_id.toString()])) {
 	        		throw new scopes.svyDataUtils.ValueNotUniqueException(null, "user_name");
 	        	}
 	        	userRecord.user_name = x;
@@ -2473,7 +2473,7 @@ function Organization(organizationRecord) {
 	
 	Object.defineProperty(this, "name", {
         set: function (x) {
-        	if (!scopes.modUtils.isValueUnique(organizationRecord, "name", x, ["owner_id"], [organizationRecord.owner_id.toString()])) {
+        	if (!scopes.svyUtils.isValueUnique(organizationRecord, "name", x, ["owner_id"], [organizationRecord.owner_id.toString()])) {
         		throw new scopes.svyDataUtils.ValueNotUniqueException(null, organizationRecord, "name", x);
         	}
         	organizationRecord.name = x;
@@ -3319,7 +3319,7 @@ function Module(moduleRecord){
 			if (!x) {
 				throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 			}
-			if (!scopes.modUtils.isValueUnique(moduleRecord, 'name', x)) {
+			if (!scopes.svyUtils.isValueUnique(moduleRecord, 'name', x)) {
 				throw new scopes.svyDataUtils.ValueNotUniqueException(null, moduleRecord, 'name', x);
 			}
 			moduleRecord.name = x;
@@ -3461,7 +3461,7 @@ function Application(applicationRecord){
 				if (!x) {
 					throw new scopes.svyExceptions.IllegalArgumentException('Name is required');
 				}
-				if (!scopes.modUtils.isValueUnique(applicationRecord, 'application_name', x)) {
+				if (!scopes.svyUtils.isValueUnique(applicationRecord, 'application_name', x)) {
 					throw new scopes.svyDataUtils.ValueNotUniqueException(null, applicationRecord, 'application_name', x);
 				}
 				applicationRecord.application_name = x;

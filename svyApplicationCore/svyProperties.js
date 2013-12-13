@@ -95,7 +95,7 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
 		throw scopes.svyExceptions.IllegalArgumentException("Wrong arguments provided for createProperty");
 	}
 	
-	if (!scopes.modUtils.isValueUnique(fs, "property_name", name, ["svy_property_sets_id"], [propertySetId]))	{
+	if (!scopes.svyUtils.isValueUnique(fs, "property_name", name, ["svy_property_sets_id"], [propertySetId]))	{
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, "property_name", name);
 	}
 	var propertyRecord = fs.getRecord(fs.newRecord());
@@ -108,7 +108,7 @@ function createProperty(name, propertySet, applicationId, sortOrder, adminLevel,
 	if (sortOrder) {
 		propertyRecord.sort_order = sortOrder;
 	}
-	if (adminLevel >= 0 && scopes.modUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, adminLevel)) {
+	if (adminLevel >= 0 && scopes.svyUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, adminLevel)) {
 		propertyRecord.admin_level = adminLevel;
 	}
 	if (header) {
@@ -145,7 +145,7 @@ function createPropertySet(name, applicationId, displayName, description, icon, 
 	}
 	/** @type {JSFoundSet<db:/svy_framework/svy_property_sets>} */
 	var fs = databaseManager.getFoundSet("db:/" + globals.nav_db_framework + "/svy_property_sets");		
-	if (!scopes.modUtils.isValueUnique(fs, "name", name))	{
+	if (!scopes.svyUtils.isValueUnique(fs, "name", name))	{
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, "property_name", name);
 	}
 	var record = fs.getRecord(fs.newRecord());
@@ -951,7 +951,7 @@ function Property(propertyRecord) {
 		set: function(x) {
 			if (x) {
 				if (record.property_name != x) {
-					if (!scopes.modUtils.isValueUnique(record, "property_name", x)) {
+					if (!scopes.svyUtils.isValueUnique(record, "property_name", x)) {
 						throw new scopes.svyDataUtils.ValueNotUniqueException(null, record, "property_name", x);
 					}
 				}
@@ -1018,7 +1018,7 @@ function Property(propertyRecord) {
 			return record.admin_level;
 		},
 		set: function(x) {
-			if (scopes.modUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, x)) {
+			if (scopes.svyUtils.objectHasValue(scopes.svySecurityManager.ADMIN_LEVEL, x)) {
 				record.admin_level = x;
 				databaseManager.saveData(record);
 			} else {
@@ -1226,7 +1226,7 @@ function PropertySet(propertySetRecord) {
 		set: function(x) {
 			if (x != record.name) {
 				var fs = record.foundset;
-				if (!scopes.modUtils.isValueUnique(fs, "name", x))	{
+				if (!scopes.svyUtils.isValueUnique(fs, "name", x))	{
 					throw new scopes.svyDataUtils.ValueNotUniqueException(null, fs, "property_name", x);
 				}
 			}

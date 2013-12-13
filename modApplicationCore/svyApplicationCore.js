@@ -264,7 +264,7 @@ function onErrorHandler(e) {
 	
 	if (typeof handled == 'boolean' && !handled) {
 		if (uncaughtExceptionCallback) {
-			handled = scopes.modUtils.callMethod(uncaughtExceptionCallback, e)
+			handled = scopes.svyUtils.callMethod(uncaughtExceptionCallback, e)
 		}
 		if (typeof handled == 'boolean' && !handled) {
 			if (e instanceof Error || e instanceof ServoyException) {
@@ -304,7 +304,7 @@ var uncaughtExceptionCallback
  * @properties={typeid:24,uuid:"83356E84-1E42-4BE7-AC11-AA60357DA587"}
  */
 function setUncaughtExceptionCallback(callback) {
-	uncaughtExceptionCallback = scopes.modUtils.convertServoyMethodToQualifiedName(callback)
+	uncaughtExceptionCallback = scopes.svyUtils.convertServoyMethodToQualifiedName(callback)
 	return uncaughtExceptionCallback || callback == null ? true : false
 }
 
