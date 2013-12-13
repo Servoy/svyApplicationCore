@@ -3492,7 +3492,7 @@ function Application(applicationRecord){
 	 * @return {String}
 	 */
 	this.getDeepLinkWebClient = function(){
-		return scopes.modUtils$system.getSolutionDeepLinkSmartClient(applicationRecord.servoy_solution_name);
+		return scopes.svySystem.getSolutionDeepLinkSmartClient(applicationRecord.servoy_solution_name);
 	}
 	
 	/**
@@ -3500,7 +3500,7 @@ function Application(applicationRecord){
 	 * @return {String}
 	 */
 	this.getDeepLinkSmartClient = function(){
-		return scopes.modUtils$system.getSolutionDeepLinkSmartClient(applicationRecord.servoy_solution_name);
+		return scopes.svySystem.getSolutionDeepLinkSmartClient(applicationRecord.servoy_solution_name);
 	}
 	
 	/**
