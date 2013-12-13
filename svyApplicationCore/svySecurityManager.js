@@ -4838,7 +4838,7 @@ function changeOrganization(oldOrganizationId, newOrganizationId) {
 	setSecuritySettings();
 	filterTables();
 	
-	scopes.modUtils$eventManager.fireEvent(this, EVENT_TYPES.ORGANIZATION_CHANGE, [oldOrganizationId, newOrganizationId]);
+	scopes.svyEventManager.fireEvent(this, EVENT_TYPES.ORGANIZATION_CHANGE, [oldOrganizationId, newOrganizationId]);
 	return true;
 }
 
@@ -4978,7 +4978,7 @@ function addOrganizationChangeListener(methodToCall) {
 	if (!methodToCall) {
 		throw new scopes.modUtils$exceptions.IllegalArgumentException("Method is required");
 	}
-	return scopes.modUtils$eventManager.addListener(this, EVENT_TYPES.ORGANIZATION_CHANGE, methodToCall);
+	return scopes.svyEventManager.addListener(this, EVENT_TYPES.ORGANIZATION_CHANGE, methodToCall);
 }
 
 /**

@@ -3,7 +3,7 @@
  * @private 
  * @properties={typeid:35,uuid:"59000B5E-2BB2-43A5-8DFF-3801818EF317",variableType:-4}
  */
-var eventManager = scopes.modUtils$eventManager;
+var eventManager = scopes.svyEventManager;
 
 /**
  * Import event types for convenience

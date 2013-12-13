@@ -2121,7 +2121,7 @@ function setPropertyValue(propertyName, propertyValue, adminLevel, ownerId, prop
 		runtimeProperties = loadRuntimeProperties();
 	}
 	
-	scopes.modUtils$eventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [propertyRecord ? new Property(propertyRecord) : null, getRuntimeProperty(propertyName)]);
+	scopes.svyEventManager.fireEvent(this, PROPERTY_CHANGED_EVENT_ACTION, [propertyRecord ? new Property(propertyRecord) : null, getRuntimeProperty(propertyName)]);
 }
 
 /**
@@ -2443,7 +2443,7 @@ function setUserProperty(propertyName, propertyValue, userId) {
  * @properties={typeid:24,uuid:"38CD589C-5D5D-4F4A-BB86-7AC6A8499BC2"}
  */
 function addPropertyChangeListener(action) {
-	scopes.modUtils$eventManager.addListener(this, PROPERTY_CHANGED_EVENT_ACTION, action);
+	scopes.svyEventManager.addListener(this, PROPERTY_CHANGED_EVENT_ACTION, action);
 }
 
 /**

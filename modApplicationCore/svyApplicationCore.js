@@ -108,7 +108,7 @@ function initModules(startupArguments) {
 			}
 			
 			form.moduleInit.call(null, startupArguments);
-			scopes.modUtils$eventManager.fireEvent(this, APPLICATION_EVENT_TYPES.MODULE_INITIALIZED, [form])
+			scopes.svyEventManager.fireEvent(this, APPLICATION_EVENT_TYPES.MODULE_INITIALIZED, [form])
 			log.trace('Initialized module ' + (form.getId() ? form.getId() : "[no ID provided for moduleDefinition \"" + moduleDefName + "\"]") + ' version ' + form.getVersion());
 			stack.pop()
 			processed[moduleDefName] = null
@@ -127,7 +127,7 @@ function initModules(startupArguments) {
  * @properties={typeid:24,uuid:"AC2D6443-559D-4ED5-A5F3-9A26AC4F4FDB"}
  */
 function addModuleInitListener(listener) {
-	scopes.modUtils$eventManager.addListener(this, APPLICATION_EVENT_TYPES.MODULE_INITIALIZED, listener)
+	scopes.svyEventManager.addListener(this, APPLICATION_EVENT_TYPES.MODULE_INITIALIZED, listener)
 }
 
 /**
@@ -142,10 +142,10 @@ function addModuleInitListener(listener) {
  */
 function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 	//Fire it for global databroadcast listeners
-	scopes.modUtils$eventManager.fireEvent(this, APPLICATION_EVENT_TYPES.DATABROADCAST, Array.prototype.slice.call(arguments, 0))
+	scopes.svyEventManager.fireEvent(this, APPLICATION_EVENT_TYPES.DATABROADCAST, Array.prototype.slice.call(arguments, 0))
 
 	//Fire it for a specific DataSource
-	scopes.modUtils$eventManager.fireEvent(dataSource, APPLICATION_EVENT_TYPES.DATABROADCAST, Array.prototype.slice.call(arguments, 0))
+	scopes.svyEventManager.fireEvent(dataSource, APPLICATION_EVENT_TYPES.DATABROADCAST, Array.prototype.slice.call(arguments, 0))
 	
 	//Fire it for a specific JSRecord
 	for (var i = 1; i <= pks.getMaxRowIndex(); i++) {
@@ -154,7 +154,7 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 		for (var j = 0; j < row.length; j++) {
 			id += '/' + (row[j] + '').replace(/\./g, '%2E').replace(/\//g, '%2F') //Encoding .'s and /-es 
 		}
-		scopes.modUtils$eventManager.fireEvent(id, APPLICATION_EVENT_TYPES.DATABROADCAST, Array.prototype.slice.call(arguments, 0))
+		scopes.svyEventManager.fireEvent(id, APPLICATION_EVENT_TYPES.DATABROADCAST, Array.prototype.slice.call(arguments, 0))
 	}
 }
 
@@ -209,7 +209,7 @@ function addDataBroadcastListener(listener, obj) {
 		}
 	}
 	//TODO: add option to hold a reference to an empty foundset on the datasource, so the client gets the databroadcast for that entity
-	scopes.modUtils$eventManager.addListener(context, APPLICATION_EVENT_TYPES.DATABROADCAST, listener)
+	scopes.svyEventManager.addListener(context, APPLICATION_EVENT_TYPES.DATABROADCAST, listener)
 }
 
 /**
@@ -224,7 +224,7 @@ function addDataBroadcastListener(listener, obj) {
  * @properties={typeid:24,uuid:"36335419-CFB4-40F3-990B-EF6E6355EB72"}
  */
 function executeErrorHandlers(exception) {
-	return scopes.modUtils$eventManager.fireEvent(this, APPLICATION_EVENT_TYPES.ERROR, arguments, true)
+	return scopes.svyEventManager.fireEvent(this, APPLICATION_EVENT_TYPES.ERROR, arguments, true)
 }
 
 /**
@@ -237,7 +237,7 @@ function executeErrorHandlers(exception) {
  */
 function addErrorHandler(handler) {
 	//TODO: figure out how to filter and fire only for specific Exceptions
-	scopes.modUtils$eventManager.addListener(this, APPLICATION_EVENT_TYPES.ERROR, handler)
+	scopes.svyEventManager.addListener(this, APPLICATION_EVENT_TYPES.ERROR, handler)
 }
 
 /**
