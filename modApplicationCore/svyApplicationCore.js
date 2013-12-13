@@ -64,7 +64,7 @@ function initModules(startupArguments) {
 	/** @type {Array<String>} */
 	var stack = []
 
-	var mods = scopes.modUtils$UI.getJSFormInstances(solutionModel.getForm('AbstractModuleDef'))
+	var mods = scopes.svyUI.getJSFormInstances(solutionModel.getForm('AbstractModuleDef'))
 	var moduleDefNameById = {}
 	
 	/** @type {RuntimeForm<AbstractModuleDef>}*/
