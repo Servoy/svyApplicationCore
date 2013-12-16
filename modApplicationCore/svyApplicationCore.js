@@ -208,7 +208,7 @@ function addDataBroadcastListener(listener, obj) {
 				context += '/' + (pks[j] + '').replace(/\./g, '%2E').replace(/\//g, '%2F') //Encoding .'s and /-es 
 			}
 		} else {
-			context = obj;
+			context = obj.toString();
 		}
 	}
 	//TODO: add option to hold a reference to an empty foundset on the datasource, so the client gets the databroadcast for that entity
