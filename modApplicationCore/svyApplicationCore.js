@@ -59,7 +59,6 @@ var APPLICATION_EVENT_TYPES = {
  * @properties={typeid:24,uuid:"2BCF34F0-F66E-456A-A493-2EE1B3EBE1B8"}
  */
 function initModules(startupArguments) {
-	//TODO: check for multiple mods with the same ID
 	//TODO: more severe logging on mods without ID
 	var processed = {}
 	/** @type {Array<String>} */
@@ -71,6 +70,15 @@ function initModules(startupArguments) {
 	/** @type {RuntimeForm<AbstractModuleDef>}*/
 	var form
 	for (var i = 0; i < mods.length; i++) {
+		var id = forms[mods[i].name].getId()
+		if (!id) {
+			log.error("Module ID not provided on '" + mods[i].name + "'. Skipping the Module definition")
+			continue
+		}
+		if (moduleDefNameById.hasOwnProperty(id)) {
+			log.error("Duplicate module ID '" + id + "' found: '" + moduleDefNameById[id] + "' and '" + mods[i].name + "' use the same ID. Skipping the latter")
+			continue
+		}
 		moduleDefNameById[forms[mods[i].name].getId()] = mods[i].name
 	}
 	
@@ -88,20 +96,24 @@ function initModules(startupArguments) {
 			}
 			
 			form = forms[moduleDefName];
-			var dependancies = form.getDependancies()
-			if (dependancies) {
-				dependancies: for (var j = 0; j < dependancies.length; j++) {
-					var name = moduleDefNameById[dependancies[j].id]
+			var dependencies = form.getDependencies()
+			if (dependencies) {
+				dependencies: for (var j = 0; j < dependencies.length; j++) {
+					var name = moduleDefNameById[dependencies[j].id]
+					if (!name) {
+						log.error("Module with ID '" + dependencies[j].id + "' not found. Referenced by '" + moduleDefNameById[form.getId()] + "'")
+						continue dependencies
+					}
 					if (name in processed) { //already processed
-						continue dependancies
+						continue dependencies
 					}
 					if (stack.indexOf(name) != -1 || name === moduleDefName) { //circular reference
 						var ids = stack.map(function(value) {
 							return forms[value].getId()
 						})
-						ids.push(dependancies[j].id)
+						ids.push(dependencies[j].id)
 						log.error('Circuclar module dependancies detected: ' + ids.join(' > '))
-						continue dependancies
+						continue dependencies
 					}
 					stack.push(name)
 					continue stack

@@ -100,6 +100,6 @@ function moduleInit(startupArguments) {}
  *
  * @properties={typeid:24,uuid:"D6A3F8D4-5E03-40BA-93DF-84D39270A3DF"}
  */
-function getDependancies() {
+function getDependencies() {
 	return null
 }

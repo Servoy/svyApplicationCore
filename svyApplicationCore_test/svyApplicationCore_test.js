@@ -18,6 +18,7 @@ function testModuleDefinitions() {
 var moduleInitRetval = []
 
 /**
+ * TODO add testcases for duplicate ID's, empty ID's and unknown IDs
  * @properties={typeid:24,uuid:"755BFFEF-FA01-49C4-BF77-1C31FA85D3D7"}
  */
 function testModuleInit() {
@@ -61,31 +62,31 @@ function testModuleInit() {
 	jsForm = solutionModel.newForm(namePrefix + 'A', abstractModuleDefJSForm)
 	jsForm.newMethod('function getId(){return "mod.a"}')
 	jsForm.newMethod('function getVersion(){return "1.0.0"}')
-	jsForm.newMethod('function getDependancies(){return ["mod.b"]}')
+	jsForm.newMethod('function getDependencies(){return [{id: "mod.b"}]}')
 	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("a")}')
 	
 	jsForm = solutionModel.newForm(namePrefix + 'B', abstractModuleDefJSForm)
 	jsForm.newMethod('function getId(){return "mod.b"}')
 	jsForm.newMethod('function getVersion(){return "1.0.0"}')
-	jsForm.newMethod('function getDependancies(){return ["mod.c"]}')
+	jsForm.newMethod('function getDependencies(){return [{id: "mod.c"}]}')
 	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("b")}')
 	
 	jsForm = solutionModel.newForm(namePrefix + 'C', abstractModuleDefJSForm)
 	jsForm.newMethod('function getId(){return "mod.c"}')
 	jsForm.newMethod('function getVersion(){return "1.0.0"}')
-	jsForm.newMethod('function getDependancies(){return ["mod.d"]}')
+	jsForm.newMethod('function getDependencies(){return [{id: "mod.d"}]}')
 	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("c")}')
 	
 	jsForm = solutionModel.newForm(namePrefix + 'D', abstractModuleDefJSForm)
 	jsForm.newMethod('function getId(){return "mod.d"}')
 	jsForm.newMethod('function getVersion(){return "1.0.0"}')
-	jsForm.newMethod('function getDependancies(){return ["mod.a"]}')
+	jsForm.newMethod('function getDependencies(){return [{id: "mod.a"}]}')
 	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("d")}')	
 	
 	jsForm = solutionModel.newForm(namePrefix + 'E', abstractModuleDefJSForm)
 	jsForm.newMethod('function getId(){return "mod.e"}')
 	jsForm.newMethod('function getVersion(){return "1.0.0"}')
-	jsForm.newMethod('function getDependancies(){return ["mod.d"]}')
+	jsForm.newMethod('function getDependencies(){return [{id: "mod.d"}]}')
 	jsForm.newMethod('function moduleInit(){scopes.svyApplicationCore_test.moduleInitRetval.push("e")}')	
 
 	scopes.svyApplicationCore.initModules()
