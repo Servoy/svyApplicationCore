@@ -199,7 +199,7 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 function addDataBroadcastListener(listener, obj) {
 	var context = this
 	if (obj) {
-		if (!(obj instanceof JSRecord || obj.constructor instanceof String)) {
+		if (!(obj instanceof JSRecord || typeof obj === 'string')) {
 			throw scopes.svyExceptions.IllegalArgumentException('obj param value passed into addDatabroadcastListener must be either a JSRecord or a String representing a datasource')
 		} else if (obj instanceof JSRecord) {
 			var pks = obj.getPKs()
@@ -273,18 +273,16 @@ function onErrorHandler(e) {
 		e = ex
 	}
 	
-	if (notHandled === true) {
-		if (uncaughtExceptionCallback) {
-			notHandled = scopes.svyUtils.callMethod(uncaughtExceptionCallback, e)
-		}
-		/* Returning anything but a Boolean true will make Servoy consider the exception handled.
-		 * 
-		 * When returning an explicit true, the exception will be "reported"
-		 * In the Smart Client this will mean that the exception will be reported to the user via a dialog
-		 * In the Web Client the exception will be logged to the serverside log file
-		 */
-		return !(notHandled === false)
+	if (notHandled === true && uncaughtExceptionCallback) {
+		notHandled = scopes.svyUtils.callMethod(uncaughtExceptionCallback, e)
 	}
+	/* Returning anything but a Boolean true will make Servoy consider the exception handled.
+	 * 
+	 * When returning an explicit true, the exception will be "reported"
+	 * In the Smart Client this will mean that the exception will be reported to the user via a dialog
+	 * In the Web Client the exception will be logged to the serverside log file
+	 */
+	return !(notHandled === false)
 }
 
 /**
