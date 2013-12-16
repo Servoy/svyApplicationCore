@@ -62,7 +62,7 @@ function errorHandler(e) {
 						application.output('VendorErrorCode: ' + dataException.getVendorErrorCode())
 					}
 				}
-				return true
+				return false
 			case ServoyException.NO_PARENT_DELETE_WITH_RELATED_RECORDS:
 				globals.DIALOGS.showErrorDialog(i18n.getI18NMessage('svy.fr.dlg.error'), i18n.getI18NMessage('svy.fr.dlg.noParentDeleteWithRelatedRecords'), 'OK');
 				if (databaseManager.hasTransaction()) {
@@ -71,7 +71,7 @@ function errorHandler(e) {
 				if (databaseManager.hasLocks()) {
 					databaseManager.releaseAllLocks();
 				}
-				return true;
+				return false;
 	
 			case servoyException.getErrorCode() == ServoyException.NO_RELATED_CREATE_ACCESS:
 				globals.DIALOGS.showErrorDialog(i18n.getI18NMessage('svy.fr.dlg.error'), i18n.getI18NMessage('svy.fr.dlg.noRelatedCreateAccess'), 'OK');
@@ -81,7 +81,7 @@ function errorHandler(e) {
 				if (databaseManager.hasLocks()) {
 					databaseManager.releaseAllLocks()
 				}
-				return true;
+				return false;
 			default:
 				break;
 		}

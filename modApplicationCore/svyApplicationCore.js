@@ -255,37 +255,24 @@ function onErrorHandler(e) {
 	if (e instanceof Packages.org.mozilla.javascript.JavaScriptException) {
  		e = e['getValue']()
  	}
- 	var handled = false
+ 	var notHandled = true
 	try {
-		handled = executeErrorHandlers(e)
+		notHandled = executeErrorHandlers(e)
 	} catch (ex) {
 		e = ex
 	}
 	
-	if (typeof handled == 'boolean' && !handled) {
+	if (notHandled === true) {
 		if (uncaughtExceptionCallback) {
-			handled = scopes.svyUtils.callMethod(uncaughtExceptionCallback, e)
+			notHandled = scopes.svyUtils.callMethod(uncaughtExceptionCallback, e)
 		}
-		if (typeof handled == 'boolean' && !handled) {
-			if (e instanceof Error || e instanceof ServoyException) {
-				/** @type {Error|ServoyException} */
-				var exc = e
-				log.error('Uncaught exception', exc)
-			} else {
-				log.error('Uncaught exception: ' + e)
-			}
-			//TODO: implement better actionable dialog
-			//TODO: i18n the message
-			globals.DIALOGS.showErrorDialog(i18n.getI18NMessage('svy.fr.lbl.warning'), 'Oops, things seem to have gone pear shaped', i18n.getI18NMessage('svy.fr.lbl.ok'))
-		} 
-		
 		/* Returning anything but a Boolean true will make Servoy consider the exception handled.
 		 * 
 		 * When returning an explicit true, the exception will be "reported"
 		 * In the Smart Client this will mean that the exception will be reported to the user via a dialog
 		 * In the Web Client the exception will be logged to the serverside log file
 		 */
-		return false
+		return !(notHandled === false)
 	}
 }
 
@@ -298,7 +285,15 @@ function onErrorHandler(e) {
 var uncaughtExceptionCallback
 
 /**
- * @param {function(ServoyException|Error|*):Boolean} callback
+ * Allows setting a callback method which gets invoked in case of an unhandled exception<br>
+ * <br>
+ * NOTE: The calling of the callback method is dependent on {@link #onErrorHandler} being used as the event handler for the Solution onError event<br>
+ * <br>
+ * An unhandled exception is an exception that is send into the solutions onError handler and is not handled by any of the added ErrorHandlers (see {@link #addErrorHandler})<br>
+ * <br>
+ * This callback could be used for example to take a snapshot of the current state of the application and email the snapshot to the development team for inspection<br>
+ * <br>
+ * @param {function(ServoyException|Error|*):Boolean} callback Return false to prevent the Servoy default action for unhandled exceptions to be executed
  * @return {Boolean} true is setting the callback was successful
  * 
  * @properties={typeid:24,uuid:"83356E84-1E42-4BE7-AC11-AA60357DA587"}
@@ -307,4 +302,3 @@ function setUncaughtExceptionCallback(callback) {
 	uncaughtExceptionCallback = scopes.svyUtils.convertServoyMethodToQualifiedName(callback)
 	return uncaughtExceptionCallback || callback == null ? true : false
 }
-
