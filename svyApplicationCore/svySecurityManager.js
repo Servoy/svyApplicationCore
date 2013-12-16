@@ -3798,8 +3798,7 @@ function filterOrganization() {
 	}
 	
 	// filter i18n
-//	databaseManager.addTableFilterParam(navDatabase, "i18n_messages", "i18n_organization_id", "IN", (organizationId, null));
-	i18n.setI18NMessagesFilter("i18n_organization_id", organizationId);
+	databaseManager.addTableFilterParam(navDatabase, "i18n_messages", "i18n_organization_id", "IN", (organizationId, null));
 }
 
 /**
