@@ -2,4 +2,5 @@
 <buildpath>
 	<buildpathentry excluding=".stp/|medias/" kind="src" path=""/>
 	<buildpathentry exported="true" kind="prj" path="/modApplicationCore"/>
+	<buildpathentry exported="true" kind="prj" path="/mod_dialog"/>
 </buildpath>

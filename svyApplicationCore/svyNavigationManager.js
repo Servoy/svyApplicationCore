@@ -7,6 +7,7 @@ var ERROR_CODES = {
 }
 
 /**
+ * @constructor 
  * @extends {scopes.svyExceptions.IllegalStateException}
  * 
  * @param {String} errorMessage
@@ -35,7 +36,6 @@ var init = (function() {
 }())
 
 /**
- * TODO: move this method to the appropriate scope, instead of on the moduleInit form
  * @public 
  * @param {ServoyException|Error|*} e
  * @return {Boolean}
@@ -86,4 +86,5 @@ function errorHandler(e) {
 				break;
 		}
 	}
+	return null
 }
