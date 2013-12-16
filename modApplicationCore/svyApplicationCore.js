@@ -5,6 +5,7 @@
  */
 
 /**
+ * @private 
  * @properties={typeid:35,uuid:"F718A8F5-5153-4A37-95A2-9B572ABFABDE",variableType:-4}
  */
 var log = scopes.svyLogManager.getLogger('com.servoy.bap.core')
@@ -160,7 +161,9 @@ function fireDataBroadcastEvent(dataSource, action, pks, cached) {
 
 /**
  * Registers a listener for incoming databroadcast events.<br><br>
- * Note that a Client only receives databroadcast events for datasources to which is holds a reference, for example has a form loaded connected to the datasource
+ * NOTE: this method requires {@link #fireDataBroadcastEvent} to be hooked up or be called from the Solutions onDatabroadCast event<br>
+ * NOTE: a Client only receives databroadcast events for datasources to which is holds a reference, for example has a form loaded connected to the datasource<br>
+ * <br>
  * 
  * @param {Function} listener
  * @param {String|JSRecord} [obj] Listen to just databroadcasts on a specific datasource or JSRecord
@@ -215,15 +218,21 @@ function addDataBroadcastListener(listener, obj) {
 /**
  * Method to assign to or call from the solution's onError event handler<br>
  * <br>
- * Will fire all attached eventHandlers until one return true
+ * Will fire all attached eventHandlers until one returns false
  * 
  * @param {*} exception exception to handle
  *
- * @returns {Boolean} Whether or not the exception was handled
+ * @returns {Boolean} False when the exception was handled, otherwise true
+ * 
+ * @see See {@link #onErrorHandler} for a default onErrorHandler impl.
  *
  * @properties={typeid:24,uuid:"36335419-CFB4-40F3-990B-EF6E6355EB72"}
  */
 function executeErrorHandlers(exception) {
+	//workaround to get to the throw exception in JavaScript. See SVY-5618
+	if (exception instanceof Packages.org.mozilla.javascript.JavaScriptException) {
+		exception = exception['getValue']()
+ 	}
 	return scopes.svyEventManager.fireEvent(this, APPLICATION_EVENT_TYPES.ERROR, arguments, true)
 }
 
@@ -232,20 +241,22 @@ function executeErrorHandlers(exception) {
  * <br>
  * If an error is handled by an errorHandler, other errorHandlers will not be invoked anymore<br>
  * <br>
- * @param {function(*):Boolean} handler Returning true will stop further errorHandlers form being called
+ * NOTE: For the errorHandlers to be called the {@link #executeErrorHandlers} or {@link #onErrorHandler} method needs to be hooked up to and be called from the solutions onError event
+ * @param {function(*):Boolean} handler Returning false will stop further errorHandlers form being called
  * @properties={typeid:24,uuid:"3FABF7E3-F0B7-423E-AD12-001705FF601B"}
  */
 function addErrorHandler(handler) {
-	//TODO: figure out how to filter and fire only for specific Exceptions
+	//TODO: allow registering listeners for specific Exceptions
 	scopes.svyEventManager.addListener(this, APPLICATION_EVENT_TYPES.ERROR, handler)
 }
 
 /**
  * Default onError handler implementation to attach to the Solutions onError event property<br>
- * Will call all registered ErrorHandlers.
- * If the error is not handled after invoking all the registered handlers, the unhandledErrorCallback will be invoked.
- * If there is no callback registered or the callback does not return true, an error dialog will be show to the user
- * and the error will be logged
+ * Will call all registered ErrorHandlers (see {@link #addErrorHandler}<br>
+ * <br>
+ * If the error is not handled after invoking all the registered handlers, the {@link #uncaughtExceptionCallback} will be invoked<br>
+ * If there is no callback registered or the callback does not return false, the default handling of uncaught exceptions of Servoy will take place<br>
+ * <br>
  * @param {ServoyException|Error|*} e
  *
  * @properties={typeid:24,uuid:"7BA4782A-8BC4-47A4-BD84-9F56FA4EC386"}
