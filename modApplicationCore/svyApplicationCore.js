@@ -245,15 +245,23 @@ function executeErrorHandlers(exception) {
 	if (exception instanceof Packages.org.mozilla.javascript.JavaScriptException) {
 		exception = exception['getValue']()
  	}
-	return scopes.svyEventManager.fireEvent(this, APPLICATION_EVENT_TYPES.ERROR, arguments, true)
+	try {
+		scopes.svyEventManager.fireEvent(this, APPLICATION_EVENT_TYPES.ERROR, arguments, true)		
+	} catch (e if e instanceof scopes.svyEventManager.VetoEventException) {
+		return false
+	}
+	return true
 }
 
 /**
  * To handle uncaught exceptions that propagate through to the solutions onError handler<br>
  * <br>
+ * If the handler handles the exception, it can throw a {@link #scopes#svyEventManager#VetoEventException} to cancel event propagation<br>
+ * <br>
  * If an error is handled by an errorHandler, other errorHandlers will not be invoked anymore<br>
  * <br>
- * NOTE: For the errorHandlers to be called the {@link #executeErrorHandlers} or {@link #onErrorHandler} method needs to be hooked up to and be called from the solutions onError event
+ * NOTE: For the errorHandlers to be called the {@link #executeErrorHandlers} or {@link #onErrorHandler} method needs to be hooked up to or be called from the solutions onError event<br>
+ * <br>
  * @param {function(*):Boolean} handler Returning false will stop further errorHandlers form being called
  * @properties={typeid:24,uuid:"3FABF7E3-F0B7-423E-AD12-001705FF601B"}
  */
@@ -281,6 +289,8 @@ function onErrorHandler(e) {
  	var notHandled = true
 	try {
 		notHandled = executeErrorHandlers(e)
+	} catch (ex if ex instanceof scopes.svyEventManager.VetoEventException) {
+		notHandled = false
 	} catch (ex) {
 		e = ex
 	}
