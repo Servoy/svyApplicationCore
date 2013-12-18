@@ -296,7 +296,7 @@ function onErrorHandler(e) {
 	}
 	
 	if (notHandled === true && uncaughtExceptionCallback) {
-		notHandled = scopes.svyUtils.callMethod(uncaughtExceptionCallback, e)
+		notHandled = scopes.svySystem.callMethod(uncaughtExceptionCallback, e)
 	}
 	/* Returning anything but a Boolean true will make Servoy consider the exception handled.
 	 * 
