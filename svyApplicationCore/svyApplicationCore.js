@@ -303,6 +303,6 @@ var uncaughtExceptionCallback
  * @properties={typeid:24,uuid:"83356E84-1E42-4BE7-AC11-AA60357DA587"}
  */
 function setUncaughtExceptionCallback(callback) {
-	uncaughtExceptionCallback = scopes.svyUtils.convertServoyMethodToQualifiedName(callback)
+	uncaughtExceptionCallback = scopes.svySystem.convertServoyMethodToQualifiedName(callback)
 	return uncaughtExceptionCallback || callback == null ? true : false
 }
