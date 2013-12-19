@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_user_login_attempt",
-joinType:1,
-name:"sec_user_login_attempt$foundset",
-primaryDataSource:"db:/svy_framework/sec_user_login_attempt",
-typeid:22,
-uuid:"A0DCE08F-1469-4A32-B6FF-F67FBE835C88"

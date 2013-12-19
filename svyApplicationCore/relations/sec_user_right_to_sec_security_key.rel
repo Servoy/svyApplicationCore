@@ -1,9 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_security_key",
-items:[
-{foreignColumnName:"security_key_id",primaryDataProviderID:"security_key_id",typeid:23,uuid:"0AE084B8-49CD-41CE-80C5-164F5BB684AB"}
-],
-name:"sec_user_right_to_sec_security_key",
-primaryDataSource:"db:/svy_framework/sec_user_right",
-typeid:22,
-uuid:"FEA78AFB-F258-45D4-BB3F-8A8EC378A43D"

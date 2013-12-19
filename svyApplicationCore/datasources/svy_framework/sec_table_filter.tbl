@@ -1,6 +1,0 @@
-dataSource:"db:/svy_framework/sec_table_filter",
-onAfterDeleteMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
-onAfterInsertMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
-onAfterUpdateMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
-typeid:39,
-uuid:"08C01B4A-2DDB-4826-9EF1-F3E415BB3CEE"

@@ -1,9 +1,0 @@
-foreignDataSource:"db:/svy_framework/prov_application",
-items:[
-{foreignColumnName:"application_id",primaryDataProviderID:"application_id",typeid:23,uuid:"CE4CF099-0832-4C48-8D30-4C7789246806"}
-],
-joinType:1,
-name:"svy_properties_to_prov_application",
-primaryDataSource:"db:/svy_framework/svy_properties",
-typeid:22,
-uuid:"9A824F77-DDDB-4F75-BA3A-0D3E2DAE2033"

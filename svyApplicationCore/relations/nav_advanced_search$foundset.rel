@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_advanced_search",
-joinType:1,
-name:"nav_advanced_search$foundset",
-primaryDataSource:"db:/svy_framework/nav_advanced_search",
-typeid:22,
-uuid:"D69448EB-C079-450E-83E2-10ED0A383A87"

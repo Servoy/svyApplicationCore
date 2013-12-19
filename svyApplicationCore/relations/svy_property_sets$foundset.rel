@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/svy_property_sets",
-joinType:1,
-name:"svy_property_sets$foundset",
-primaryDataSource:"db:/svy_framework/svy_property_sets",
-typeid:22,
-uuid:"CEBCA0F6-C8B1-4854-80D0-B3952023BA99"

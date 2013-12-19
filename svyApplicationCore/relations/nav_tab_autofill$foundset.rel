@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_tab_autofill",
-joinType:1,
-name:"nav_tab_autofill$foundset",
-primaryDataSource:"db:/svy_framework/nav_tab_autofill",
-typeid:22,
-uuid:"432A3D95-D869-40BC-95AF-C530A3FB0E74"

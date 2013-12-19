@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_print_list_details",
-joinType:1,
-name:"nav_print_list_details$foundset",
-primaryDataSource:"db:/svy_framework/nav_print_list_details",
-typeid:22,
-uuid:"58A8B2C8-1BAD-4970-8F7B-BF45214AD0E9"

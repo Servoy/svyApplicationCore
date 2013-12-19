@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_user_right",
-joinType:1,
-name:"sec_user_right$foundset",
-primaryDataSource:"db:/svy_framework/sec_user_right",
-typeid:22,
-uuid:"3BB9FFE7-AF13-4896-8C4B-2AF17472DAB8"

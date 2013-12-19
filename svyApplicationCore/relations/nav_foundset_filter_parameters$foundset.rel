@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_foundset_filter_parameters",
-joinType:1,
-name:"nav_foundset_filter_parameters$foundset",
-primaryDataSource:"db:/svy_framework/nav_foundset_filter_parameters",
-typeid:22,
-uuid:"CB2E0658-400C-4748-9531-1F507B5ADB0F"

@@ -1,9 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_user_org",
-items:[
-{foreignColumnName:"user_org_id",primaryDataProviderID:"user_org_id",typeid:23,uuid:"EAE74442-5271-4162-9A9B-3EB3463EDBBC"}
-],
-name:"sec_user_right_to_sec_user_org",
-primaryDataSource:"db:/svy_framework/sec_user_right",
-typeid:22,
-uuid:"2BE124E5-6157-4C1F-B3C3-5A3B1125FDE0"

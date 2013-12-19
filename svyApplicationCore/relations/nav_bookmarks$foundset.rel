@@ -1,8 +1,0 @@
-allowCreationRelatedRecords:true,
-deprecated:"Not used. Will be removed in version 6",
-foreignDataSource:"db:/svy_framework/nav_bookmarks",
-joinType:1,
-name:"nav_bookmarks$foundset",
-primaryDataSource:"db:/svy_framework/nav_bookmarks",
-typeid:22,
-uuid:"5DA1B176-DCFF-4AC2-9F32-933906A95508"

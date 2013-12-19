@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_help",
-joinType:1,
-name:"nav_help$foundset",
-primaryDataSource:"db:/svy_framework/nav_help",
-typeid:22,
-uuid:"AB7C9AFE-A27E-425D-A3E0-30F6DBE51DA1"

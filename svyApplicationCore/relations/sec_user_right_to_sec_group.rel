@@ -1,9 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_group",
-items:[
-{foreignColumnName:"group_id",primaryDataProviderID:"group_id",typeid:23,uuid:"918A68F1-0401-4662-9E24-2402F8E4668F"}
-],
-name:"sec_user_right_to_sec_group",
-primaryDataSource:"db:/svy_framework/sec_user_right",
-typeid:22,
-uuid:"0CA0A54C-2FB3-4FCB-B18C-26089FD63D56"

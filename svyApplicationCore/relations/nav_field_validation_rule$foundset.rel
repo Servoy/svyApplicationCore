@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_field_validation_rule",
-joinType:1,
-name:"nav_field_validation_rule$foundset",
-primaryDataSource:"db:/svy_framework/nav_field_validation_rule",
-typeid:22,
-uuid:"E44F13A0-FF5F-46AA-BE3A-F489BFBCC48B"

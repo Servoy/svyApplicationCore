@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_owner_in_module",
-joinType:1,
-name:"sec_owner_in_module$foundset",
-primaryDataSource:"db:/svy_framework/sec_owner_in_module",
-typeid:22,
-uuid:"8F0C180A-62D4-4A10-8D84-5BD721DE4B20"

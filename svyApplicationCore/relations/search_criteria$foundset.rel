@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/search_criteria",
-joinType:1,
-name:"search_criteria$foundset",
-primaryDataSource:"db:/svy_framework/search_criteria",
-typeid:22,
-uuid:"B2BFC77E-51D0-4FAE-91AF-B362F6195E4B"

@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/nav_shortkey",
-joinType:1,
-name:"nav_shortkey$foundset",
-primaryDataSource:"db:/svy_framework/nav_shortkey",
-typeid:22,
-uuid:"508744D2-3C34-4672-BCD8-A24291212AAE"

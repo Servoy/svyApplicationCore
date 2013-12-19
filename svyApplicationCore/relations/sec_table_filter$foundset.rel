@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/sec_table_filter",
-joinType:1,
-name:"sec_table_filter$foundset",
-primaryDataSource:"db:/svy_framework/sec_table_filter",
-typeid:22,
-uuid:"B0520BF6-DD33-4152-A1BE-4D2C2A6398F7"

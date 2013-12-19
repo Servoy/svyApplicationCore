@@ -1,7 +1,0 @@
-allowCreationRelatedRecords:true,
-foreignDataSource:"db:/svy_framework/mon_pricing_models",
-joinType:1,
-name:"mon_pricing_models$foundset",
-primaryDataSource:"db:/svy_framework/mon_pricing_models",
-typeid:22,
-uuid:"EB4789CA-1837-4467-B6F4-D1C952A065EA"

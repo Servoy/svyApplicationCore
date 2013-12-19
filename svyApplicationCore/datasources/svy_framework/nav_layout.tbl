@@ -1,6 +1,0 @@
-dataSource:"db:/svy_framework/nav_layout",
-onAfterDeleteMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
-onAfterInsertMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
-onAfterUpdateMethodID:"ECA13B00-D635-4076-8631-9017686968B1",
-typeid:39,
-uuid:"4DB5BA29-06B7-4426-8D81-32FB5BC5D977"
