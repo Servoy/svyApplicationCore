@@ -6,12 +6,31 @@
 var eventManager = scopes.svyEventManager;
 
 /**
- * Import event types for convenience
- * @private 
- * @enum 
- * @properties={typeid:35,uuid:"AA2118F1-38BC-4767-85F3-27B3AC1AAA83",variableType:-4}
+ * Enumeration of event type constants for forms.
+ * Listeners can be attached to form events
+ * 
+ * @public 
+ * @enum
+ * @see forms.svyBase.addListener
+ * 
+ * @properties={typeid:35,uuid:"E74C65B2-2C50-49DE-971B-2660005C9ACE",variableType:-4}
  */
-var eventTypes = scopes.svyApplicationCore.FORM_EVENT_TYPES;
+var FORM_EVENT_TYPES = { //Some of these are backed up by constants on JS(DND)Event
+	DRAG:'drag',
+	DRAG_END:'drag-end',
+	DRAG_OVER:'drag-over',
+	DROP:'drop',
+	ELEMENT_FOCUS_GAINED:'element-focus-lost',
+	ELEMENT_FOCUS_LOST:'element-focus-lost',
+	LOAD:'load',
+	HIDE:'hide',
+	RECORD_EDIT_START:'record-edit-start',
+	RECORD_EDIT_STOP:'record-edit-stop',
+	RECORD_SELECTION:'record-selection',
+	RESIZE:'resize',
+	SHOW:'show',
+	UNLOAD:'unload'
+};
 
 /**
  * Provides implementations of svyBase the opportunity to update the view whenever the model is believed to have changed
@@ -38,7 +57,7 @@ function updateUI(){
  * @param {Function} listener
  * @param {String} eventType
  * 
- * @see scopes.svyApplicationCore.FORM_EVENT_TYPES
+ * @see {@link #FORM_EVENT_TYPES}
  * 
  * @properties={typeid:24,uuid:"D8096A41-2CA9-4D4B-BE60-8302D0CE6676"}
  */
@@ -53,7 +72,7 @@ function addListener(listener, eventType){
  * @param {String} eventType
  *
  * @public 
- * @see scopes.svyApplicationCore.FORM_EVENT_TYPES
+ * @see {@link #FORM_EVENT_TYPES}
  * @author Sean
  * 
  * @properties={typeid:24,uuid:"3F1F7F10-0595-4638-A726-17B937866047"}
@@ -83,7 +102,7 @@ function removeListener(listener, eventType){
  */
 function onDrag(event) {
 	updateUI();
-	fireEvent(eventTypes.DRAG, event);
+	fireEvent(FORM_EVENT_TYPES.DRAG, event);
 	return DRAGNDROP.NONE
 }
 
@@ -98,7 +117,7 @@ function onDrag(event) {
  */
 function onDragEnd(event) {
 	updateUI();
-	fireEvent(eventTypes.DRAG_END, event);
+	fireEvent(FORM_EVENT_TYPES.DRAG_END, event);
 }
 
 /**
@@ -115,7 +134,7 @@ function onDragEnd(event) {
  */
 function onDragOver(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.DRAG_OVER, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.DRAG_OVER, event, true);
 	return permitted;
 }
 
@@ -133,7 +152,7 @@ function onDragOver(event) {
  */
 function onDrop(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.DROP, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.DROP, event, true);
 	return permitted;
 }
 
@@ -150,7 +169,7 @@ function onDrop(event) {
  */
 function onElementFocusGained(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_GAINED, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.ELEMENT_FOCUS_GAINED, event, true);
 	return permitted;
 }
 
@@ -167,7 +186,7 @@ function onElementFocusGained(event) {
  */
 function onElementFocusLost(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.ELEMENT_FOCUS_LOST, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.ELEMENT_FOCUS_LOST, event, true);
 	return permitted;
 }
 
@@ -183,7 +202,7 @@ function onElementFocusLost(event) {
  * @properties={typeid:24,uuid:"E32455DA-B6F2-45CB-BAEA-FA9952612CEE"}
  */
 function onHide(event) {
-	var permitted = fireEvent(eventTypes.HIDE, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.HIDE, event, true);
 	return permitted;
 }
 
@@ -198,7 +217,7 @@ function onHide(event) {
  */
 function onLoad(event) {
 	//	TODO Add support for a global form (re) loaded event in addition to registered listeners
-	fireEvent(eventTypes.LOAD,event);
+	fireEvent(FORM_EVENT_TYPES.LOAD,event);
 }
 
 /**
@@ -214,7 +233,7 @@ function onLoad(event) {
  */
 function onRecordEditStart(event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.RECORD_EDIT_START, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.RECORD_EDIT_START, event, true);
 	return permitted;
 }
 
@@ -230,14 +249,14 @@ function onRecordEditStart(event) {
  * @returns {Boolean} Always true in svyBase
  *
  * @protected
- * @see scopes.svyApplicationCore.FORM_EVENT_TYPES.RECORD_EDIT_STOP
+ * @see {@link #FORM_EVENT_TYPES}
  * @author Sean
  * 
  * @properties={typeid:24,uuid:"43B70EDD-007F-4975-B338-E02AAF9F4453"}
  */
 function onRecordEditStop(record, event) {
 	updateUI();
-	var permitted = fireEvent(eventTypes.RECORD_EDIT_STOP, event, true);
+	var permitted = fireEvent(FORM_EVENT_TYPES.RECORD_EDIT_STOP, event, true);
 	return permitted;
 }
 
@@ -249,14 +268,14 @@ function onRecordEditStop(record, event) {
  * @param {JSEvent} event the event that triggered the action
  *
  * @protected
- * @see scopes.svyApplicationCore.FORM_EVENT_TYPES.RECORD_SELECTION
+ * @see {@link #FORM_EVENT_TYPES}
  * @author Sean
  * 
  * @properties={typeid:24,uuid:"A0CA6456-5EF1-4EE9-B245-95BE346E3FC8"}
  */
 function onRecordSelection(event) {
 	updateUI();
-	fireEvent(eventTypes.RECORD_SELECTION, event);
+	fireEvent(FORM_EVENT_TYPES.RECORD_SELECTION, event);
 }
 
 /**
@@ -270,7 +289,7 @@ function onRecordSelection(event) {
  */
 function onResize(event) {
 	updateUI();	
-	fireEvent(eventTypes.RESIZE, event);
+	fireEvent(FORM_EVENT_TYPES.RESIZE, event);
 }
 
 /**
@@ -282,14 +301,14 @@ function onResize(event) {
  * @param {JSEvent} event the event that triggered the action
  *
  * @protected
- * @see scopes.svyApplicationCore.FORM_EVENT_TYPES.SHOW
+ * @see {@link #FORM_EVENT_TYPES}
  * @author Sean
  * 
  * @properties={typeid:24,uuid:"C16ADCD3-8E46-4E96-9572-D474FB904C1F"}
  */
 function onShow(firstShow, event) {
 	updateUI();
-	fireEvent(eventTypes.SHOW, event);
+	fireEvent(FORM_EVENT_TYPES.SHOW, event);
 }
 
 /**
@@ -302,7 +321,7 @@ function onShow(firstShow, event) {
  * @properties={typeid:24,uuid:"94A128E1-5822-4982-8A79-1D648CE1769C"}
  */
 function onUnload(event) {
-	fireEvent(eventTypes.UNLOAD, event);
+	fireEvent(FORM_EVENT_TYPES.UNLOAD, event);
 }
 
 /**

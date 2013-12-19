@@ -8,34 +8,7 @@
  * @private 
  * @properties={typeid:35,uuid:"F718A8F5-5153-4A37-95A2-9B572ABFABDE",variableType:-4}
  */
-var log = scopes.svyLogManager.getLogger('com.servoy.bap.core')
-
-/**
- * Enumeration of event type constants for forms.
- * Listeners can be attached to form events
- * 
- * @public 
- * @enum
- * @see forms.svyBase.addListener
- * 
- * @properties={typeid:35,uuid:"28D14430-2DF3-4EE4-A975-6C4DE2530390",variableType:-4}
- */
-var FORM_EVENT_TYPES = { //Some of these are backed up by constants on JS(DND)Event
-	DRAG:'drag',
-	DRAG_END:'drag-end',
-	DRAG_OVER:'drag-over',
-	DROP:'drop',
-	ELEMENT_FOCUS_GAINED:'element-focus-lost',
-	ELEMENT_FOCUS_LOST:'element-focus-lost',
-	LOAD:'load',
-	HIDE:'hide',
-	RECORD_EDIT_START:'record-edit-start',
-	RECORD_EDIT_STOP:'record-edit-stop',
-	RECORD_SELECTION:'record-selection',
-	RESIZE:'resize',
-	SHOW:'show',
-	UNLOAD:'unload'
-};
+var log = scopes.svyLogManager.getLogger('com.servoy.bap.application.core')
 
 /**
  * @private
