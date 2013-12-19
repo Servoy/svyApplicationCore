@@ -2,5 +2,5 @@
 <buildpath>
 	<buildpathentry excluding=".stp/|medias/" kind="src" path=""/>
 	<buildpathentry exported="true" kind="prj" path="/svyUtils$unitTest"/>
-	<buildpathentry exported="true" kind="prj" path="/svyApplicationCore"/>
+	<buildpathentry exported="true" kind="prj" path="/svyAppCore"/>
 </buildpath>
