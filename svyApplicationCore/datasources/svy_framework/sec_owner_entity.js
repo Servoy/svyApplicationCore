@@ -79,7 +79,7 @@ function createOrganization(organizationName, record)
 		throw new scopes.svyDataUtils.NoRecordException();
 	}
 	
-	if (!scopes.svyUtils.isValueUnique(sec_owner_to_sec_organization, "name", organizationName, ["owner_id"], [record.owner_id.toString()])) {
+	if (!scopes.svyDataUtils.datasourceHasValue(sec_owner_to_sec_organization, "name", organizationName, ["owner_id"], [record.owner_id.toString()])) {
 		throw new scopes.svyDataUtils.ValueNotUniqueException(null, record, "name", organizationName);
 	}
 	
