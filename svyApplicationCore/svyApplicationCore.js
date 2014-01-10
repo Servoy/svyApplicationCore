@@ -255,7 +255,7 @@ function addErrorHandler(handler) {
  * @properties={typeid:24,uuid:"7BA4782A-8BC4-47A4-BD84-9F56FA4EC386"}
  */
 function onErrorHandler(e) {
-	//workaround to get to the throw exception in JavaScript. See SVY-5618
+	//workaround to get to the thrown exception object from JavaScript prior to Servoy 7.4. See SVY-5618
 	if (e instanceof Packages.org.mozilla.javascript.JavaScriptException) {
  		e = e['getValue']()
  	}
