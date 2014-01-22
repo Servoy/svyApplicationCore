@@ -12,7 +12,7 @@
 var version;
 
 /**
- * Returns the module version
+ * Returns the module version. User semantic versions {@link http://semver.org/}
  * @abstract
  * @return {String} version
  * @properties={typeid:24,uuid:"88C8B51B-1405-4ED0-A0A0-389230BF5663"}
