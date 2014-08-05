@@ -43,7 +43,7 @@ function getId() {
 /**
  * Override to invoke module initialization code
  * 
- * @param {Object<Array<String>>} [startupArguments] all startup arguments with which the solution is opened
+ * @param {Object.<String,String>} [startupArguments] all startup arguments with which the solution is opened
  * 
  * @properties={typeid:24,uuid:"348C7102-DD5B-492D-8092-D5961AAF2CE4"}
  */
