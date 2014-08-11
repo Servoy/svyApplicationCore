@@ -27,7 +27,7 @@ var APPLICATION_EVENT_TYPES = {
  *
  * The method will invoke the moduleInit method on all instances of the AbstractModuleDef class
  *
- * @param {Object.<String,String>} [startupArguments] all startup arguments with which the solution is opened
+ * @param {Object<Array<String>>} [startupArguments] all startup arguments with which the solution is opened
  *
  * @properties={typeid:24,uuid:"2BCF34F0-F66E-456A-A493-2EE1B3EBE1B8"}
  */
