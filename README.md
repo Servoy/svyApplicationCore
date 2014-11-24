@@ -1,5 +1,9 @@
-svyApplicationCore
+svyApplicationCore (Deprecated)
 ==================
+
+This module has been deprecated since all it's content has been moved into the [svyUtils](https://github.com/Servoy/svyUtils) module.
+
+Do not checkout this module anymore
 
 'svyApplicationCore' is a module of the [Servoy Business Application Platform](http://servoy.com). It offers default implementations for the solutions onError and onDataBroadcast events and provides a module initialization mechanism.
 
@@ -8,18 +12,12 @@ The aim of this module is to provide the API's for 3rd party modules to allow ea
 
 Documentation
 -------------
-See the [Wiki](https://github.com/Servoy/svyApplicationCore/wiki) for the available documentation
+See the svyUtils [Wiki](https://github.com/Servoy/svyUtils/wiki) for the available documentation
 
 
 Feature Requests & Bugs
 -----------------------
-Found a bug or would like to see a new feature implemented? Raise an issue in the [Issue Tracker](https://github.com/Servoy/svyApplicationCore/issues)
-
-
-Contributing
--------------
-Eager to fix a bug or introduce a new feature? Clone the repository and issue a pull request
-
+Found a bug or would like to see a new feature implemented? Raise an issue in the svyUtils [Issue Tracker](https://github.com/Servoy/svyUtilsCore/issues)
 
 License
 -------
